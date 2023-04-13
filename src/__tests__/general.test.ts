@@ -4,7 +4,7 @@ import { Configuration, GeneralApi } from "tdei-client";
 // import { HarnessTester } from "../harness-tester";
 import testHarness from "../test-harness.json";
 
-describe('Login API', () =>{
+describe('General API', () =>{
 
     let configuration = new Configuration({
         username: testHarness.system.username,
