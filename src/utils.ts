@@ -5,6 +5,9 @@ import {
   GtfsFlexUpload,
   GtfsFlexUploadCollectionMethodEnum,
   GtfsFlexUploadDataSourceEnum,
+  GtfsPathwaysUpload,
+  GtfsPathwaysUploadCollectionMethodEnum,
+  GtfsPathwaysUploadDataSourceEnum,
   OswUpload,
   OswUploadCollectionMethodEnum,
   OswUploadDataSourceEnum
@@ -127,8 +130,8 @@ export class Utility {
      */
 
     return {
-      tdei_org_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
-      tdei_service_id: "",
+      tdei_org_id: "0c29017c-f0b9-433e-ae13-556982f2520b",
+      tdei_service_id: "9066ad72-d044-4199-9f6c-b71f75ece7e8",
       collected_by: "test user",
       collection_date: "2023-03-03T02:22:45.374Z",
       collection_method: GtfsFlexUploadCollectionMethodEnum.Manual,
@@ -137,6 +140,70 @@ export class Utility {
       valid_to: "2023-03-02T04:22:42.493Z",
       polygon: this.getRandomPolygon(),
       flex_schema_version: "v2.0"
+    };
+  }
+
+  static getRandomGtfsPathwaysUpload(): GtfsPathwaysUpload {
+    /**
+    {
+    "tdei_org_id": "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
+    "tdei_station_id": "9db42377-a4a7-4e5f-bc4a-ebbe40bfed19",
+    "collected_by": "testuser",
+    "collection_date": "2023-03-02T04:22:42.493Z",
+    "collection_method": "manual",
+    "valid_from": "2023-03-02T04:22:42.493Z",
+    "valid_to": "2023-03-06T04:22:42.493Z",
+    "data_source": "TDEITools",
+    "polygon": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                78.319084,
+                13.0361
+              ],
+              [
+                71.508215,
+                13.9144
+              ],
+              [
+                73.175267,
+                13.187164
+              ],
+              [
+                71.323583,
+                12.67485
+              ],
+              [
+                78.319084,
+                13.0361
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+    },
+    "pathways_schema_version": "v2.0"
+    }
+     */
+
+    return {
+      tdei_org_id: "5446ec87-1082-4d56-bcfa-f9579a002ef2",
+      tdei_station_id: "d9832f18-0780-4818-b0e3-9f72f602d26e",
+      collected_by: "test user",
+      collection_date: "2023-03-03T02:22:45.374Z",
+      collection_method: GtfsPathwaysUploadCollectionMethodEnum.Manual,
+      data_source: GtfsPathwaysUploadDataSourceEnum.InHouse,
+      valid_from: "2023-03-02T04:22:42.493Z",
+      valid_to: "2023-03-02T04:22:42.493Z",
+      polygon: this.getRandomPolygon(),
+      pathways_schema_version: "v1.0"
     };
   }
 }
