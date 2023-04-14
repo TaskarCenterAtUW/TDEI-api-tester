@@ -1,0 +1,44 @@
+{
+    "users": [
+        {
+            "role": "poc",
+            "user": {
+                "firstName": "Naresh",
+                "lastName": "Kumar",
+                "email": "nareshd1@gaussiansolutions.com",
+                "phone": "8971722511",
+                "password": "Pa$s1word"
+            }
+        },
+        {
+            "role": "flex_data_generator",
+            "user": {
+                "firstName": "Flex",
+                "lastName": "generator",
+                "email": "flex1@tdei.com",
+                "phone": "8971722512",
+                "password": "Pa$s1word"
+            }
+        },
+        {
+            "role": "pathways_data_generator",
+            "user": {
+                "firstName": "Pathways",
+                "lastName": "generator",
+                "email": "pathways1@tdei.com",
+                "phone": "8971722513",
+                "password": "Pa$s1word"
+            }
+        },
+        {
+            "role": "osw_data_generator",
+            "user": {
+                "firstName": "OSW",
+                "lastName": "generator",
+                "email": "osw1@tdei.com",
+                "phone": "8971722514",
+                "password": "Pa$s1word"
+            }
+        }
+    ]
+}

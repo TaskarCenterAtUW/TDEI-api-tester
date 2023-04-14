@@ -1,0 +1,42 @@
+{
+    
+    "org_name": "Test Organization2",
+    "phone": "911-111-1122",
+    "url": "https://tdei.com",
+    "address": "Test address",
+    "polygon": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                77.588807600,
+                                12.976222960
+                            ],
+                            [
+                                77.589285400,
+                                12.972094479
+                            ],
+                            [
+                                77.593012392,
+                                12.974608826
+                            ],
+                            [
+                                77.588839463,
+                                12.976254000
+                            ],
+                            [
+                                77.588807600,
+                                12.976222960
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ]
+    }
+}
