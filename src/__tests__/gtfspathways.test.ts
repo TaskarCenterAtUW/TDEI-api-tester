@@ -13,7 +13,6 @@ describe('GTFS PATHWAYS API', () => {
     });
 
     beforeAll( async ()=>{
-        // console.log('Hello there');
         let generalAPI = new GeneralApi(configuration);
         const loginResponse = await generalAPI.authenticate({username:configuration.username,password:configuration.password});
         configuration.baseOptions = {
@@ -46,11 +45,5 @@ describe('GTFS PATHWAYS API', () => {
        
     },10000)
 
-
-
-
-
-
-
-
+ 
 });
