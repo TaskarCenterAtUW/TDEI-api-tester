@@ -1,7 +1,11 @@
 
 
+import path from "path";
 import { Configuration, GeneralApi, GTFSPathwaysApi } from "tdei-client";
 import testHarness from "../test-harness.json";
+import { Utility } from "../utils";
+import * as fs from "fs";
+import axios from "axios";
 
 describe('GTFS PATHWAYS API', () => {
 
@@ -32,7 +36,6 @@ describe('GTFS PATHWAYS API', () => {
     it('Should list GTFS Pathways Stations', async () => {
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
         const stations = await gtfsPathwaysAPI.listStations();
-        console.log(stations.data);
         expect(Array.isArray(stations.data)).toBe(true);
 
     }, 10000)
@@ -40,10 +43,54 @@ describe('GTFS PATHWAYS API', () => {
     it('Should list GTFS Pathways versions', async () => {
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
         const versions = await gtfsPathwaysAPI.listPathwaysVersions();
-        console.log(versions.data.versions);
         expect(Array.isArray(versions.data.versions)).toBe(true);
 
     }, 10000)
 
 
+
+    it('Should be able to upload GTFS pathways file', async ()=>{
+        let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
+
+        let metaToUpload = Utility.getRandomPathwaysUpload();
+
+        const uploadInterceptor = axios.interceptors.request.use((req) =>
+        requestInterceptor(req, "pathways-test-upload.zip")
+      );
+
+        const requestInterceptor = (request, fileName) => {
+            
+              let data = request.data as FormData;
+              let file = data.get("file") as File;
+              delete data["file"];
+              delete data["meta"];
+              data.set("file", file, fileName);
+              data.set("meta", JSON.stringify(metaToUpload));
+            
+            return request;
+          };
+
+
+        let fileDir = path.dirname(path.dirname(__dirname));
+        let payloadFilePath = path.join(
+          fileDir,
+          "assets/payloads/gtfs-pathways/files/success_1_all_attrs.zip"
+        );
+        let filestream = fs.readFileSync(payloadFilePath);
+        const blob = new Blob([filestream], { type: "application/zip" });
+
+         const uploadedFileResponse = await gtfsPathwaysAPI.uploadPathwaysFileForm(
+           metaToUpload,
+           blob
+          );
+
+
+        expect(uploadedFileResponse.status).toBe(202);
+        expect(uploadedFileResponse.data).not.toBeNull();
+        axios.interceptors.request.eject(uploadInterceptor);
+  
+
+    });
+
+ 
 });
