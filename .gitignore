@@ -105,3 +105,4 @@ dist
 .DS_Store
 src/test-harness.json
 test-report.html
+wallaby.js

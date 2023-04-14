@@ -1,12 +1,8 @@
-import { Configuration, GeneralApi } from "tdei-client";
-import testHarness from "../test-harness.json";
+import { GeneralApi } from "tdei-client";
+import { Utility } from "../utils";
 
 describe("General API", () => {
-  let configuration = new Configuration({
-    username: testHarness.system.username,
-    password: testHarness.system.password,
-    basePath: testHarness.system.baseUrl
-  });
+  let configuration = Utility.getConfiguration();
 
   beforeAll(async () => {
     let generalAPI = new GeneralApi(configuration);
@@ -15,9 +11,7 @@ describe("General API", () => {
       password: configuration.password
     });
     configuration.baseOptions = {
-      headers: {
-        Authorization: `Bearer ${loginResponse.data.access_token}`
-      }
+      headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
     };
   });
 
@@ -37,32 +31,32 @@ describe("General API", () => {
 
     const orgList = await generalAPI.listOrganizations();
 
-        expect(Array.isArray(orgList.data)).toBe(true);
+    expect(Array.isArray(orgList.data)).toBe(true);
+  }, 10000);
 
-    },10000);
+  it("Should list down all the stations", async () => {
+    let generalAPI = new GeneralApi(configuration);
 
-    it('Should list down all the stations',async () => {
-        let generalAPI = new GeneralApi(configuration);
-        const StationList = await generalAPI.listStations();
-        expect(Array.isArray(StationList.data)).toBe(true);
-        
-    },10000);
+    const StationList = await generalAPI.listStations();
 
-    it('Should get status', async () => {
-        let generalAPI = new GeneralApi(configuration);
-        let recordId = "3a9f0655ccab4e88833f015fe926a7ca";
-        const status = await generalAPI.getStatus(recordId);
-        expect(status.status).toBe(200);
-        expect(status.data.tdeiRecordId).toBe(recordId);
-    },10000)
+    expect(Array.isArray(StationList.data)).toBe(true);
+  }, 10000);
 
-    it('Should list available API versions', async () => {
-        let generalAPI = new GeneralApi(configuration);
-        const versions = await generalAPI.listApiVersions();
-        // status check
-        // versions.status to be 200
-        expect(versions.data.version).not.toBe('');
+  it("Should get status", async () => {
+    let generalAPI = new GeneralApi(configuration);
+    let recordId = "3a9f0655ccab4e88833f015fe926a7ca";
 
-    },10000)
+    const status = await generalAPI.getStatus(recordId);
 
+    expect(status.status).toBe(200);
+    expect(status.data.tdeiRecordId).toBe(recordId);
+  }, 10000);
+
+  it("Should list available API versions", async () => {
+    let generalAPI = new GeneralApi(configuration);
+
+    const versions = await generalAPI.listApiVersions();
+
+    expect(versions.data.version).not.toBeNull();
+  }, 10000);
 });

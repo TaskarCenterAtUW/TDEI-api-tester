@@ -1,4 +1,5 @@
 import {
+  Configuration,
   FeatureTypeEnum,
   GeoJsonObject,
   GeoJsonObjectTypeEnum,
@@ -12,11 +13,23 @@ import {
   OswUploadCollectionMethodEnum,
   OswUploadDataSourceEnum
 } from "tdei-client";
-
+import config from "./test-harness.json";
 /**
  * Utility class.
  */
 export class Utility {
+  static getConfiguration(): Configuration {
+    return new Configuration({
+      username: config.system.username,
+      password: config.system.password,
+      basePath: config.system.baseUrl
+    });
+  }
+
+  static addAuthZHeader(accessToken) {
+    return { Authorization: `Bearer ${accessToken}` };
+  }
+
   static getRandomPolygon(): GeoJsonObject {
     return {
       type: GeoJsonObjectTypeEnum.FeatureCollection,
@@ -39,7 +52,7 @@ export class Utility {
       this.getRandomNumber(12, 15)
     ];
     randomCoordinates.push(firstRandom);
-    for (let i = 3; i--;) {
+    for (let i = 3; i--; ) {
       randomCoordinates.push([
         this.getRandomNumber(70, 79),
         this.getRandomNumber(12, 15)

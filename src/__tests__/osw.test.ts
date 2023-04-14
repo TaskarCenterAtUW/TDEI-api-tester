@@ -1,16 +1,11 @@
-import { Configuration, GeneralApi, OSWApi, OswUpload } from "tdei-client";
-import testHarness from "../test-harness.json";
+import { GeneralApi, OSWApi, OswUpload } from "tdei-client";
 import axios from "axios";
 import { Utility } from "../utils";
 import path from "path";
 import * as fs from "fs";
 
 describe("Tests for OSW", () => {
-  let configuration = new Configuration({
-    username: testHarness.system.username,
-    password: testHarness.system.password,
-    basePath: testHarness.system.baseUrl
-  });
+  let configuration = Utility.getConfiguration();
 
   beforeAll(async () => {
     let generalAPI = new GeneralApi(configuration);
@@ -19,9 +14,7 @@ describe("Tests for OSW", () => {
       password: configuration.password
     });
     configuration.baseOptions = {
-      headers: {
-        Authorization: `Bearer ${loginResponse.data.access_token}`
-      }
+      headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
     };
   });
 

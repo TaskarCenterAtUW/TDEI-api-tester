@@ -8,7 +8,8 @@ export default async (): Promise<Config>=>{
         reporters:[
             "default",
             ["./node_modules/jest-html-reporter",{
-                "pageTitle":"Test Report"
+                "pageTitle": "Test Report",
+                "includeFailureMsg": true
             }]
         ],
         transform:{
