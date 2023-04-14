@@ -104,3 +104,4 @@ dist
 .tern-port
 .DS_Store
 src/test-harness.json
+test-report.html
