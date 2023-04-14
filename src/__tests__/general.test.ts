@@ -37,6 +37,30 @@ describe("General API", () => {
 
     const orgList = await generalAPI.listOrganizations();
 
-    expect(Array.isArray(orgList.data)).toBe(true);
-  }, 10000);
+        expect(Array.isArray(orgList.data)).toBe(true);
+
+    },10000);
+
+    it('Should list down all the stations',async () => {
+        let generalAPI = new GeneralApi(configuration);
+        const StationList = await generalAPI.listStations();
+        expect(Array.isArray(StationList.data)).toBe(true);
+        
+    },10000);
+
+    it('Should get status', async () => {
+        let generalAPI = new GeneralApi(configuration);
+        const status = await generalAPI.getStatus('');
+        expect(status.data).toBe(true);
+    },10000)
+
+    it('Should list available API versions', async () => {
+        let generalAPI = new GeneralApi(configuration);
+        const versions = await generalAPI.listApiVersions();
+        // status check
+        // versions.status to be 200
+        expect(versions.data.version).not.toBe('');
+
+    },10000)
+
 });
