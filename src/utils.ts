@@ -5,9 +5,6 @@ import {
   GtfsFlexUpload,
   GtfsFlexUploadCollectionMethodEnum,
   GtfsFlexUploadDataSourceEnum,
-  GtfsPathwaysUpload,
-  GtfsPathwaysUploadCollectionMethodEnum,
-  GtfsPathwaysUploadDataSourceEnum,
   OswUpload,
   OswUploadCollectionMethodEnum,
   OswUploadDataSourceEnum
