@@ -50,8 +50,10 @@ describe("General API", () => {
 
     it('Should get status', async () => {
         let generalAPI = new GeneralApi(configuration);
-        const status = await generalAPI.getStatus('');
-        expect(status.data).toBe(true);
+        let recordId = "3a9f0655ccab4e88833f015fe926a7ca";
+        const status = await generalAPI.getStatus(recordId);
+        expect(status.status).toBe(200);
+        expect(status.data.tdeiRecordId).toBe(recordId);
     },10000)
 
     it('Should list available API versions', async () => {
