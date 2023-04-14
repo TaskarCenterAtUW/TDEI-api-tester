@@ -2,6 +2,9 @@ import {
   FeatureTypeEnum,
   GeoJsonObject,
   GeoJsonObjectTypeEnum,
+  GtfsFlexUpload,
+  GtfsFlexUploadCollectionMethodEnum,
+  GtfsFlexUploadDataSourceEnum,
   OswUpload,
   OswUploadCollectionMethodEnum,
   OswUploadDataSourceEnum
@@ -33,7 +36,7 @@ export class Utility {
       this.getRandomNumber(12, 15)
     ];
     randomCoordinates.push(firstRandom);
-    for (let i = 3; i--; ) {
+    for (let i = 3; i--;) {
       randomCoordinates.push([
         this.getRandomNumber(70, 79),
         this.getRandomNumber(12, 15)
@@ -70,6 +73,70 @@ export class Utility {
       publication_date: "2023-03-02T04:22:42.493Z",
       polygon: this.getRandomPolygon(),
       osw_schema_version: "v0.1"
+    };
+  }
+
+  static getRandomGtfsFlexUpload(): GtfsFlexUpload {
+    /**
+    {
+    "tdei_org_id": "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
+    "tdei_service_id": "9db42377-a4a7-4e5f-bc4a-ebbe40bfed19",
+    "collected_by": "testuser",
+    "collection_date": "2023-03-02T04:22:42.493Z",
+    "collection_method": "manual",
+    "valid_from": "2023-03-02T04:22:42.493Z",
+    "valid_to": "2023-03-06T04:22:42.493Z",
+    "data_source": "TDEITools",
+    "polygon": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                78.319084,
+                13.0361
+              ],
+              [
+                71.508215,
+                13.9144
+              ],
+              [
+                73.175267,
+                13.187164
+              ],
+              [
+                71.323583,
+                12.67485
+              ],
+              [
+                78.319084,
+                13.0361
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+    },
+    "flex_schema_version": "v2.0"
+    }
+     */
+
+    return {
+      tdei_org_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
+      tdei_service_id: "",
+      collected_by: "test user",
+      collection_date: "2023-03-03T02:22:45.374Z",
+      collection_method: GtfsFlexUploadCollectionMethodEnum.Manual,
+      data_source: GtfsFlexUploadDataSourceEnum.InHouse,
+      valid_from: "2023-03-02T04:22:42.493Z",
+      valid_to: "2023-03-02T04:22:42.493Z",
+      polygon: this.getRandomPolygon(),
+      flex_schema_version: "v2.0"
     };
   }
 }
