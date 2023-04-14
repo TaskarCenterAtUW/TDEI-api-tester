@@ -40,8 +40,8 @@ describe('GTFS PATHWAYS API', () => {
     it('Should list GTFS Pathways versions', async () => {
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
         const versions = await gtfsPathwaysAPI.listPathwaysVersions();
-        console.log(versions.data);
-        expect(Array.isArray(versions.data["versions"])).toBe(true);
+        console.log(versions.data.versions);
+        expect(Array.isArray(versions.data.versions)).toBe(true);
        
     },10000)
 
