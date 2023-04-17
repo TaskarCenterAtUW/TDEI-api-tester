@@ -6,7 +6,10 @@
   "scripts": {
     "test": "jest",
     "build": "rimraf ./build && tsc",
-    "start": "npm run build && node build/index.js"
+    "start": "npm run build && node build/index.js",
+    "e2e-tests":"jest --testRegex src/**/*.e2e.test.ts",
+    "integration-tests": "jest --testRegex src/**/*.it.test.ts",
+    "regression-tests":"jest --testRegex src/**/*.rt.test.ts"
   },
   "keywords": [],
   "author": "Naresh Kumar",
