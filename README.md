@@ -44,3 +44,34 @@ describe('my-awesome-test', () => {
 
 ## TODO:
  Document on what the component is and where it helps
+
+## Seeder requirements
+- To enhance the testing with different personas and varied systems, it is imperative that we generate
+  some scripts that allow generation of users and other seed data required for testing.
+- Here are the requirements for seed data generation
+
+- Create an organization with random org data
+- Create/register a user for POC role
+- Create a user for each role 
+- Assign the roles to the users for the generated organization
+- Create a pathways station
+- Create a flex service
+
+- Generate and keep the access tokens of all the users.
+
+The above seeder should generate all of this and respond with a json or object with the following format:
+
+```json
+{
+	"users":{
+		"poc":"<poc api token>",
+		"flexdg":"<flex data generator api key>",
+		"pathwaydg":"<pathways data generator api key>",
+		"oswdg":"<osw data generator api key>"
+	},
+	"tdei_org_id":"<generated org ID>",
+	"station_id":"<generated station ID>",
+	"service_id":"<service ID>"
+}
+
+```
