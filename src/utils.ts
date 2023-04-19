@@ -14,7 +14,6 @@ import {
     OswUploadDataSourceEnum,
 } from "tdei-client";
 import config from "./test-harness.json";
-import axios, {AxiosInstance} from 'axios'
 import {faker} from '@faker-js/faker'
 
 /**
@@ -208,102 +207,6 @@ export class Utility {
             tdei_org_id: orgId,
             service_name: `${faker.animal.cat()} Service`,
             polygon: this.getRandomPolygon()
-        }
-    }
-}
-
-export class APIUtility {
-    private instance: AxiosInstance;
-
-    constructor() {
-        axios.defaults.baseURL = config.seed.baseUrl;
-        this.instance = axios.create();
-        // console.log(Utility.getRandomOrganizationUpload())
-    }
-
-    async login(): Promise<void> {
-        try {
-            const resp = await axios({
-                method: 'post',
-                url: '/api/v1/authenticate',
-                data: {
-                    username: config.seed.adminUser,
-                    password: config.seed.adminPassword
-                }
-            })
-            const accessToken = resp?.data?.access_token
-            axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
-        } catch (err: any) {
-            throw err?.response?.data?.message
-        }
-    }
-
-    async createOrg(): Promise<string> {
-        try {
-            const resp = await axios({
-                method: 'post',
-                url: '/api/v1/organization',
-                data: Utility.getRandomOrganizationUpload()
-            })
-            return resp?.data?.data
-        } catch (err: any) {
-            throw err?.response?.data?.message
-        }
-    }
-
-    async createUser(): Promise<any> {
-        try {
-            const resp = await axios({
-                method: 'post',
-                url: '/api/v1/register',
-                data: Utility.getUserUpload()
-            })
-            return resp?.data?.data
-        } catch (err: any) {
-            throw err?.response?.data?.message
-        }
-    }
-
-    async addPermission(orgId: string, username: string, role: string): Promise<void> {
-        try {
-            const resp = await axios({
-                method: 'post',
-                url: '/api/v1/permission',
-                data: {
-                    tdei_org_id: orgId,
-                    user_name: username,
-                    roles: [role]
-                }
-            })
-            return resp?.data?.data
-        } catch (err: any) {
-            throw err?.response?.data?.message
-        }
-    }
-
-    async createStation(orgId: string): Promise<string> {
-        try {
-            const resp = await axios({
-                method: 'post',
-                url: '/api/v1/station',
-                data: Utility.getStationUpload(orgId)
-            })
-            return resp?.data?.data
-        } catch (err: any) {
-            throw err?.response?.data?.message
-        }
-    }
-
-    async createService(orgId: string): Promise<string> {
-        try {
-            const resp = await axios({
-                method: 'post',
-                url: '/api/v1/service',
-                data: Utility.getServiceUpload(orgId)
-            })
-            return resp?.data?.data
-        } catch (err: any) {
-            throw err?.response?.data?.message
         }
     }
 }
