@@ -41,6 +41,14 @@ class Seeder {
         }
         return users
     }
+
+    public async deactivateOrg(orgId: string): Promise<boolean> {
+        return await this.client.activateOrDeactivateOrg(orgId, false)
+    }
+
+    public async activateOrg(orgId: string): Promise<boolean> {
+        return await this.client.activateOrDeactivateOrg(orgId, true)
+    }
 }
 
 
@@ -136,6 +144,21 @@ class APIUtility {
             return resp?.data?.data
         } catch (err: any) {
             throw err?.response?.data?.message
+        }
+    }
+
+    async activateOrDeactivateOrg(orgId: string, isActive: boolean): Promise<boolean> {
+        if (!axios.defaults.headers.common['Authorization']) {
+            await this.login()
+        }
+        try {
+            const resp = await axios({
+                method: 'delete',
+                url: `/api/v1/organization/${orgId}/active/${isActive}`,
+            })
+            return resp?.data
+        } catch (err: any) {
+            throw err?.response?.data
         }
     }
 }
