@@ -6,6 +6,7 @@ import config from "./test-harness.json";
 class Seeder {
     private client: APIUtility;
     private readonly roles: Array<string>
+
     constructor() {
         this.client = new APIUtility()
         this.roles = ['poc', 'flex_data_generator', 'pathways_data_generator', 'osw_data_generator']
@@ -17,10 +18,10 @@ class Seeder {
         const orgId = await this.client.createOrg()
         console.info(`Created Organisation with ID: ${orgId}`)
         seedData['tdei_org_id'] = orgId
-        const serviceId= await this.client.createService(orgId)
+        const serviceId = await this.client.createService(orgId)
         console.info(`Created Service with ID: ${serviceId}`)
         seedData['service_id'] = serviceId
-         const stationId = await this.client.createStation(orgId)
+        const stationId = await this.client.createStation(orgId)
         seedData['station_id'] = stationId
         console.info(`Created Station with ID: ${stationId}`)
         seedData['users'] = await this.createUsers(orgId)
@@ -138,11 +139,3 @@ class APIUtility {
         }
     }
 }
-
-const run = async () => {
-    const seeder = await new Seeder().seed()
-    console.log(seeder)
-
-}
-
-run()
