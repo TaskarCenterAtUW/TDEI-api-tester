@@ -3,7 +3,7 @@ import {SeedData} from './models/types'
 import axios, {AxiosInstance} from "axios";
 import config from "./test-harness.json";
 
-class Seeder {
+export class Seeder {
     private client: APIUtility;
     private readonly roles: Array<string>
 
