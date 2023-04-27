@@ -3,6 +3,9 @@ import { Utility } from "../utils";
 import axios from "axios";
 import path from "path";
 import * as fs from "fs";
+import exp from "constants";
+
+const DOWNLOAD_FILE_PATH = `${__dirname}/tmp`
 
 describe("GTFS PATHWAYS API", () => {
   let configuration = Utility.getConfiguration();
@@ -16,7 +19,18 @@ describe("GTFS PATHWAYS API", () => {
     configuration.baseOptions = {
       headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
     };
-  });
+    // Create a cleand up download folder
+    if (!fs.existsSync(DOWNLOAD_FILE_PATH)) {
+        fs.mkdirSync(DOWNLOAD_FILE_PATH);
+    } else {
+      fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
+      fs.mkdirSync(DOWNLOAD_FILE_PATH);
+    }
+  })
+
+  afterAll(async () => {
+    // fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
+})
 
   it("Should list GTFS Pathways Files", async () => {
     let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
@@ -74,9 +88,21 @@ describe("GTFS PATHWAYS API", () => {
       metaToUpload,
       blob
     );
-
+      console.log(uploadedFileResponse.data);
     expect(uploadedFileResponse.status).toBe(202);
     expect(uploadedFileResponse.data).not.toBeNull();
     axios.interceptors.request.eject(uploadInterceptor);
+  });
+
+  it('Should be able to download file',async () => {
+    let tdei_record_id = '7cd301eb50ea413f90be12598d158149';
+    let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
+    let result = await gtfsPathwaysAPI.getPathwaysFile(tdei_record_id);
+    // Have to download and check if the record is correct.
+    
+    expect(result.data).not.toBeNull();
+    expect(result.status).toBe(200);
+
+    
   });
 });

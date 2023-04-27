@@ -161,8 +161,8 @@ export class Utility {
     static getRandomPathwaysUpload(): GtfsPathwaysUpload {
 
         return {
-            tdei_org_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
-            tdei_station_id: "472877cb-edb3-40d2-b0b4-d124b90e5cd1",
+            tdei_org_id: config.system.tdei_org_id,
+            tdei_station_id: config.system.tdei_station_id,
             collected_by: "testuser",
             collection_date: "2023-03-02T04:22:42.493Z",
             collection_method: GtfsPathwaysUploadCollectionMethodEnum.Manual,
