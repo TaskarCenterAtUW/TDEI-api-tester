@@ -1,0 +1,1384 @@
+{
+	"info": {
+		"_postman_id": "c7ef2883-3ad2-42b7-bbb2-1a877c410e5e",
+		"name": "TDEI-metadata-validation",
+		"description": "Metadata validation scripts using upload",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23362010"
+	},
+	"item": [
+		{
+			"name": "gtfs-flex",
+			"item": [
+				{
+					"name": "upload-max-collected-by",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collected_by\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-collected-by}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Collected by has a max 50 characters length"
+					},
+					"response": []
+				},
+				{
+					"name": "no-collection_date",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collectionDate\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-no-collection-date}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "No collection date should yield bad request with error containing collectionDate"
+					},
+					"response": []
+				},
+				{
+					"name": "collection-date-future",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collection_date\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-collection-date-future}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "If the collection_date is in future, there should be an error with collection_date invalid"
+					},
+					"response": []
+				},
+				{
+					"name": "no-collection-method",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collectionMethod\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-no-collection-method}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should throw a bad request if there is no collection method specified"
+					},
+					"response": []
+				},
+				{
+					"name": "invalid-collection-method",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collection_method\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-invalid-collection-method}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should throw a bad request if the collection method is invalid"
+					},
+					"response": []
+				},
+				{
+					"name": "no-data-source",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"dataSource\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-no-data-source}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "should throw a bad request if data source is not specified"
+					},
+					"response": []
+				},
+				{
+					"name": "invalid-data-source",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"data_source\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-invalid-data-source}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should throw a bad request if the data source is invalid and not in the list"
+					},
+					"response": []
+				},
+				{
+					"name": "no-flex-schema",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"flexSchemaVersion\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-no-schema}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "should throw a bad request if flex-schema is not added"
+					},
+					"response": []
+				},
+				{
+					"name": "invalid-flex-schema",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"flex_schema_version\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-invalid-schema}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "should throw an invalid flex schema error if the flex schema is not in the given list"
+					},
+					"response": []
+				},
+				{
+					"name": "flex-success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{flex-valid}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfsflex",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should give out success if the valid parameters are sent"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "gtfs-pathways",
+			"item": [
+				{
+					"name": "upload-max-collected-by",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collected_by\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-collected-by}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Collected by has a max 50 characters length"
+					},
+					"response": []
+				},
+				{
+					"name": "no-collection_date",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collectionDate\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-no-collection-date}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "No collection date should yield bad request with error containing collectionDate"
+					},
+					"response": []
+				},
+				{
+					"name": "collection-date-future",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collection_date\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-collection-date-future}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "If the collection_date is in future, there should be an error with collection_date invalid"
+					},
+					"response": []
+				},
+				{
+					"name": "no-collection-method",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collectionMethod\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-no-collection-method}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should throw a bad request if there is no collection method specified"
+					},
+					"response": []
+				},
+				{
+					"name": "invalid-collection-method",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"collection_method\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-invalid-collection-method}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should throw a bad request if the collection method is invalid"
+					},
+					"response": []
+				},
+				{
+					"name": "no-data-source",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"dataSource\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-no-data-source}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "should throw a bad request if data source is not specified"
+					},
+					"response": []
+				},
+				{
+					"name": "invalid-data-source",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"data_source\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-invalid-data-source}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should throw a bad request if the data source is invalid and not in the list"
+					},
+					"response": []
+				},
+				{
+					"name": "no-pathway-schema",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"pathwaysSchemaVersion\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-no-schema}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "should throw a bad request if flex-schema is not added"
+					},
+					"response": []
+				},
+				{
+					"name": "invalid-pathway-schema",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"pathways_schema_version\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-invalid-schema}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "should throw an invalid flex schema error if the flex schema is not in the given list"
+					},
+					"response": []
+				},
+				{
+					"name": "pathway-success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "meta",
+									"value": "{{pathway-valid}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "success_1_all_attrs.zip"
+								},
+								{
+									"key": "tdeiOrgId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								},
+								{
+									"key": "userId",
+									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"api",
+								"gtfspathways",
+								"v1",
+								"uploadFile"
+							]
+						},
+						"description": "Should give out success if the valid parameters are sent"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "flex-collected-by",
+			"value": "{\n  \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n  \"tdei_service_id\": \"333\",\n  \"collected_by\": \"morethan50charsmorethan50charsmorethan50charsmorethan50charsmorethan50charsmorethan50chars\",\n  \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n  \"collection_method\": \"manual\",\n  \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n  \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n  \"data_source\": \"TDEITools\",\n  \"polygon\": {\n    \"coordinates\": [\n          [\n            [\n              77.58700584031209,\n              12.97544246408998\n            ],\n            [\n              77.58670678771239,\n              12.974635462667848\n            ],\n            [\n              77.58782248394829,\n              12.974489753799247\n            ],\n            [\n              77.58813303857153,\n              12.97529675569426\n            ],\n            [\n              77.58700584031209,\n              12.97544246408998\n            ]]]\n  },\n  \"flex_schema_version\": \"v2.0\"\n}",
+			"type": "string"
+		},
+		{
+			"key": "flex-no-collection-date",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": null,\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"v2.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-collection-date-future",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2025-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"v2.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-no-collection-method",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": null,\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"v2.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-invalid-collection-method",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"planted\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"v2.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-no-data-source",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": null,\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"v2.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-invalid-data-source",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"webapp\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"v2.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-no-schema",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": null\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-invalid-schema",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"2.0.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "flex-valid",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_service_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"flex_schema_version\": \"v2.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-collected-by",
+			"value": "{\n  \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n  \"tdei_station_id\": \"333\",\n  \"collected_by\": \"morethan50charsmorethan50charsmorethan50charsmorethan50charsmorethan50charsmorethan50chars\",\n  \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n  \"collection_method\": \"manual\",\n  \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n  \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n  \"data_source\": \"TDEITools\",\n  \"polygon\": {\n    \"coordinates\": [\n          [\n            [\n              77.58700584031209,\n              12.97544246408998\n            ],\n            [\n              77.58670678771239,\n              12.974635462667848\n            ],\n            [\n              77.58782248394829,\n              12.974489753799247\n            ],\n            [\n              77.58813303857153,\n              12.97529675569426\n            ],\n            [\n              77.58700584031209,\n              12.97544246408998\n            ]]]\n  },\n  \"pathways_schema_version\": \"v1.0\"\n}",
+			"type": "string"
+		},
+		{
+			"key": "pathway-no-collection-date",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": null,\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"v1.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-collection-date-future",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2025-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"v1.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-no-collection-method",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": null,\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"v1.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-invalid-collection-method",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"planted\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"v1.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-no-data-source",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": null,\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"v1.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-invalid-data-source",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"webapp\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"v1.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-no-schema",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": null\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-invalid-schema",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"1.0.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "pathway-valid",
+			"value": "{\n    \"tdei_org_id\": \"5e339544-3b12-40a5-8acd-78c66d1fa981\",\n    \"tdei_station_id\": \"333\",\n    \"collected_by\": \"testuser\",\n    \"collection_date\": \"2023-03-02T04:22:42.493Z\",\n    \"collection_method\": \"manual\",\n    \"valid_from\": \"2023-03-02T04:22:42.493Z\",\n    \"valid_to\": \"2023-03-02T04:22:42.493Z\",\n    \"data_source\": \"TDEITools\",\n    \"polygon\": {\n      \"coordinates\": [\n            [\n              [\n                77.58700584031209,\n                12.97544246408998\n              ],\n              [\n                77.58670678771239,\n                12.974635462667848\n              ],\n              [\n                77.58782248394829,\n                12.974489753799247\n              ],\n              [\n                77.58813303857153,\n                12.97529675569426\n              ],\n              [\n                77.58700584031209,\n                12.97544246408998\n              ]]]\n    },\n    \"pathways_schema_version\": \"v1.0\"\n  }",
+			"type": "string"
+		},
+		{
+			"key": "hostUrl",
+			"value": "https://localhost:8080",
+			"type": "string"
+		}
+	]
+}
