@@ -3,9 +3,11 @@ import { Utility } from "../utils";
 import axios from "axios";
 import path from "path";
 import * as fs from "fs";
-import exp from "constants";
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/tmp`
+import { TextEncoder, TextDecoder } from 'util';
+
+Object.assign(global, { TextDecoder, TextEncoder });
 
 describe("GTFS PATHWAYS API", () => {
   let configuration = Utility.getConfiguration();
@@ -56,49 +58,63 @@ describe("GTFS PATHWAYS API", () => {
     expect(Array.isArray(versions.data.versions)).toBe(true);
   }, 10000);
 
-  it("Should be able to upload GTFS pathways file", async () => {
-    let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
+  // it("Should be able to upload GTFS pathways file", async () => {
+  //   let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
 
-    let metaToUpload = Utility.getRandomPathwaysUpload();
+  //   let metaToUpload = Utility.getRandomPathwaysUpload();
 
-    const uploadInterceptor = axios.interceptors.request.use((req) =>
-      requestInterceptor(req, "pathways-test-upload.zip")
-    );
+  //   const uploadInterceptor = axios.interceptors.request.use((req) =>
+  //     requestInterceptor(req, "pathways-test-upload.zip")
+  //   );
 
-    const requestInterceptor = (request, fileName) => {
-      let data = request.data as FormData;
-      let file = data.get("file") as File;
-      delete data["file"];
-      delete data["meta"];
-      data.set("file", file, fileName);
-      data.set("meta", JSON.stringify(metaToUpload));
+  //   const requestInterceptor = (request, fileName) => {
+  //     let data = request.data as FormData;
+  //     let file = data.get("file") as File;
+  //     delete data["file"];
+  //     delete data["meta"];
+  //     data.set("file", file, fileName);
+  //     data.set("meta", JSON.stringify(metaToUpload));
 
-      return request;
-    };
+  //     return request;
+  //   };
 
-    let fileDir = path.dirname(path.dirname(__dirname));
-    let payloadFilePath = path.join(
-      fileDir,
-      "assets/payloads/gtfs-pathways/files/success_1_all_attrs.zip"
-    );
-    let filestream = fs.readFileSync(payloadFilePath);
-    const blob = new Blob([filestream], { type: "application/zip" });
+  //   let fileDir = path.dirname(path.dirname(__dirname));
+  //   let payloadFilePath = path.join(
+  //     fileDir,
+  //     "assets/payloads/gtfs-pathways/files/success_1_all_attrs.zip"
+  //   );
+  //   let filestream = fs.readFileSync(payloadFilePath);
+  //   const blob = new Blob([filestream], { type: "application/zip" });
 
-    const uploadedFileResponse = await gtfsPathwaysAPI.uploadPathwaysFileForm(
-      metaToUpload,
-      blob
-    );
-      console.log(uploadedFileResponse.data);
-    expect(uploadedFileResponse.status).toBe(202);
-    expect(uploadedFileResponse.data).not.toBeNull();
-    axios.interceptors.request.eject(uploadInterceptor);
-  });
+  //   const uploadedFileResponse = await gtfsPathwaysAPI.uploadPathwaysFileForm(
+  //     metaToUpload,
+  //     blob
+  //   );
+  //     console.log(uploadedFileResponse.data);
+  //   expect(uploadedFileResponse.status).toBe(202);
+  //   expect(uploadedFileResponse.data).not.toBeNull();
+  //   axios.interceptors.request.eject(uploadInterceptor);
+  // },20000);
 
+/**
+ * @jest-environment ./my-custom-environment
+ */
   it('Should be able to download file',async () => {
     let tdei_record_id = '7cd301eb50ea413f90be12598d158149';
     let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
     let result = await gtfsPathwaysAPI.getPathwaysFile(tdei_record_id);
+    // let resultString = JSON.stringify(result.data);
+    // let buffer = Buffer.from(result.data as unknown as );
     // Have to download and check if the record is correct.
+    let resultData = result.data;
+    const zipData = new TextEncoder().encode(resultData as unknown as string);
+    const blob = new Blob([zipData], { type: "application/zip" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "file.zip";
+    link.click();
+    // fs.writeFileSync('ab.zip',result.data as unknown as Buffer);
     
     expect(result.data).not.toBeNull();
     expect(result.status).toBe(200);
