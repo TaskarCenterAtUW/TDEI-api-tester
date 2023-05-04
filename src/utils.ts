@@ -15,6 +15,8 @@ import {
 } from "tdei-client";
 import config from "./test-harness.json";
 import {faker} from '@faker-js/faker'
+import path from "path";
+import * as fs from "fs";
 
 /**
  * Utility class.
@@ -71,17 +73,6 @@ export class Utility {
     }
 
     static getRandomOswUpload(): OswUpload {
-        /**
-         * {"tdei_org_id":"66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
-         * "collected_by":"sfsd",
-         * "collection_date":"2023-03-03T02:22:45.374Z",
-         * "collection_method":"manual",
-         * "publication_date":"2023-03-02T04:22:42.493Z",
-         * "data_source":"InHouse",
-         * "polygon":{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[77.588807608,12.976222962],[77.589285425,12.972094479],[77.593012392,12.974608826],[77.588839463,12.976254003],[77.588807608,12.976222962]]]}}]},
-         * "osw_schema_version":"v0.1"}
-         */
-
         return {
             tdei_org_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
             collected_by: "Collector name",
@@ -95,54 +86,6 @@ export class Utility {
     }
 
     static getRandomGtfsFlexUpload(): GtfsFlexUpload {
-        /**
-         {
-    "tdei_org_id": "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
-    "tdei_service_id": "9db42377-a4a7-4e5f-bc4a-ebbe40bfed19",
-    "collected_by": "testuser",
-    "collection_date": "2023-03-02T04:22:42.493Z",
-    "collection_method": "manual",
-    "valid_from": "2023-03-02T04:22:42.493Z",
-    "valid_to": "2023-03-06T04:22:42.493Z",
-    "data_source": "TDEITools",
-    "polygon": {
-    "type": "FeatureCollection",
-    "features": [
-      {
-        "type": "Feature",
-        "geometry": {
-          "type": "Polygon",
-          "coordinates": [
-            [
-              [
-                78.319084,
-                13.0361
-              ],
-              [
-                71.508215,
-                13.9144
-              ],
-              [
-                73.175267,
-                13.187164
-              ],
-              [
-                71.323583,
-                12.67485
-              ],
-              [
-                78.319084,
-                13.0361
-              ]
-            ]
-          ]
-        }
-      }
-    ]
-    },
-    "flex_schema_version": "v2.0"
-    }
-         */
 
         return {
             tdei_org_id: "0c29017c-f0b9-433e-ae13-556982f2520b",
@@ -208,6 +151,31 @@ export class Utility {
             service_name: `${faker.animal.cat()} Service`,
             polygon: this.getRandomPolygon()
         }
+    }
+
+    /**
+     * All the file blob datas
+     */
+    static getFlexBlob():Blob {
+        return this.getFileBlob('gtfs-flex','success_1_all_attrs.zip');
+    }
+
+    static getPathwaysBlob(): Blob {
+        return this.getFileBlob('gtfs-pathways','success_1_all_attrs.zip');
+    }
+    
+    static getOSWBlob():Blob {
+        return this.getFileBlob('osw','valid.zip');
+    }
+    
+
+    static getFileBlob(directory:string,filename:string): Blob {
+        let fileDir = path.dirname(__dirname);
+        let payloadFilePath = path.join(fileDir,"assets/payloads/"+directory+"/files/"+filename);
+        let filestream = fs.readFileSync(payloadFilePath);
+        const blob = new Blob([filestream], { type: "application/zip" });
+        return blob
+
     }
 }
 
