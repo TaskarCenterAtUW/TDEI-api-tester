@@ -175,87 +175,136 @@ describe('GTFS Flex service', ()=>{
     describe('List services', ()=>{
         
         describe('Functional', ()=>{
-            
+            it('When passed with valid token, should return status 200 with list of services', async ()=>{
+                let flexApi = new GTFSFlexApi(configuration);
+                
+                const services = await flexApi.listFlexServices();
+
+                expect(services.status).toBe(200);
+                expect(Array.isArray(services.data)).toBe(true);
+
+            });
+
+            it('When passed with valid token and orgId, should return status 200 with list for same orgId', async ()=>{
+                let orgId = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                let flexApi = new GTFSFlexApi(configuration);
+                
+                const services = await flexApi.listFlexServices(orgId);
+
+                expect(services.status).toBe(200);
+                expect(Array.isArray(services.data)).toBe(true);
+            });
+
+            it('When passed with valid token and invalid orgId, should return status 200 with empty list', async ()=>{
+                let orgId = 'dummyOrgId';
+                let flexApi = new GTFSFlexApi(configuration);
+                
+                const services = await flexApi.listFlexServices(orgId);
+
+                expect(services.status).toBe(200);
+                expect(services.data.length).toBe(0);
+            });
+
+            it('When passed with valid token and page limit, should return status 200 with list less than or equal', async ()=>{
+                let page_size = 5;
+                let flexApi = new GTFSFlexApi(configuration);
+                
+                const services = await flexApi.listFlexServices(undefined,undefined,page_size);
+
+                expect(services.status).toBe(200);
+                expect(Array.isArray(services.data)).toBe(true);
+                expect(services.data.length).toBeLessThanOrEqual(page_size);
+            });
+
+            it('When passed with invalid token, should return 401 status', async ()=>{
+                let flexApi = new GTFSFlexApi(Utility.getConfiguration());
+                
+                const services =  flexApi.listFlexServices();
+
+                await expect(services).rejects.toMatchObject({response:{status:401}});
+            });
+
+
         })
     })
 
 })
 
 
-describe('GTFS FLEX API', () => {
+// describe('GTFS FLEX API', () => {
 
-    let configuration = Utility.getConfiguration();
+//     let configuration = Utility.getConfiguration();
 
-    beforeAll(async () => {
-        let generalAPI = new GeneralApi(configuration);
-        const loginResponse = await generalAPI.authenticate({ username: configuration.username, password: configuration.password });
-        configuration.baseOptions = {
-          headers: {
-            ...Utility.addAuthZHeader(loginResponse.data.access_token)
-          }
-        };
-    });
+//     beforeAll(async () => {
+//         let generalAPI = new GeneralApi(configuration);
+//         const loginResponse = await generalAPI.authenticate({ username: configuration.username, password: configuration.password });
+//         configuration.baseOptions = {
+//           headers: {
+//             ...Utility.addAuthZHeader(loginResponse.data.access_token)
+//           }
+//         };
+//     });
 
-    it('Should list GTFS flex services', async () => {
-        let gtfsFlexAPI = new GTFSFlexApi(configuration);
+//     it('Should list GTFS flex services', async () => {
+//         let gtfsFlexAPI = new GTFSFlexApi(configuration);
 
-        const services = await gtfsFlexAPI.listFlexServices();
+//         const services = await gtfsFlexAPI.listFlexServices();
 
-        expect(Array.isArray(services.data)).toBe(true);
+//         expect(Array.isArray(services.data)).toBe(true);
 
-    }, 10000)
+//     }, 10000)
 
-    it('Should list GTFS flex versions', async () => {
-        let gtfsFlexAPI = new GTFSFlexApi(configuration);
+//     it('Should list GTFS flex versions', async () => {
+//         let gtfsFlexAPI = new GTFSFlexApi(configuration);
 
-        const versions = await gtfsFlexAPI.listFlexVersions();
+//         const versions = await gtfsFlexAPI.listFlexVersions();
 
-        expect(Array.isArray(versions.data["versions"])).toBe(true);
-    }, 10000)
+//         expect(Array.isArray(versions.data["versions"])).toBe(true);
+//     }, 10000)
 
-    it('Should list GTFS flex files', async () => {
-        let gtfsFlexAPI = new GTFSFlexApi(configuration);
+//     it('Should list GTFS flex files', async () => {
+//         let gtfsFlexAPI = new GTFSFlexApi(configuration);
 
-        const files = await gtfsFlexAPI.listFlexFiles();
+//         const files = await gtfsFlexAPI.listFlexFiles();
 
-        expect(Array.isArray(files.data)).toBe(true);
-    }, 10000)
+//         expect(Array.isArray(files.data)).toBe(true);
+//     }, 10000)
 
-    it("Should be able to upload Flex files", async () => {
-        let metaToUpload = Utility.getRandomGtfsFlexUpload();
-        const requestInterceptor = (request: InternalAxiosRequestConfig, fileName: string) => {
-            if (
-                request.url === `${configuration.basePath}/api/v1/gtfs-flex`
-            ) {
-                let data = request.data as FormData;
-                let file = data.get("file") as File;
-                delete data["file"];
-                delete data["meta"];
-                data.set("file", file, fileName);
-                data.set("meta", JSON.stringify(metaToUpload));
-            }
-            return request;
-        };
-        // Actual method does not give the results as expected
-        // So we are writing interceptor
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>
-            requestInterceptor(req, "flex-test-upload.zip")
-        );
-        let fileDir = path.dirname(path.dirname(__dirname));
-        let payloadFilePath = path.join(
-            fileDir,
-            "assets/payloads/gtfs-flex/files/success_1_all_attrs.zip"
-        );
-        let filestream = fs.readFileSync(payloadFilePath);
-        const blob = new Blob([filestream], { type: "application/zip" });
-        let flexApi = new GTFSFlexApi(configuration);
+//     it("Should be able to upload Flex files", async () => {
+//         let metaToUpload = Utility.getRandomGtfsFlexUpload();
+//         const requestInterceptor = (request: InternalAxiosRequestConfig, fileName: string) => {
+//             if (
+//                 request.url === `${configuration.basePath}/api/v1/gtfs-flex`
+//             ) {
+//                 let data = request.data as FormData;
+//                 let file = data.get("file") as File;
+//                 delete data["file"];
+//                 delete data["meta"];
+//                 data.set("file", file, fileName);
+//                 data.set("meta", JSON.stringify(metaToUpload));
+//             }
+//             return request;
+//         };
+//         // Actual method does not give the results as expected
+//         // So we are writing interceptor
+//         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>
+//             requestInterceptor(req, "flex-test-upload.zip")
+//         );
+//         let fileDir = path.dirname(path.dirname(__dirname));
+//         let payloadFilePath = path.join(
+//             fileDir,
+//             "assets/payloads/gtfs-flex/files/success_1_all_attrs.zip"
+//         );
+//         let filestream = fs.readFileSync(payloadFilePath);
+//         const blob = new Blob([filestream], { type: "application/zip" });
+//         let flexApi = new GTFSFlexApi(configuration);
 
-        const uploadedFileResponse = await flexApi.uploadGtfsFlexFileForm(
-            metaToUpload,
-            blob
-        );
+//         const uploadedFileResponse = await flexApi.uploadGtfsFlexFileForm(
+//             metaToUpload,
+//             blob
+//         );
 
-        expect(uploadedFileResponse.data != "").toBe(true);
+//         expect(uploadedFileResponse.data != "").toBe(true);
 
-    }, 50000);
-});
+//     }, 50000);
+// });
