@@ -1,14 +1,29 @@
 
 
-import {  GeneralApi, GTFSFlexApi } from "tdei-client";
+import {  GeneralApi, GTFSFlexApi, GtfsFlexUpload } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import path from "path";
 import * as fs from "fs";
+import { Seeder } from "../seeder";
 
 
 describe('GTFS Flex service', ()=>{
     let configuration = Utility.getConfiguration();
+    // Upload interceptor
+    const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string, metaToUpload:GtfsFlexUpload) => {
+        if (
+            request.url === `${configuration.basePath}/api/v1/gtfs-flex`
+        ) {
+            let data = request.data as FormData;
+            let file = data.get("file") as File;
+            delete data["file"];
+            delete data["meta"];
+            data.set("file", file, fileName);
+            data.set("meta", JSON.stringify(metaToUpload));
+        }
+        return request;
+    };
 
     beforeAll(async () => {
         let generalAPI = new GeneralApi(configuration);
@@ -90,6 +105,47 @@ describe('GTFS Flex service', ()=>{
             expect(files.status).toBe(200);
             expect(files.data.length).toBe(0);
 
+        })
+    })
+
+    describe('Post flex file ', () => {
+
+        var serviceId: string = '';
+
+        beforeAll( async ()=>{
+            const seeder = new Seeder();
+            serviceId = await seeder.createService('c552d5d1-0719-4647-b86d-6ae9b25327b7');
+
+        })
+
+        describe('Functional', ()=> {
+
+            it('When passed with valid token, metadata and file, should return 202 status with recordId', async () => {
+
+                let flexApi = new GTFSFlexApi(configuration);
+                let metaToUpload = Utility.getRandomGtfsFlexUpload();
+                metaToUpload.tdei_service_id = serviceId;
+                metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+                let fileDir = path.dirname(path.dirname(__dirname));
+                let payloadFilePath = path.join(fileDir,"assets/payloads/gtfs-flex/files/success_1_all_attrs.zip");
+                let filestream = fs.readFileSync(payloadFilePath);
+                const blob = new Blob([filestream], { type: "application/zip" });
+                try {
+                const uploadedFileResponse = await flexApi.uploadGtfsFlexFileForm(
+                    metaToUpload,
+                    blob
+                );
+                
+                expect(uploadedFileResponse.status).toBe(202);
+                expect(uploadedFileResponse.data != "").toBe(true);
+                }
+                catch(e){
+                     console.log(e);
+                }
+            
+                axios.interceptors.request.eject(uploadInterceptor);
+            },20000)
         })
     })
 
