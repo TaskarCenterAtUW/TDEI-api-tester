@@ -4,7 +4,12 @@ export default async (): Promise<Config>=>{
     return {
         verbose:true,
         preset:'ts-jest',
-        testEnvironment:'node',
+        testEnvironment:'jsdom',
+        testEnvironmentOptions:{
+            html: '<html lang="zh-cmn-Hant"></html>',
+            url: 'https://tdei-gateway-dev.azurewebsites.net',
+            userAgent: 'Agent/007',
+        },
         reporters:[
             "default",
             ["./node_modules/jest-html-reporter",{
