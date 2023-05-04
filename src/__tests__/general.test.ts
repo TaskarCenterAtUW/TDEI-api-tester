@@ -1,9 +1,13 @@
 import { GeneralApi } from "tdei-client";
 import { Utility } from "../utils";
+import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 
-describe("General API", () => {
+
+describe("General service", () => {
+
   let configuration = Utility.getConfiguration();
-
+  
   beforeAll(async () => {
     let generalAPI = new GeneralApi(configuration);
     const loginResponse = await generalAPI.authenticate({
@@ -15,48 +19,138 @@ describe("General API", () => {
     };
   });
 
-  it("Should be able to login", async () => {
-    let generalAPI = new GeneralApi(configuration);
+   
 
-    const loginResponse = await generalAPI.authenticate({
-      username: configuration.username,
-      password: configuration.password
+  describe("List API versions", () => {
+    describe("Functional", () => {
+
+      it('When valid token is provided, expect to return 200 status with api version list', async () => {
+        // Arrange
+        let generalAPI = new GeneralApi(configuration);
+        // Action
+        const versions = await generalAPI.listApiVersions();
+
+        // Assert
+        expect(versions.status).toBe(200);
+        expect(versions.data.version).not.toBeNull();
+
+      })
+      it('When no token is provided, expect to 401 status in return', async () => {
+
+        let generalAPI = new GeneralApi(Utility.getConfiguration());
+
+        const version = generalAPI.listApiVersions();
+
+        await expect(version).rejects.toMatchObject({ response: { status: 401 } });
+
+
+      });
+
     });
+  })
 
-    expect(loginResponse.data.access_token).not.toBeNull();
-  });
+  describe('Authentication', () => {
+    describe('Functional', () => {
 
-  it("Should list down all the organizations", async () => {
-    let generalAPI = new GeneralApi(configuration);
+      it('When valid username and password provided, should return 200 status with access_token', async () => {
 
-    const orgList = await generalAPI.listOrganizations();
+        let generalAPI = new GeneralApi(Utility.getConfiguration());
 
-    expect(Array.isArray(orgList.data)).toBe(true);
-  }, 10000);
+        const loginResponse = await generalAPI.authenticate({
+          username: configuration.username,
+          password: configuration.password
+        });
 
-  it("Should list down all the stations", async () => {
-    let generalAPI = new GeneralApi(configuration);
+        expect(loginResponse.data.access_token).not.toBeNull();
+      })
+    })
+    describe('Validate', () => {
+      it('When invalid username and password provided, should return 401 status', async () => {
 
-    const StationList = await generalAPI.listStations();
+        let generalAPI = new GeneralApi(Utility.getConfiguration());
 
-    expect(Array.isArray(StationList.data)).toBe(true);
-  }, 10000);
+        let loginResponse = generalAPI.authenticate({ username: 'abc@gmail.com', password: 'invalidpassword' });
 
-  it("Should get status", async () => {
-    let generalAPI = new GeneralApi(configuration);
-    let recordId = "3a9f0655ccab4e88833f015fe926a7ca";
+        await expect(loginResponse).rejects.toMatchObject({ response: { status: 401 } });
 
-    const status = await generalAPI.getStatus(recordId);
+      })
+    })
+  })
 
-    expect(status.status).toBe(200);
-    expect(status.data.tdeiRecordId).toBe(recordId);
-  }, 10000);
+  describe('List Organizations', ()=> {
 
-  it("Should list available API versions", async () => {
-    let generalAPI = new GeneralApi(configuration);
+    describe('Functional', ()=>{
 
-    const versions = await generalAPI.listApiVersions();
+      it('When valid token provided, expect to return 200 status and list of organizations', async ()=>{
+        let generalAPI = new GeneralApi(configuration);
 
-    expect(versions.data.version).not.toBeNull();
-  }, 10000);
+        const orgList = await generalAPI.listOrganizations();
+        
+        expect(orgList.status).toBe(200);
+        expect(Array.isArray(orgList.data)).toBe(true);
+
+      })
+      it('When valid token provided, expect to return 200 status and contain orgId that is predefined ', async ()=> {
+        let generalAPI = new GeneralApi(configuration);
+        const orgList = await generalAPI.listOrganizations();
+
+        expect(orgList.status).toBe(200);
+        expect(orgList.data).toEqual(expect.arrayContaining([expect.objectContaining({tdei_org_id:'c552d5d1-0719-4647-b86d-6ae9b25327b7'})]));
+      })
+
+    })
+
+    describe('Validation', ()=>{
+      it('When requested without token, it should return 401 status', async ()=>{
+        let generalAPI = new GeneralApi(Utility.getConfiguration());
+
+        const orgList = generalAPI.listOrganizations();
+        
+        await expect(orgList).rejects.toMatchObject({ response: { status: 401 } });
+
+      })
+    })
+  })
+
+  describe('Get status', ()=>{
+    describe('Functional', ()=>{
+      it('When passed with recordId and valid token, should return result with same recordId', async ()=>{
+        let generalAPI = new GeneralApi(configuration);
+        const recordId = '7cd301eb50ea413f90be12598d158149';
+
+        const recordStatus = await generalAPI.getStatus(recordId);
+
+        expect(recordStatus.status).toBe(200);
+        expect(recordStatus.data).toMatchObject({tdeiRecordId:recordId});
+
+      })
+    })
+
+    describe('Validation', ()=>{
+      it('When passed with wrong recordId and valid token, should fail with 404 not found', async ()=>{
+
+        let generalAPI = new GeneralApi(configuration);
+        const wrongRecordId = '7cd301eb50ea413f90be12598d158133';
+
+        const recordStatus = generalAPI.getStatus(wrongRecordId);
+
+        await expect(recordStatus).rejects.toMatchObject({response:{status:404}});
+
+      })
+
+      it('When passed with recordId and without token, should fail with 401 error', async () => {
+
+        let generalAPI = new GeneralApi(Utility.getConfiguration());
+        const recordId = '7cd301eb50ea413f90be12598d158149';
+
+        const recordStatus = generalAPI.getStatus(recordId);
+
+        await expect(recordStatus).rejects.toMatchObject({response:{status:401}});
+
+      })
+
+    })
+  })
+
 });
+
