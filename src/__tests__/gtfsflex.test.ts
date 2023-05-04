@@ -115,6 +115,7 @@ describe('GTFS Flex service', ()=>{
         beforeAll( async ()=>{
             const seeder = new Seeder();
             serviceId = await seeder.createService('c552d5d1-0719-4647-b86d-6ae9b25327b7');
+            seeder.removeHeader();
 
         })
 
@@ -122,30 +123,59 @@ describe('GTFS Flex service', ()=>{
 
             it('When passed with valid token, metadata and file, should return 202 status with recordId', async () => {
 
+                //TODO: Simplify this arrange.
                 let flexApi = new GTFSFlexApi(configuration);
+                const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
                 let metaToUpload = Utility.getRandomGtfsFlexUpload();
                 metaToUpload.tdei_service_id = serviceId;
                 metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-                const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
-                let fileDir = path.dirname(path.dirname(__dirname));
-                let payloadFilePath = path.join(fileDir,"assets/payloads/gtfs-flex/files/success_1_all_attrs.zip");
-                let filestream = fs.readFileSync(payloadFilePath);
-                const blob = new Blob([filestream], { type: "application/zip" });
-                try {
-                const uploadedFileResponse = await flexApi.uploadGtfsFlexFileForm(
-                    metaToUpload,
-                    blob
-                );
+                let fileBlob = Utility.getFlexBlob();
+                
+                const uploadedFileResponse = await flexApi.uploadGtfsFlexFileForm(metaToUpload,fileBlob);
                 
                 expect(uploadedFileResponse.status).toBe(202);
                 expect(uploadedFileResponse.data != "").toBe(true);
-                }
-                catch(e){
-                     console.log(e);
-                }
             
                 axios.interceptors.request.eject(uploadInterceptor);
             },20000)
+
+            it('When passed with valid token, invalid metadata and correct file, should return 400 status', async ()=>{
+                let flexApi = new GTFSFlexApi(configuration);
+                const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+                let metaToUpload = Utility.getRandomGtfsFlexUpload();
+                metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                metaToUpload.collection_date = "";
+                let fileBlob = Utility.getFlexBlob();
+                
+                const uploadedFileResponse = flexApi.uploadGtfsFlexFileForm(metaToUpload,fileBlob);
+
+                await expect(uploadedFileResponse).rejects.toMatchObject({response:{status:400}});
+            
+                axios.interceptors.request.eject(uploadInterceptor);
+
+            },12000)
+
+            it('When passed with invalid token, valid metadata and valid file, should return 401 status', async () =>{
+                let flexApi = new GTFSFlexApi(Utility.getConfiguration());
+                const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+                let metaToUpload = Utility.getRandomGtfsFlexUpload();
+                metaToUpload.tdei_service_id = serviceId;
+                metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                let fileBlob = Utility.getFlexBlob();
+
+                const uploadedFileResponse =  flexApi.uploadGtfsFlexFileForm(metaToUpload,fileBlob);
+
+                await expect(uploadedFileResponse).rejects.toMatchObject({response:{status:401}});
+            
+                axios.interceptors.request.eject(uploadInterceptor);
+            },18000)
+        })
+    })
+
+    describe('List services', ()=>{
+        
+        describe('Functional', ()=>{
+            
         })
     })
 

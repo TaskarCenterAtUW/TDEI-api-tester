@@ -38,6 +38,10 @@ export class Seeder {
         return this.client.createService(orgId);
     }
 
+    public async removeHeader(){
+        axios.defaults.headers.common.Authorization = null;
+    }
+
     private async createUsers(orgId): Promise<object> {
         const users = {}
         for await (const role of this.roles) {
