@@ -6,6 +6,96 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import path from "path";
 import * as fs from "fs";
 
+
+describe('GTFS Flex service', ()=>{
+    let configuration = Utility.getConfiguration();
+
+    beforeAll(async () => {
+        let generalAPI = new GeneralApi(configuration);
+        const loginResponse = await generalAPI.authenticate({ username: configuration.username, password: configuration.password });
+        configuration.baseOptions = {
+          headers: {
+            ...Utility.addAuthZHeader(loginResponse.data.access_token)
+          }
+        };
+    });
+
+    describe('List Files', ()=>{
+        it('When passed with valid token, should return 200 status with files list', async () =>{
+            
+            let gtfsFlexAPI = new GTFSFlexApi(configuration);
+            
+            const filesResponse = await gtfsFlexAPI.listFlexFiles();
+
+            expect(filesResponse.status).toBe(200)
+            expect(Array.isArray(filesResponse.data)).toBe(true);
+
+        })
+
+        it('When passed without token, should return 401 status', async ()=>{
+            
+            let flexApi = new GTFSFlexApi(Utility.getConfiguration());
+
+            const filesPromise = flexApi.listFlexFiles();
+
+            await expect(filesPromise).rejects.toMatchObject({response:{status:401}})
+
+        })
+
+        it('When passed with token and page_size 5, should return 200 status with less than 5 elements', async ()=>{
+            
+            let flexApi = new GTFSFlexApi(configuration);
+
+            const files = await flexApi.listFlexFiles(undefined,undefined,undefined,undefined,undefined,undefined,undefined,5);
+
+            expect(files.status).toBe(200);
+            expect(files.data.length).toBeLessThanOrEqual(5);
+
+        })
+
+        it('When passed with valid token and tdei_service_id, shold return records of same service', async ()=>{
+            
+            let tdei_service_id = '801018f7-db32-4085-bbae-5339fa094cce';
+            let flexApi = new GTFSFlexApi(configuration);
+
+            const files = await flexApi.listFlexFiles(tdei_service_id);
+
+            expect(files.status).toBe(200);
+
+            // test.each(files.data)
+            files.data.forEach(element => {
+                expect(element.tdei_service_id).toEqual(tdei_service_id);
+            });
+        })
+
+        it('When passed with valid token and valid recordId, should return 200 status with only single record with same record Id', async () => {
+           
+            let tdei_record_id = '2bf7f70127b146cbb96319b5d39ada93';
+            let flexApi = new GTFSFlexApi(configuration);
+
+            const files = await flexApi.listFlexFiles(undefined,undefined,undefined,undefined,undefined,tdei_record_id);
+
+            expect(files.status).toBe(200);
+            expect(files.data.length).toBe(1);
+            expect(files.data[0].tdei_record_id).toBe(tdei_record_id);
+        })
+
+        it('When passed with valid token and invalid recordId, should return 200 status with no records', async () => {
+
+            let tdei_record_id = 'randomrecordid';
+            let flexApi = new GTFSFlexApi(configuration);
+
+            const files = await flexApi.listFlexFiles(undefined,undefined,undefined,undefined,undefined,tdei_record_id);
+
+            expect(files.status).toBe(200);
+            expect(files.data.length).toBe(0);
+
+        })
+    })
+
+})
+
+
 describe('GTFS FLEX API', () => {
 
     let configuration = Utility.getConfiguration();
