@@ -1,11 +1,27 @@
 import { GeneralApi, OSWApi, OswUpload } from "tdei-client";
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import path from "path";
 import * as fs from "fs";
 
-describe("Tests for OSW", () => {
+
+
+describe('OSW service', () => {
   let configuration = Utility.getConfiguration();
+  const NULL_PARAM = void 0;
+  const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string, metaToUpload:OswUpload) => {
+    if (
+        request.url === `${configuration.basePath}/api/v1/osw`
+    ) {
+        let data = request.data as FormData;
+        let file = data.get("file") as File;
+        delete data["file"];
+        delete data["meta"];
+        data.set("file", file, fileName);
+        data.set("meta", JSON.stringify(metaToUpload));
+    }
+    return request;
+};
 
   beforeAll(async () => {
     let generalAPI = new GeneralApi(configuration);
@@ -17,61 +33,150 @@ describe("Tests for OSW", () => {
       headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
     };
   });
+  describe('List Files', () => {
+    describe('Functional', () => {
+      it('When passed with valid token, should return 200 status with list of osw records', async () => {
+        let oswAPI = new OSWApi(configuration);
 
-  it("Should get list of osw versions", async () => {
-    let oswAPI = new OSWApi(configuration);
+        const oswFiles = await oswAPI.listOswFiles();
 
-    const oswVersions = await oswAPI.listOswVersions();
+        expect(oswFiles.status).toBe(200);
+        expect(Array.isArray(oswFiles.data)).toBe(true);
+      })
 
-    expect(oswVersions.status).toBe(200);
-    expect(Array.isArray(oswVersions.data.versions)).toBe(true);
-  });
+      it('When passed with valid token and page size, should return 200 status with files less than or equal to 5', async () =>{
+        let oswAPI = new OSWApi(configuration);
+        let page_size = 5;
 
-  it("Should return list of osw files", async () => {
-    let oswAPI = new OSWApi(configuration);
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,page_size);
 
-    const oswFiles = await oswAPI.listOswFiles();
+        expect(oswFiles.status).toBe(200);
+        expect(oswFiles.data.length).toBeLessThanOrEqual(page_size);
 
-    expect(oswFiles.status).toBe(200);
-    expect(Array.isArray(oswFiles.data)).toBe(true);
-  });
+      })
 
-  it("Should be able to upload osw files", async () => {
-    let metaToUpload = Utility.getRandomOswUpload();
-    const requestInterceptor = (request, fileName) => {
-      if (
-        request.url === "https://tdei-gateway-dev.azurewebsites.net/api/v1/osw"
-      ) {
-        let data = request.data as FormData;
-        let file = data.get("file") as File;
-        delete data["file"];
-        delete data["meta"];
-        data.set("file", file, fileName);
-        data.set("meta", JSON.stringify(metaToUpload));
-      }
-      return request;
-    };
-    // Actual method does not give the results as expected
-    // So we are writing interceptor
-    const uploadInterceptor = axios.interceptors.request.use((req) =>
-      requestInterceptor(req, "osw-test-upload.zip")
-    );
-    let fileDir = path.dirname(path.dirname(__dirname));
-    let payloadFilePath = path.join(
-      fileDir,
-      "assets/payloads/osw/files/valid.zip"
-    );
-    let filestream = fs.readFileSync(payloadFilePath);
-    const blob = new Blob([filestream], { type: "application/zip" });
-    let oswAPI = new OSWApi(configuration);
+      it('When passed with valid token and valid org ID, should return 200 status with files of the same org', async () => {
+        let oswAPI = new OSWApi(configuration);
+        //TODO: read from seeder or config
+        let orgId = '5e339544-3b12-40a5-8acd-78c66d1fa981';
 
-    const uploadedFileResponse = await oswAPI.uploadOswFileForm(
-      metaToUpload,
-      blob
-    );
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,orgId);
 
-    expect(uploadedFileResponse.status).toBe(202);
-    expect(uploadedFileResponse.data).not.toBeNull();
-    axios.interceptors.request.eject(uploadInterceptor);
-  });
-});
+        expect(oswFiles.status).toBe(200);
+        oswFiles.data.forEach(element => {
+          expect(element.tdei_org_id).toEqual(orgId);
+        });
+
+      })
+
+      it('When passed with valid token and valid recordId, should return 200 status with same record ID', async () =>{
+        let oswAPI = new OSWApi(configuration);
+        //TODO: feed from seeder
+        let recordId = '978203eeac334bdeba262899fce1fd8a';
+
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,recordId);
+
+        expect(oswFiles.status).toBe(200);
+        expect(oswFiles.data.length).toBe(1);
+        expect(oswFiles.data[0].tdei_record_id).toBe(recordId);
+      })
+
+    })
+
+    describe('Validation', () => {
+      it('When passed with valid token and invalid recordId, should return 200 with 0 records', async () =>{
+        let oswAPI = new OSWApi(configuration);
+        let recordId = 'dummyRecordId';
+
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,recordId);
+
+        expect(oswFiles.status).toBe(200);
+        expect(oswFiles.data.length).toBe(0);
+
+      })
+
+      it('When passed without valid token, should reject with 401 status', async () =>{
+        let oswAPI = new OSWApi(Utility.getConfiguration());
+
+        const oswFiles = oswAPI.listOswFiles();
+
+        await expect(oswFiles).rejects.toMatchObject({response:{status:401}});
+      })
+
+    })
+
+  })
+
+  describe('Post file', ()=>{
+    describe('Functional', ()=>{
+      it('When passed with valid token, metadata and file, should return 202 status with recordId in response', async ()=>{
+        let oswAPI = new OSWApi(configuration);
+        let metaToUpload = Utility.getRandomOswUpload();
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+        //TODO: feed from seeder or configuration
+        metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+        let fileBlob = Utility.getOSWBlob();
+        
+        const uploadedFileResponse = await oswAPI.uploadOswFileForm(metaToUpload,fileBlob);
+
+        expect(uploadedFileResponse.status).toBe(202);
+        expect(uploadedFileResponse.data != "").toBe(true);
+            
+        axios.interceptors.request.eject(uploadInterceptor);
+
+      }, 20000)
+
+      it('When passed with valid token, invalid metadata and file, should return 400 status in response', async ()=>{
+        let oswAPI = new OSWApi(configuration);
+        let metaToUpload = Utility.getRandomOswUpload();
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+        //TODO: feed from seeder or configuration
+        metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+        metaToUpload.collection_date = "";
+        let fileBlob = Utility.getOSWBlob();
+        
+        const uploadedFileResponse =  oswAPI.uploadOswFileForm(metaToUpload,fileBlob);
+
+        await expect(uploadedFileResponse).rejects.toMatchObject({response:{status:400}});
+            
+        axios.interceptors.request.eject(uploadInterceptor);
+
+      }, 20000)
+
+      it('When passed without valid token, metadata and file, should return 401 status in response', async ()=>{
+        let oswAPI = new OSWApi(Utility.getConfiguration());
+        let metaToUpload = Utility.getRandomOswUpload();
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+        //TODO: feed from seeder or configuraiton
+        metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+        let fileBlob = Utility.getOSWBlob();
+        
+        const uploadedFileResponse =  oswAPI.uploadOswFileForm(metaToUpload,fileBlob);
+
+        await expect(uploadedFileResponse).rejects.toMatchObject({response:{status:401}});
+            
+        axios.interceptors.request.eject(uploadInterceptor);
+
+      }, 20000)
+
+    })
+  })
+  describe('List OSW Versions', () =>{
+    it('When passed with valid token, should respond with 200 status', async () =>{
+      let oswAPI = new OSWApi(configuration);
+
+      let oswVersions = await oswAPI.listOswVersions();
+
+      expect(oswVersions.status).toBe(200);
+      expect(Array.isArray(oswVersions.data.versions)).toBe(true);
+    })
+
+    it('When passed without valid token, should respond with 401 status', async () =>{
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let oswVersionsResponse = oswAPI.listOswVersions();
+
+      await expect(oswVersionsResponse).rejects.toMatchObject({response:{status:401}});
+    })
+  })
+})
