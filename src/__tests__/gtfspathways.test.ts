@@ -9,6 +9,8 @@ import { Seeder } from "../seeder";
 describe('GTFS Pathways service', () => {
 
   let configuration = Utility.getConfiguration();
+  const NULL_PARAM = void 0;
+
 
   const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string, metaToUpload:GtfsPathwaysUpload) => {
     if (
@@ -53,7 +55,7 @@ describe('GTFS Pathways service', () => {
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
         let page_size = 5
 
-        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(undefined,undefined,undefined,undefined,undefined,undefined,undefined,page_size);
+        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,page_size);
 
         expect(pathwayFiles.status).toBe(200)
         expect(pathwayFiles.data.length).toBeLessThanOrEqual(page_size)
@@ -65,7 +67,7 @@ describe('GTFS Pathways service', () => {
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
         let stationId = '5e20eb06-a950-4a5d-a9ca-1e390a801b8a';
 
-        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(undefined,stationId);
+        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM,stationId);
 
         expect(pathwayFiles.status).toBe(200);
         pathwayFiles.data.forEach(element => {
@@ -79,7 +81,7 @@ describe('GTFS Pathways service', () => {
         let recordId = '90d81b53e2e54abebd66986d2fdab169';
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
 
-        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(undefined,undefined,undefined,undefined,undefined,recordId);
+        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,recordId);
 
         expect(pathwayFiles.status).toBe(200);
         expect(pathwayFiles.data.length).toBe(1);
