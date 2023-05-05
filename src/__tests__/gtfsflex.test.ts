@@ -6,6 +6,7 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import path from "path";
 import * as fs from "fs";
 import { Seeder } from "../seeder";
+import { version } from "os";
 
 
 describe('GTFS Flex service', ()=>{
@@ -230,6 +231,28 @@ describe('GTFS Flex service', ()=>{
             });
 
 
+        })
+    })
+
+    describe('List Flex versions', ()=>{
+        describe('Functional', ()=>{
+            it('When passed with valid token, should return 200 status with versions', async () =>{
+                let flexApi = new GTFSFlexApi(configuration);
+
+                const versions = await flexApi.listFlexVersions();
+
+                expect(versions.status).toBe(200)
+                expect(Array.isArray(versions.data.versions)).toBe(true);
+            })
+        })
+        describe('Validation', () => {
+            it('When passed with invalid token, should return 401 status', async ()=>{
+                let flexApi = new GTFSFlexApi(Utility.getConfiguration());
+
+                const versions = flexApi.listFlexVersions();
+
+                await expect(versions).rejects.toMatchObject({response:{status:401}});
+            })
         })
     })
 
