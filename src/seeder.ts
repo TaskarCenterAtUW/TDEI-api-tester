@@ -3,7 +3,7 @@ import {SeedData} from './models/types'
 import axios, {AxiosInstance} from "axios";
 import config from "./test-harness.json";
 
-class Seeder {
+export class Seeder {
     private client: APIUtility;
     private readonly roles: Array<string>
 
@@ -26,6 +26,20 @@ class Seeder {
         console.info(`Created Station with ID: ${stationId}`)
         seedData['users'] = await this.createUsers(orgId)
         return seedData
+    }
+
+    public async createStation(orgId:string): Promise<string>{
+        await this.client.login()
+        return this.client.createStation(orgId);
+    }
+
+    public async createService(orgId:string): Promise<string> {
+        await this.client.login()
+        return this.client.createService(orgId);
+    }
+
+    public async removeHeader(){
+        axios.defaults.headers.common.Authorization = null;
     }
 
     private async createUsers(orgId): Promise<object> {
