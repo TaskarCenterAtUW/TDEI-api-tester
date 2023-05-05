@@ -65,6 +65,7 @@ describe('GTFS Pathways service', () => {
       it('When passed with valid token and serviceId, should return list of files of same service id', async () =>{
 
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
+        //TODO: feed from seeder or configuration
         let stationId = '5e20eb06-a950-4a5d-a9ca-1e390a801b8a';
 
         const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM,stationId);
@@ -77,7 +78,7 @@ describe('GTFS Pathways service', () => {
       })
 
       it('When passed with valid token and recordId, should return record with same recordId', async () => {
-
+        //TODO: feed from seeder or configuration
         let recordId = '90d81b53e2e54abebd66986d2fdab169';
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
 
@@ -118,6 +119,7 @@ describe('GTFS Pathways service', () => {
 
   describe('Post Pathway File', ()=>{
     var stationId: string = '';
+    //TODO: feed from seeder or configuration
     const orgId = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
 
     beforeAll( async ()=>{
@@ -181,7 +183,7 @@ describe('GTFS Pathways service', () => {
   })
 
   describe('List stations', ()=>{
-
+    //TODO: feed from seeder or configuration
     const orgId = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
     describe('Functional', ()=>{
 
