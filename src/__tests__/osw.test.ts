@@ -57,6 +57,7 @@ describe('OSW service', () => {
 
       it('When passed with valid token and valid org ID, should return 200 status with files of the same org', async () => {
         let oswAPI = new OSWApi(configuration);
+        //TODO: read from seeder or config
         let orgId = '5e339544-3b12-40a5-8acd-78c66d1fa981';
 
         const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,orgId);
@@ -70,6 +71,7 @@ describe('OSW service', () => {
 
       it('When passed with valid token and valid recordId, should return 200 status with same record ID', async () =>{
         let oswAPI = new OSWApi(configuration);
+        //TODO: feed from seeder
         let recordId = '978203eeac334bdeba262899fce1fd8a';
 
         const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,recordId);
@@ -111,6 +113,7 @@ describe('OSW service', () => {
         let oswAPI = new OSWApi(configuration);
         let metaToUpload = Utility.getRandomOswUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+        //TODO: feed from seeder or configuration
         metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
         let fileBlob = Utility.getOSWBlob();
         
@@ -127,6 +130,7 @@ describe('OSW service', () => {
         let oswAPI = new OSWApi(configuration);
         let metaToUpload = Utility.getRandomOswUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+        //TODO: feed from seeder or configuration
         metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
         metaToUpload.collection_date = "";
         let fileBlob = Utility.getOSWBlob();
@@ -143,6 +147,7 @@ describe('OSW service', () => {
         let oswAPI = new OSWApi(Utility.getConfiguration());
         let metaToUpload = Utility.getRandomOswUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) =>uploadRequestInterceptor(req, "flex-test-upload.zip",metaToUpload))
+        //TODO: feed from seeder or configuraiton
         metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
         let fileBlob = Utility.getOSWBlob();
         
