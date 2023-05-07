@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "c7ef2883-3ad2-42b7-bbb2-1a877c410e5e",
+		"_postman_id": "4fb55cc0-9b06-4124-9d8a-519ec0a9094f",
 		"name": "TDEI-metadata-validation",
-		"description": "Metadata validation scripts using upload",
+		"description": "This collection elaborates on how to test the metadata validation for the TDEI system\n\nThere are two folders in this collection. Each folder represents the file type supported.\n\nAll the payloads for each case are put up as collection variables\n\n## Steps to test\n\n1. Authenticate the user using `Authenticate` method\n2. This sets the access_token for the session\n3. Based on the type of file you want to verify, run the corresponding folder.\n4. Only one folder can be run at one time. If you want to run both at the same time, ensure that the user details are correct (User has permission to upload both flex and pathways)\n5. Each of the file type will require a zip file for upload. The files are sent separately or available in /assets/payloads folder",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "23362010"
 	},
@@ -43,29 +43,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "Collected by has a max 50 characters length"
@@ -105,29 +94,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "No collection date should yield bad request with error containing collectionDate"
@@ -167,29 +145,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "If the collection_date is in future, there should be an error with collection_date invalid"
@@ -229,29 +196,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "Should throw a bad request if there is no collection method specified"
@@ -291,29 +247,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "Should throw a bad request if the collection method is invalid"
@@ -353,29 +298,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "should throw a bad request if data source is not specified"
@@ -415,29 +349,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "Should throw a bad request if the data source is invalid and not in the list"
@@ -477,29 +400,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "should throw a bad request if flex-schema is not added"
@@ -539,29 +451,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "should throw an invalid flex schema error if the flex schema is not in the given list"
@@ -575,8 +476,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
+									"pm.test(\"Status code is 202\", function () {",
+									"    pm.response.to.have.status(202);",
 									"});",
 									""
 								],
@@ -599,34 +500,53 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfsflex/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-flex",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfsflex",
 								"v1",
-								"uploadFile"
+								"gtfs-flex"
 							]
 						},
 						"description": "Should give out success if the valid parameters are sent"
 					},
 					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},
@@ -666,29 +586,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "Collected by has a max 50 characters length"
@@ -728,29 +637,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "No collection date should yield bad request with error containing collectionDate"
@@ -790,29 +688,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "If the collection_date is in future, there should be an error with collection_date invalid"
@@ -852,29 +739,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "Should throw a bad request if there is no collection method specified"
@@ -914,29 +790,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "Should throw a bad request if the collection method is invalid"
@@ -976,29 +841,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "should throw a bad request if data source is not specified"
@@ -1038,29 +892,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "Should throw a bad request if the data source is invalid and not in the list"
@@ -1100,29 +943,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "should throw a bad request if flex-schema is not added"
@@ -1162,29 +994,18 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "should throw an invalid flex schema error if the flex schema is not in the given list"
@@ -1198,8 +1019,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
+									"pm.test(\"Status code is 202\", function () {",
+									"    pm.response.to.have.status(202);",
 									"});",
 									""
 								],
@@ -1222,36 +1043,137 @@
 									"key": "file",
 									"type": "file",
 									"src": "success_1_all_attrs.zip"
-								},
-								{
-									"key": "tdeiOrgId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
-								},
-								{
-									"key": "userId",
-									"value": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{hostUrl}}/api/gtfspathways/v1/uploadFile",
+							"raw": "{{hostUrl}}/api/v1/gtfs-pathways",
 							"host": [
 								"{{hostUrl}}"
 							],
 							"path": [
 								"api",
-								"gtfspathways",
 								"v1",
-								"uploadFile"
+								"gtfs-pathways"
 							]
 						},
 						"description": "Should give out success if the valid parameters are sent"
 					},
 					"response": []
 				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
 			]
+		},
+		{
+			"name": "Authenticate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {",
+							"",
+							"    pm.expect(pm.response.code).to.eql(200);",
+							"",
+							"    pm.test(\"Access token is valid\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData.access_token).to.be.a('string')",
+							"        pm.expect(jsonData.expires_in).to.be.a('number')",
+							"        pm.expect(jsonData.refresh_expires_in).to.be.a('number')",
+							"        pm.expect(jsonData.refresh_token).to.be.a('string')",
+							"        pm.collectionVariables.set('access_token',jsonData.access_token)",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\":\"nareshd@gaussiansolutions.com\",\n    \"password\":\"flexdg\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hostUrl}}/api/v1/authenticate",
+					"host": [
+						"{{hostUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"authenticate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Status of file",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{hostUrl}}/api/v1/status?tdeiRecordId=691267863e774a27936588c727e27441",
+					"host": [
+						"{{hostUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"status"
+					],
+					"query": [
+						{
+							"key": "tdeiRecordId",
+							"value": "691267863e774a27936588c727e27441"
+						}
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
@@ -1377,7 +1299,12 @@
 		},
 		{
 			"key": "hostUrl",
-			"value": "https://localhost:8080",
+			"value": "https://tdei-gateway-dev.azurewebsites.net",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
 			"type": "string"
 		}
 	]
