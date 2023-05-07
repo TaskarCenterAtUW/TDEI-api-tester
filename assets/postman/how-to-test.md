@@ -1,6 +1,6 @@
 # Testing the metadata validation postman 
 - Import the collection to your postman
-- Pre-run the authenticate call to ensure that there is access token
+- Pre-run the `Authenticate` call to ensure that there is access token
 - The .zip files needed for upload are available in [payloads](../payloads/) folder
 - For flex use [valid-flex-zip-file](../payloads/gtfs-flex/files/success_1_all_attrs.zip)
 - For pathways use [valid-pathway-file](../payloads/gtfs-pathways/files/success_1_all_attrs.zip)
