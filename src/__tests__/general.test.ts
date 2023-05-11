@@ -32,7 +32,7 @@ describe("General service", () => {
 
         // Assert
         expect(versions.status).toBe(200);
-        expect(versions.data.version).not.toBeNull();
+        expect(versions.data.versions).not.toBeNull();
 
       })
       it('When no token is provided, expect to 401 status in return', async () => {
