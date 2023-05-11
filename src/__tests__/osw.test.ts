@@ -3,9 +3,10 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import path from "path";
 import * as fs from "fs";
+import AdmZip from "adm-zip";
 
 
-
+const DOWNLOAD_FILE_PATH = `${__dirname}/tmp`;
 describe('OSW service', () => {
   let configuration = Utility.getConfiguration();
   const NULL_PARAM = void 0;
@@ -32,7 +33,20 @@ describe('OSW service', () => {
     configuration.baseOptions = {
       headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
     };
+
+    // Create a cleand up download folder
+    if (!fs.existsSync(DOWNLOAD_FILE_PATH)) {
+      fs.mkdirSync(DOWNLOAD_FILE_PATH)
+    } else {
+      fs.rmSync(DOWNLOAD_FILE_PATH, {recursive:true,force:true});
+      fs.mkdirSync(DOWNLOAD_FILE_PATH);
+    }
   });
+
+  afterAll(async ()=>{
+    fs.rmSync(DOWNLOAD_FILE_PATH, {recursive:true,force:true});
+  })
+
   describe('List Files', () => {
     describe('Functional', () => {
       it('When passed with valid token, should return 200 status with list of osw records', async () => {
@@ -179,4 +193,59 @@ describe('OSW service', () => {
       await expect(oswVersionsResponse).rejects.toMatchObject({response:{status:401}});
     })
   })
+
+  describe('Get a record for OSW', ()=>{
+    describe('Functional', () => {
+      it('When passed with valid recordId, should be able to get the zip file', async ()=>{
+        
+        let oswRecordId = '8ec3e5c760024640ade1c7acce9ad9b6';
+        let oswAPI = new OSWApi(configuration);
+
+        let response = await oswAPI.getOswFile(oswRecordId,{responseType:'arraybuffer'});
+        const data: any = response.data;
+        const contentDisposition = response.headers['content-disposition'];
+        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+        const matches = filenameRegex.exec(contentDisposition);
+        const fileName = (matches != null && matches[1]) ? matches[1].replace(/['"]/g, '') : 'data.zip';
+        const filePath = `${DOWNLOAD_FILE_PATH}/${fileName}`
+        fs.writeFileSync(filePath, new Uint8Array(data))
+        const zip = new AdmZip(filePath);
+        const entries = zip.getEntries();
+
+        expect(entries.length).toBeGreaterThan(0);
+        expect(fileName.includes('zip')).toBe(true);
+        expect(response.data).not.toBeNull();
+        expect(response.status).toBe(200);
+
+      })
+
+    })
+
+    describe('Validation', ()=>{
+      it('When passed with valid recordId and invalid token, should return 401 status', async ()=>{
+
+        let oswRecordId = '8ec3e5c760024640ade1c7acce9ad9b6';
+        let oswAPI = new OSWApi(Utility.getConfiguration());
+
+        let response = oswAPI.getOswFile(oswRecordId);
+
+        await expect(response).rejects.toMatchObject({response:{status:401}});
+
+      })
+
+      it('When passed with invalid record and valid token, should return 404 status', async () =>{
+
+        let oswRecordId = 'dummyRecordId';
+        let oswAPI = new OSWApi(configuration);
+
+        let response = oswAPI.getOswFile(oswRecordId);
+
+        await expect(response).rejects.toMatchObject({response:{status:404}});
+
+      })
+
+    })
+    
+  })
+
 })
