@@ -1,7 +1,8 @@
-import { GeneralApi } from "tdei-client";
+import { GeneralApi, Organization, RecordStatus, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import { AxiosError } from "axios";
 import { isAxiosError } from "axios";
+import exp from "constants";
 
 
 describe("General service", () => {
@@ -34,7 +35,15 @@ describe("General service", () => {
         expect(versions.status).toBe(200);
         expect(versions.data.versions).not.toBeNull();
 
+      versions.data.versions?.forEach(version => {
+        expect(version).toMatchObject(<VersionSpec>{
+          version: expect.any(String),
+          documentation: expect.any(String),
+          specification: expect.any(String)
+        });
       })
+      })
+
       it('When no token is provided, expect to 401 status in return', async () => {
 
         let generalAPI = new GeneralApi(Utility.getConfiguration());
@@ -89,15 +98,28 @@ describe("General service", () => {
         expect(orgList.status).toBe(200);
         expect(Array.isArray(orgList.data)).toBe(true);
 
+        orgList.data.forEach(data => {
+          expect(data).toMatchObject(<Organization>{
+            tdei_org_id: expect.any(String),
+            org_name: expect.any(String),
+            polygon: {}
+          })
+        })
       })
+
       it('When valid token provided, expect to return 200 status and contain orgId that is predefined ', async ()=> {
         let generalAPI = new GeneralApi(configuration);
         const orgList = await generalAPI.listOrganizations();
 
         expect(orgList.status).toBe(200);
-        expect(orgList.data).toEqual(expect.arrayContaining([expect.objectContaining({tdei_org_id:'c552d5d1-0719-4647-b86d-6ae9b25327b7'})]));
-      })
+     //  expect(orgList.data).toEqual(expect.arrayContaining([expect.objectContaining({tdei_org_id:'c552d5d1-0719-4647-b86d-6ae9b25327b7'})]));
 
+        expect(orgList.data).toMatchObject(<Organization>{
+          tdei_org_id: 'c552d5d1-0719-4647-b86d-6ae9b25327b7',
+          org_name: expect.any(String),
+          polygon: {}
+        })
+      })
     })
 
     describe('Validation', ()=>{
@@ -121,8 +143,12 @@ describe("General service", () => {
         const recordStatus = await generalAPI.getStatus(recordId);
 
         expect(recordStatus.status).toBe(200);
-        expect(recordStatus.data).toMatchObject({tdeiRecordId:recordId});
-
+        expect(recordStatus.data).toMatchObject(<RecordStatus>{
+          tdeiRecordId: recordId,
+          stage: expect.any(String),
+          status: expect.any(String),
+          isComplete: expect.any(Boolean)
+        })
       })
     })
 
