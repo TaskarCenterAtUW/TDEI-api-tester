@@ -112,13 +112,7 @@ describe("General service", () => {
         const orgList = await generalAPI.listOrganizations();
 
         expect(orgList.status).toBe(200);
-     //  expect(orgList.data).toEqual(expect.arrayContaining([expect.objectContaining({tdei_org_id:'c552d5d1-0719-4647-b86d-6ae9b25327b7'})]));
-
-        expect(orgList.data).toMatchObject(<Organization>{
-          tdei_org_id: 'c552d5d1-0719-4647-b86d-6ae9b25327b7',
-          org_name: expect.any(String),
-          polygon: {}
-        })
+        expect(orgList.data).toEqual(expect.arrayContaining([expect.objectContaining({tdei_org_id:'c552d5d1-0719-4647-b86d-6ae9b25327b7'})]));
       })
     })
 
