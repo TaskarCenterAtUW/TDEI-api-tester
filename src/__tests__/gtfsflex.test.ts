@@ -1,6 +1,6 @@
 
 
-import {  GeneralApi, GTFSFlexApi, GtfsFlexUpload } from "tdei-client";
+import {  GeneralApi, GeoJsonObjectTypeEnum, GTFSFlexApi, GtfsFlexDownload, GtfsFlexDownloadCollectionMethodEnum, GtfsFlexDownloadDataSourceEnum, GtfsFlexServiceModel, GtfsFlexUpload, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import path from "path";
@@ -57,7 +57,28 @@ describe('GTFS Flex service', ()=>{
 
             expect(filesResponse.status).toBe(200)
             expect(Array.isArray(filesResponse.data)).toBe(true);
-
+            filesResponse.data.forEach(element => {
+                expect(element).toMatchObject(<GtfsFlexDownload>{
+                    tdei_record_id: expect.any(String),
+                    tdei_org_id: expect.any(String),
+                    tdei_service_id: expect.any(String),
+                    collected_by: expect.any(String),
+                    collection_date: expect.any(String),
+                collection_method: expect.any(String),
+                //TODO:
+                  //  collection_method: expect.any(GtfsFlexDownloadCollectionMethodEnum),
+                  valid_from: expect.any(String),
+                  valid_to: expect.any(String),
+                  //TODO:
+                //  confidence_level: expect.any(Number),
+                data_source: expect.any(String),
+                //TODO:
+              //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
+               polygon: {},
+               flex_schema_version: expect.any(String),
+               download_url: expect.any(String)
+                })
+            })
         })
 
         it('When passed without token, should return 401 status', async ()=>{
@@ -91,8 +112,29 @@ describe('GTFS Flex service', ()=>{
             expect(files.status).toBe(200);
 
             files.data.forEach(element => {
-                expect(element.tdei_service_id).toEqual(tdei_service_id);
-            });
+                expect(element).toMatchObject(<GtfsFlexDownload>{
+                    tdei_record_id: expect.any(String),
+                    tdei_org_id: expect.any(String),
+                    tdei_service_id: '801018f7-db32-4085-bbae-5339fa094cce',
+                    collected_by: expect.any(String),
+                    collection_date: expect.any(String),
+                collection_method: expect.any(String),
+                //TODO:
+                  //  collection_method: expect.any(GtfsFlexDownloadCollectionMethodEnum),
+                  valid_from: expect.any(String),
+                  valid_to: expect.any(String),
+                  //TODO:
+                //  confidence_level: expect.any(Number),
+                data_source: expect.any(String),
+                //TODO:
+              //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
+               polygon: {},
+               flex_schema_version: expect.any(String),
+               download_url: expect.any(String)
+                })
+            })
+
+          
         })
 
         it('When passed with valid token and valid recordId, should return 200 status with only single record with same record Id', async () => {
@@ -103,8 +145,29 @@ describe('GTFS Flex service', ()=>{
             const files = await flexApi.listFlexFiles(undefined,undefined,undefined,undefined,undefined,tdei_record_id);
 
             expect(files.status).toBe(200);
-            expect(files.data.length).toBe(1);
-            expect(files.data[0].tdei_record_id).toBe(tdei_record_id);
+            expect(files.data.length).toBe(1);        
+            files.data.forEach(element => {
+                expect(element).toMatchObject(<GtfsFlexDownload>{
+                    tdei_record_id: tdei_record_id,
+                    tdei_org_id: expect.any(String),
+                    tdei_service_id: expect.any(String),
+                    collected_by: expect.any(String),
+                    collection_date: expect.any(String),
+                collection_method: expect.any(String),
+                //TODO:
+                  //  collection_method: expect.any(GtfsFlexDownloadCollectionMethodEnum),
+                  valid_from: expect.any(String),
+                  valid_to: expect.any(String),
+                  //TODO:
+                //  confidence_level: expect.any(Number),
+                data_source: expect.any(String),
+                //TODO:
+              //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
+               polygon: {},
+               flex_schema_version: expect.any(String),
+               download_url: expect.any(String)
+                })
+            })
         })
 
         it('When passed with valid token and invalid recordId, should return 200 status with no records', async () => {
@@ -197,7 +260,13 @@ describe('GTFS Flex service', ()=>{
 
                 expect(services.status).toBe(200);
                 expect(Array.isArray(services.data)).toBe(true);
-
+                services.data.forEach(element => {
+                    expect(element).toMatchObject(<GtfsFlexServiceModel>{
+                        polygon: {},
+                        service_name: expect.any(String),
+                        tdei_service_id: expect.any(String)
+                    })
+                })
             });
 
             it('When passed with valid token and orgId, should return status 200 with list for same orgId', async ()=>{
@@ -255,6 +324,13 @@ describe('GTFS Flex service', ()=>{
 
                 expect(versions.status).toBe(200)
                 expect(Array.isArray(versions.data.versions)).toBe(true);
+                versions.data.versions?.forEach(version => {
+                    expect(version).toMatchObject(<VersionSpec>{
+                        version: expect.any(String),
+                        documentation: expect.any(String),
+                        specification: expect.any(String)
+                    })
+                })
             })
         })
         describe('Validation', () => {
