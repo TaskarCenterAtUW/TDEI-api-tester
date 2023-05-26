@@ -1,4 +1,4 @@
-import { GeneralApi, GTFSPathwaysApi, GtfsPathwaysUpload } from "tdei-client";
+import { GeneralApi, GtfsFlexDownload, GTFSPathwaysApi, GtfsPathwaysDownload, GtfsPathwaysUpload, Station, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import path from "path";
@@ -62,6 +62,24 @@ describe('GTFS Pathways service', () => {
         const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles();
 
         expect(Array.isArray(pathwayFiles.data)).toBe(true);
+        pathwayFiles.data.forEach(download => {
+          expect(download).toMatchObject(<GtfsPathwaysDownload>{
+            tdei_org_id: expect.any(String),
+            tdei_station_id: expect.any(String),
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            valid_from: expect.any(String),
+            valid_to: expect.any(String),
+            //TODO:
+           // confidence_level: expect.any(Number),
+           data_source: expect.any(String),
+           polygon: {},
+           tdei_record_id: expect.any(String),
+           pathways_schema_version: expect.any(String),
+           download_url: expect.any(String)
+          })
+        })
       })
 
       it('When passed with valid token and page size 5, should return list of files less than or equal to 5', async () => {
@@ -73,7 +91,24 @@ describe('GTFS Pathways service', () => {
 
         expect(pathwayFiles.status).toBe(200)
         expect(pathwayFiles.data.length).toBeLessThanOrEqual(page_size)
-
+        pathwayFiles.data.forEach(download => {
+          expect(download).toMatchObject(<GtfsPathwaysDownload>{
+            tdei_org_id: expect.any(String),
+            tdei_station_id: expect.any(String),
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            valid_from: expect.any(String),
+            valid_to: expect.any(String),
+            //TODO:
+           // confidence_level: expect.any(Number),
+           data_source: expect.any(String),
+           polygon: {},
+           tdei_record_id: expect.any(String),
+           pathways_schema_version: expect.any(String),
+           download_url: expect.any(String)
+          })
+        })
       })
 
       it('When passed with valid token and serviceId, should return list of files of same service id', async () =>{
@@ -85,10 +120,24 @@ describe('GTFS Pathways service', () => {
         const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM,stationId);
 
         expect(pathwayFiles.status).toBe(200);
-        pathwayFiles.data.forEach(element => {
-          expect(element.tdei_station_id).toEqual(stationId);
-        });
-
+        pathwayFiles.data.forEach(download => {
+          expect(download).toMatchObject(<GtfsPathwaysDownload>{
+            tdei_org_id: expect.any(String),
+            tdei_station_id: '5e20eb06-a950-4a5d-a9ca-1e390a801b8a',
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            valid_from: expect.any(String),
+            valid_to: expect.any(String),
+            //TODO:
+           // confidence_level: expect.any(Number),
+           data_source: expect.any(String),
+           polygon: {},
+           tdei_record_id: expect.any(String),
+           pathways_schema_version: expect.any(String),
+           download_url: expect.any(String)
+          })
+        })
       })
 
       it('When passed with valid token and recordId, should return record with same recordId', async () => {
@@ -100,10 +149,25 @@ describe('GTFS Pathways service', () => {
 
         expect(pathwayFiles.status).toBe(200);
         expect(pathwayFiles.data.length).toBe(1);
-        expect(pathwayFiles.data[0].tdei_record_id).toBe(recordId);
-
+        pathwayFiles.data.forEach(download => {
+          expect(download).toMatchObject(<GtfsPathwaysDownload>{
+            tdei_org_id: expect.any(String),
+            tdei_station_id: expect.any(String),
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            valid_from: expect.any(String),
+            valid_to: expect.any(String),
+            //TODO:
+           // confidence_level: expect.any(Number),
+           data_source: expect.any(String),
+           polygon: {},
+           tdei_record_id: '90d81b53e2e54abebd66986d2fdab169',
+           pathways_schema_version: expect.any(String),
+           download_url: expect.any(String)
+          })
+        })
       })
-
     })
 
     describe('Validation', ()=>{
@@ -208,7 +272,13 @@ describe('GTFS Pathways service', () => {
 
         expect(stations.status).toBe(200);
         expect(Array.isArray(stations.data)).toBe(true);
-        
+        stations.data.forEach(station => {
+          expect(station).toMatchObject(<Station>{
+            polygon: {},
+            station_name: expect.any(String),
+            tdei_station_id: expect.any(String)
+          })
+        })
       })
 
       it('When passed with valid token and orgId, should return the stations', async () =>{
@@ -218,6 +288,13 @@ describe('GTFS Pathways service', () => {
 
         expect(stations.status).toBe(200);
         expect(Array.isArray(stations.data)).toBe(true);
+        stations.data.forEach(station => {
+          expect(station).toMatchObject(<Station>{
+            polygon: {},
+            station_name: expect.any(String),
+            tdei_station_id: expect.any(String)
+          })
+        })
         
       })
 
@@ -264,6 +341,14 @@ describe('GTFS Pathways service', () => {
         let versions = await pathwaysAPI.listPathwaysVersions();
 
         expect(versions.status).toBe(200);
+        versions.data.versions?.forEach(version => {
+          expect(version).toMatchObject(<VersionSpec>{
+              version: expect.any(String),
+              documentation: expect.any(String),
+              specification: expect.any(String)
+          })
+      })
+
       })
     })
     describe('Validation', ()=>{
