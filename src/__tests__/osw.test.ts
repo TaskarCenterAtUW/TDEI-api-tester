@@ -115,7 +115,7 @@ describe('OSW service', () => {
         expect(oswFiles.status).toBe(200);
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
-            tdei_org_id: '5e339544-3b12-40a5-8acd-78c66d1fa981',
+            tdei_org_id: orgId,
             collected_by: expect.any(String),
             collection_date: expect.any(String),
             collection_method: expect.any(String),
@@ -156,7 +156,7 @@ describe('OSW service', () => {
           // confidence_level: expect.any(String),
           data_source: expect.any(String),
          polygon: expect.anything() as null | GeoJsonObject,
-          tdei_record_id: '978203eeac334bdeba262899fce1fd8a',
+          tdei_record_id: recordId,
           osw_schema_version: expect.any(String),
           download_url: expect.any(String)
           })

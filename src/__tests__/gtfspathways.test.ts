@@ -124,7 +124,7 @@ describe('GTFS Pathways service', () => {
         pathwayFiles.data.forEach(download => {
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
             tdei_org_id: expect.any(String),
-            tdei_station_id: '5e20eb06-a950-4a5d-a9ca-1e390a801b8a',
+            tdei_station_id: stationId,
             collected_by: expect.any(String),
             collection_date: expect.any(String),
             collection_method: expect.any(String),
@@ -163,7 +163,7 @@ describe('GTFS Pathways service', () => {
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
           polygon: expect.anything() as null | GeoJsonObject,
-           tdei_record_id: '90d81b53e2e54abebd66986d2fdab169',
+           tdei_record_id: recordId,
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
           })
