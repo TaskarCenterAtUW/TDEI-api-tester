@@ -115,7 +115,7 @@ describe('GTFS Flex service', ()=>{
                 expect(element).toMatchObject(<GtfsFlexDownload>{
                     tdei_record_id: expect.any(String),
                     tdei_org_id: expect.any(String),
-                    tdei_service_id: '801018f7-db32-4085-bbae-5339fa094cce',
+                    tdei_service_id: tdei_service_id,
                     collected_by: expect.any(String),
                     collection_date: expect.any(String),
                 collection_method: expect.any(String),
