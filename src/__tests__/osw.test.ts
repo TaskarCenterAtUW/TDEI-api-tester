@@ -1,4 +1,4 @@
-import { GeneralApi, OSWApi, OswDownload, OswUpload, VersionSpec } from "tdei-client";
+import { Feature, GeneralApi, GeoJsonObject, OSWApi, OswDownload, OswUpload, VersionSpec } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import path from "path";
@@ -68,7 +68,7 @@ describe('OSW service', () => {
          // publication_date: expect.any(String),
           // confidence_level: expect.any(String),
           data_source: expect.any(String),
-          polygon: {},
+         polygon: expect.anything() as null | GeoJsonObject,
           tdei_record_id: expect.any(String),
           osw_schema_version: expect.any(String),
           download_url: expect.any(String)
@@ -96,7 +96,7 @@ describe('OSW service', () => {
          // publication_date: expect.any(String),
           // confidence_level: expect.any(String),
           data_source: expect.any(String),
-          polygon: {},
+         polygon: expect.anything() as null | GeoJsonObject,
           tdei_record_id: expect.any(String),
           osw_schema_version: expect.any(String),
           download_url: expect.any(String)
@@ -125,7 +125,7 @@ describe('OSW service', () => {
          // publication_date: expect.any(String),
           // confidence_level: expect.any(String),
           data_source: expect.any(String),
-          polygon: {},
+         polygon: expect.anything() as null | GeoJsonObject,
           tdei_record_id: expect.any(String),
           osw_schema_version: expect.any(String),
           download_url: expect.any(String)
@@ -155,7 +155,7 @@ describe('OSW service', () => {
          // publication_date: expect.any(String),
           // confidence_level: expect.any(String),
           data_source: expect.any(String),
-          polygon: {},
+         polygon: expect.anything() as null | GeoJsonObject,
           tdei_record_id: '978203eeac334bdeba262899fce1fd8a',
           osw_schema_version: expect.any(String),
           download_url: expect.any(String)

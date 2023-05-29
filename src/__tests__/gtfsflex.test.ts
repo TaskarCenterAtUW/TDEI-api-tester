@@ -1,6 +1,6 @@
 
 
-import {  GeneralApi, GeoJsonObjectTypeEnum, GTFSFlexApi, GtfsFlexDownload, GtfsFlexDownloadCollectionMethodEnum, GtfsFlexDownloadDataSourceEnum, GtfsFlexServiceModel, GtfsFlexUpload, VersionSpec } from "tdei-client";
+import {  Feature, GeneralApi, GeoJsonObject, GeoJsonObjectTypeEnum, GTFSFlexApi, GtfsFlexDownload, GtfsFlexDownloadCollectionMethodEnum, GtfsFlexDownloadDataSourceEnum, GtfsFlexServiceModel, GtfsFlexUpload, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import path from "path";
@@ -74,7 +74,7 @@ describe('GTFS Flex service', ()=>{
                 data_source: expect.any(String),
                 //TODO:
               //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
-               polygon: {},
+               polygon: expect.anything() as null | GeoJsonObject,
                flex_schema_version: expect.any(String),
                download_url: expect.any(String)
                 })
@@ -128,7 +128,7 @@ describe('GTFS Flex service', ()=>{
                 data_source: expect.any(String),
                 //TODO:
               //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
-               polygon: {},
+              polygon: expect.anything() as null | GeoJsonObject,
                flex_schema_version: expect.any(String),
                download_url: expect.any(String)
                 })
@@ -163,7 +163,7 @@ describe('GTFS Flex service', ()=>{
                 data_source: expect.any(String),
                 //TODO:
               //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
-               polygon: {},
+              polygon: expect.anything() as null | GeoJsonObject,
                flex_schema_version: expect.any(String),
                download_url: expect.any(String)
                 })
@@ -262,7 +262,7 @@ describe('GTFS Flex service', ()=>{
                 expect(Array.isArray(services.data)).toBe(true);
                 services.data.forEach(element => {
                     expect(element).toMatchObject(<GtfsFlexServiceModel>{
-                        polygon: {},
+                       polygon: expect.anything() as null | GeoJsonObject,
                         service_name: expect.any(String),
                         tdei_service_id: expect.any(String)
                     })

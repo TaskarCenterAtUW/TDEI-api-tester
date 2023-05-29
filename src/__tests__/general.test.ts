@@ -102,7 +102,7 @@ describe("General service", () => {
           expect(data).toMatchObject(<Organization>{
             tdei_org_id: expect.any(String),
             org_name: expect.any(String),
-            polygon: {}
+            polygon: expect.anything()
           })
         })
       })
