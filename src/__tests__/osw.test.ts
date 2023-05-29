@@ -1,4 +1,4 @@
-import { GeneralApi, OSWApi, OswUpload } from "tdei-client";
+import { Feature, GeneralApi, GeoJsonObject, OSWApi, OswDownload, OswUpload, VersionSpec } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import path from "path";
@@ -56,6 +56,24 @@ describe('OSW service', () => {
 
         expect(oswFiles.status).toBe(200);
         expect(Array.isArray(oswFiles.data)).toBe(true);
+        oswFiles.data.forEach(file => {
+          expect(file).toMatchObject(<OswDownload>{
+            tdei_org_id: expect.any(String),
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            //TODO:
+           // collection_method: expect.any(OswDownloadCollectionMethodEnum),
+           //TODO:
+         // publication_date: expect.any(String),
+          // confidence_level: expect.any(String),
+          data_source: expect.any(String),
+         polygon: expect.anything() as null | GeoJsonObject,
+          tdei_record_id: expect.any(String),
+          osw_schema_version: expect.any(String),
+          download_url: expect.any(String)
+          })
+        })
       })
 
       it('When passed with valid token and page size, should return 200 status with files less than or equal to 5', async () =>{
@@ -66,6 +84,24 @@ describe('OSW service', () => {
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBeLessThanOrEqual(page_size);
+        oswFiles.data.forEach(file => {
+          expect(file).toMatchObject(<OswDownload>{
+            tdei_org_id: expect.any(String),
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            //TODO:
+           // collection_method: expect.any(OswDownloadCollectionMethodEnum),
+           //TODO:
+         // publication_date: expect.any(String),
+          // confidence_level: expect.any(String),
+          data_source: expect.any(String),
+         polygon: expect.anything() as null | GeoJsonObject,
+          tdei_record_id: expect.any(String),
+          osw_schema_version: expect.any(String),
+          download_url: expect.any(String)
+          })
+        })
 
       })
 
@@ -77,9 +113,24 @@ describe('OSW service', () => {
         const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,orgId);
 
         expect(oswFiles.status).toBe(200);
-        oswFiles.data.forEach(element => {
-          expect(element.tdei_org_id).toEqual(orgId);
-        });
+        oswFiles.data.forEach(file => {
+          expect(file).toMatchObject(<OswDownload>{
+            tdei_org_id: orgId,
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            //TODO:
+           // collection_method: expect.any(OswDownloadCollectionMethodEnum),
+           //TODO:
+         // publication_date: expect.any(String),
+          // confidence_level: expect.any(String),
+          data_source: expect.any(String),
+         polygon: expect.anything() as null | GeoJsonObject,
+          tdei_record_id: expect.any(String),
+          osw_schema_version: expect.any(String),
+          download_url: expect.any(String)
+          })
+        })
 
       })
 
@@ -92,7 +143,24 @@ describe('OSW service', () => {
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBe(1);
-        expect(oswFiles.data[0].tdei_record_id).toBe(recordId);
+        oswFiles.data.forEach(file => {
+          expect(file).toMatchObject(<OswDownload>{
+            tdei_org_id: expect.any(String),
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(String),
+            //TODO:
+           // collection_method: expect.any(OswDownloadCollectionMethodEnum),
+           //TODO:
+         // publication_date: expect.any(String),
+          // confidence_level: expect.any(String),
+          data_source: expect.any(String),
+         polygon: expect.anything() as null | GeoJsonObject,
+          tdei_record_id: recordId,
+          osw_schema_version: expect.any(String),
+          download_url: expect.any(String)
+          })
+        })
       })
 
     })
@@ -183,6 +251,15 @@ describe('OSW service', () => {
 
       expect(oswVersions.status).toBe(200);
       expect(Array.isArray(oswVersions.data.versions)).toBe(true);
+      oswVersions.data.versions?.forEach(version => {
+        expect(version).toMatchObject(<VersionSpec>{
+            version: expect.any(String),
+            documentation: expect.any(String),
+            specification: expect.any(String)
+        })
+    })
+      
+      
     })
 
     it('When passed without valid token, should respond with 401 status', async () =>{
