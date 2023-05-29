@@ -1,10 +1,11 @@
-import { GeneralApi, GtfsFlexDownload, GTFSPathwaysApi, GtfsPathwaysDownload, GtfsPathwaysUpload, Station, VersionSpec } from "tdei-client";
+import { Feature, GeneralApi, GeoJsonObject, GtfsFlexDownload, GTFSPathwaysApi, GtfsPathwaysDownload, GtfsPathwaysUpload, Station, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import path from "path";
 import * as fs from "fs";
 import { Seeder } from "../seeder";
 import AdmZip from "adm-zip";
+import exp from "constants";
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/tmp`;
 
@@ -74,7 +75,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-           polygon: {},
+          polygon: expect.anything() as null | GeoJsonObject,
            tdei_record_id: expect.any(String),
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -103,7 +104,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-           polygon: {},
+          polygon: expect.anything() as null | GeoJsonObject,
            tdei_record_id: expect.any(String),
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -132,7 +133,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-           polygon: {},
+          polygon: expect.anything() as null | GeoJsonObject,
            tdei_record_id: expect.any(String),
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -161,7 +162,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-           polygon: {},
+          polygon: expect.anything() as null | GeoJsonObject,
            tdei_record_id: '90d81b53e2e54abebd66986d2fdab169',
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -274,7 +275,7 @@ describe('GTFS Pathways service', () => {
         expect(Array.isArray(stations.data)).toBe(true);
         stations.data.forEach(station => {
           expect(station).toMatchObject(<Station>{
-            polygon: {},
+           polygon: expect.anything() as null | GeoJsonObject,
             station_name: expect.any(String),
             tdei_station_id: expect.any(String)
           })
@@ -290,7 +291,7 @@ describe('GTFS Pathways service', () => {
         expect(Array.isArray(stations.data)).toBe(true);
         stations.data.forEach(station => {
           expect(station).toMatchObject(<Station>{
-            polygon: {},
+           polygon: expect.anything() as null | GeoJsonObject,
             station_name: expect.any(String),
             tdei_station_id: expect.any(String)
           })
