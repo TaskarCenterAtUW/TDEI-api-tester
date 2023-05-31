@@ -8,6 +8,7 @@ import * as fs from "fs";
 import { Seeder } from "../seeder";
 import { version } from "os";
 import AdmZip from "adm-zip";
+import exp from "constants";
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/tmp`;
 
@@ -58,6 +59,7 @@ describe('GTFS Flex service', ()=>{
             expect(filesResponse.status).toBe(200)
             expect(Array.isArray(filesResponse.data)).toBe(true);
             filesResponse.data.forEach(element => {
+               expectPolygon(element.polygon);
                 expect(element).toMatchObject(<GtfsFlexDownload>{
                     tdei_record_id: expect.any(String),
                     tdei_org_id: expect.any(String),
@@ -74,7 +76,7 @@ describe('GTFS Flex service', ()=>{
                 data_source: expect.any(String),
                 //TODO:
               //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
-               polygon: expect.anything() as null | GeoJsonObject,
+               polygon: expect.any(Object || null),
                flex_schema_version: expect.any(String),
                download_url: expect.any(String)
                 })
@@ -112,6 +114,7 @@ describe('GTFS Flex service', ()=>{
             expect(files.status).toBe(200);
 
             files.data.forEach(element => {
+                expectPolygon(element.polygon);
                 expect(element).toMatchObject(<GtfsFlexDownload>{
                     tdei_record_id: expect.any(String),
                     tdei_org_id: expect.any(String),
@@ -128,7 +131,7 @@ describe('GTFS Flex service', ()=>{
                 data_source: expect.any(String),
                 //TODO:
               //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
-              polygon: expect.anything() as null | GeoJsonObject,
+              polygon: expect.any(Object || null),
                flex_schema_version: expect.any(String),
                download_url: expect.any(String)
                 })
@@ -147,6 +150,7 @@ describe('GTFS Flex service', ()=>{
             expect(files.status).toBe(200);
             expect(files.data.length).toBe(1);        
             files.data.forEach(element => {
+                expectPolygon(element.polygon);
                 expect(element).toMatchObject(<GtfsFlexDownload>{
                     tdei_record_id: tdei_record_id,
                     tdei_org_id: expect.any(String),
@@ -163,7 +167,7 @@ describe('GTFS Flex service', ()=>{
                 data_source: expect.any(String),
                 //TODO:
               //  data_source: expect.any(GtfsFlexDownloadDataSourceEnum),
-              polygon: expect.anything() as null | GeoJsonObject,
+              polygon: expect.any(Object || null),
                flex_schema_version: expect.any(String),
                download_url: expect.any(String)
                 })
@@ -261,8 +265,9 @@ describe('GTFS Flex service', ()=>{
                 expect(services.status).toBe(200);
                 expect(Array.isArray(services.data)).toBe(true);
                 services.data.forEach(element => {
+                    expectPolygon(element.polygon);
                     expect(element).toMatchObject(<GtfsFlexServiceModel>{
-                       polygon: expect.anything() as null | GeoJsonObject,
+                       polygon: expect.any(Object || null),
                         service_name: expect.any(String),
                         tdei_service_id: expect.any(String)
                     })
@@ -399,3 +404,12 @@ describe('GTFS Flex service', ()=>{
       })
 
 })
+
+function expectPolygon(polygon: any) {
+    if (polygon) {
+        var aPolygon = polygon as GeoJsonObject;
+        expect(typeof aPolygon.features).not.toBeNull();
+        expect(aPolygon.features?.length).toBeGreaterThan(0);
+
+    }
+}

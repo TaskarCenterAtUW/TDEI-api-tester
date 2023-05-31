@@ -64,6 +64,7 @@ describe('GTFS Pathways service', () => {
 
         expect(Array.isArray(pathwayFiles.data)).toBe(true);
         pathwayFiles.data.forEach(download => {
+          expectPolygon(download.polygon)
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
             tdei_org_id: expect.any(String),
             tdei_station_id: expect.any(String),
@@ -75,7 +76,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-          polygon: expect.anything() as null | GeoJsonObject,
+          polygon: expect.any(Object || null),
            tdei_record_id: expect.any(String),
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -93,6 +94,7 @@ describe('GTFS Pathways service', () => {
         expect(pathwayFiles.status).toBe(200)
         expect(pathwayFiles.data.length).toBeLessThanOrEqual(page_size)
         pathwayFiles.data.forEach(download => {
+          expectPolygon(download.polygon);
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
             tdei_org_id: expect.any(String),
             tdei_station_id: expect.any(String),
@@ -104,7 +106,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-          polygon: expect.anything() as null | GeoJsonObject,
+          polygon: expect.any(Object || null),
            tdei_record_id: expect.any(String),
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -122,6 +124,7 @@ describe('GTFS Pathways service', () => {
 
         expect(pathwayFiles.status).toBe(200);
         pathwayFiles.data.forEach(download => {
+          expectPolygon(download.polygon);
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
             tdei_org_id: expect.any(String),
             tdei_station_id: stationId,
@@ -133,7 +136,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-          polygon: expect.anything() as null | GeoJsonObject,
+          polygon: expect.any(Object || null),
            tdei_record_id: expect.any(String),
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -151,6 +154,7 @@ describe('GTFS Pathways service', () => {
         expect(pathwayFiles.status).toBe(200);
         expect(pathwayFiles.data.length).toBe(1);
         pathwayFiles.data.forEach(download => {
+          expectPolygon(download.polygon); 
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
             tdei_org_id: expect.any(String),
             tdei_station_id: expect.any(String),
@@ -162,7 +166,7 @@ describe('GTFS Pathways service', () => {
             //TODO:
            // confidence_level: expect.any(Number),
            data_source: expect.any(String),
-          polygon: expect.anything() as null | GeoJsonObject,
+          polygon: expect.any(Object || null),
            tdei_record_id: recordId,
            pathways_schema_version: expect.any(String),
            download_url: expect.any(String)
@@ -274,8 +278,9 @@ describe('GTFS Pathways service', () => {
         expect(stations.status).toBe(200);
         expect(Array.isArray(stations.data)).toBe(true);
         stations.data.forEach(station => {
+          expectPolygon(station.polygon);
           expect(station).toMatchObject(<Station>{
-           polygon: expect.anything() as null | GeoJsonObject,
+           polygon: expect.any(Object || null),
             station_name: expect.any(String),
             tdei_station_id: expect.any(String)
           })
@@ -290,8 +295,9 @@ describe('GTFS Pathways service', () => {
         expect(stations.status).toBe(200);
         expect(Array.isArray(stations.data)).toBe(true);
         stations.data.forEach(station => {
+          expectPolygon(station.polygon);
           expect(station).toMatchObject(<Station>{
-           polygon: expect.anything() as null | GeoJsonObject,
+           polygon: expect.any(Object || null),
             station_name: expect.any(String),
             tdei_station_id: expect.any(String)
           })
@@ -418,3 +424,12 @@ describe('GTFS Pathways service', () => {
   })
 
 })
+
+function expectPolygon(polygon: any) {
+  if (polygon) {
+      var aPolygon = polygon as GeoJsonObject;
+      expect(typeof aPolygon.features).not.toBeNull();
+      expect(aPolygon.features?.length).toBeGreaterThan(0);
+
+  }
+}
