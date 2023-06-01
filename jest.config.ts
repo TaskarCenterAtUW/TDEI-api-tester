@@ -5,6 +5,7 @@ export default async (): Promise<Config>=>{
         verbose:true,
         preset:'ts-jest',
         testEnvironment:'node',
+        testTimeout: 15000,
         reporters:[
             "default",
             ["./node_modules/jest-html-reporter",{

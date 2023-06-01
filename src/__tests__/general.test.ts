@@ -3,6 +3,7 @@ import { Utility } from "../utils";
 import { AxiosError } from "axios";
 import { isAxiosError } from "axios";
 import exp from "constants";
+import { type } from "os";
 
 
 describe("General service", () => {
@@ -102,7 +103,7 @@ describe("General service", () => {
           expect(data).toMatchObject(<Organization>{
             tdei_org_id: expect.any(String),
             org_name: expect.any(String),
-            polygon: expect.anything()
+            polygon: expect.any(Object || null)
           })
         })
       })
