@@ -14,7 +14,7 @@ import {
     OswUploadDataSourceEnum,
 } from "tdei-client";
 import config from "./test-harness.json";
-import {faker} from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 import path from "path";
 import * as fs from "fs";
 
@@ -31,7 +31,7 @@ export class Utility {
     }
 
     static addAuthZHeader(accessToken) {
-        return {Authorization: `Bearer ${accessToken}`};
+        return { Authorization: `Bearer ${accessToken}` };
     }
 
     static getRandomPolygon(): GeoJsonObject {
@@ -148,7 +148,7 @@ export class Utility {
     static getServiceUpload(orgId: string) {
         return {
             tdei_org_id: orgId,
-            service_name: `${faker.animal.cat()} Service`,
+            service_name: `${faker.company.name()} Service`,
             polygon: this.getRandomPolygon()
         }
     }
@@ -156,22 +156,22 @@ export class Utility {
     /**
      * All the file blob datas
      */
-    static getFlexBlob():Blob {
-        return this.getFileBlob('gtfs-flex','success_1_all_attrs.zip');
+    static getFlexBlob(): Blob {
+        return this.getFileBlob('gtfs-flex', 'success_1_all_attrs.zip');
     }
 
     static getPathwaysBlob(): Blob {
-        return this.getFileBlob('gtfs-pathways','success_1_all_attrs.zip');
+        return this.getFileBlob('gtfs-pathways', 'success_1_all_attrs.zip');
     }
-    
-    static getOSWBlob():Blob {
-        return this.getFileBlob('osw','valid.zip');
-    }
-    
 
-    static getFileBlob(directory:string,filename:string): Blob {
+    static getOSWBlob(): Blob {
+        return this.getFileBlob('osw', 'valid.zip');
+    }
+
+
+    static getFileBlob(directory: string, filename: string): Blob {
         let fileDir = path.dirname(__dirname);
-        let payloadFilePath = path.join(fileDir,"assets/payloads/"+directory+"/files/"+filename);
+        let payloadFilePath = path.join(fileDir, "assets/payloads/" + directory + "/files/" + filename);
         let filestream = fs.readFileSync(payloadFilePath);
         const blob = new Blob([filestream], { type: "application/zip" });
         return blob
