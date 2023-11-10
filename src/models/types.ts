@@ -13,7 +13,7 @@ interface Users {
 
 
 export interface SeedData {
-    tdei_org_id: string
+    tdei_project_group_id: string
     service_id: string
     station_id: string
     users: Users | {}

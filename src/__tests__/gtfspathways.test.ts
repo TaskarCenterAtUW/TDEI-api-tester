@@ -1,11 +1,9 @@
-import { AuthenticationApi, Feature, GeneralApi, GeoJsonObject, GtfsFlexDownload, GTFSPathwaysApi, GtfsPathwaysDownload, GtfsPathwaysUpload, Station, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeoJsonObject, GTFSPathwaysApi, GtfsPathwaysDownload, GtfsPathwaysUpload, Station, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
-import path from "path";
 import * as fs from "fs";
 import { Seeder } from "../seeder";
 import AdmZip from "adm-zip";
-import exp from "constants";
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/gtfs-pathways-tmp`;
 
@@ -66,7 +64,7 @@ describe('GTFS Pathways service', () => {
         pathwayFiles.data.forEach(download => {
           expectPolygon(download.polygon)
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_org_id: expect.any(String),
+            tdei_project_group_id: expect.any(String),
             tdei_station_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
@@ -96,7 +94,7 @@ describe('GTFS Pathways service', () => {
         pathwayFiles.data.forEach(download => {
           expectPolygon(download.polygon);
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_org_id: expect.any(String),
+            tdei_project_group_id: expect.any(String),
             tdei_station_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
@@ -126,7 +124,7 @@ describe('GTFS Pathways service', () => {
         pathwayFiles.data.forEach(download => {
           expectPolygon(download.polygon);
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_org_id: expect.any(String),
+            tdei_project_group_id: expect.any(String),
             tdei_station_id: stationId,
             collected_by: expect.any(String),
             collection_date: expect.any(String),
@@ -156,7 +154,7 @@ describe('GTFS Pathways service', () => {
         pathwayFiles.data.forEach(download => {
           expectPolygon(download.polygon);
           expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_org_id: expect.any(String),
+            tdei_project_group_id: expect.any(String),
             tdei_station_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
@@ -203,11 +201,11 @@ describe('GTFS Pathways service', () => {
   describe('Post Pathway File', () => {
     var stationId: string = '';
     //TODO: feed from seeder or configuration
-    const orgId = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+    const project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
 
     beforeAll(async () => {
       const seeder = new Seeder();
-      stationId = await seeder.createStation(orgId);
+      stationId = await seeder.createStation(project_group_id);
       seeder.removeHeader();
     })
 
@@ -217,7 +215,7 @@ describe('GTFS Pathways service', () => {
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
         let metaToUpload = Utility.getRandomPathwaysUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        metaToUpload.tdei_org_id = orgId;
+        metaToUpload.tdei_project_group_id = project_group_id;
         metaToUpload.tdei_station_id = stationId;
         let fileBlob = Utility.getPathwaysBlob();
 
@@ -235,7 +233,7 @@ describe('GTFS Pathways service', () => {
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
         let metaToUpload = Utility.getRandomPathwaysUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        metaToUpload.tdei_org_id = orgId;
+        metaToUpload.tdei_project_group_id = project_group_id;
         metaToUpload.tdei_station_id = stationId;
         metaToUpload.collection_date = "";
         let fileBlob = Utility.getPathwaysBlob();
@@ -252,7 +250,7 @@ describe('GTFS Pathways service', () => {
         let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
         let metaToUpload = Utility.getRandomPathwaysUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        metaToUpload.tdei_org_id = orgId;
+        metaToUpload.tdei_project_group_id = project_group_id;
         metaToUpload.tdei_station_id = stationId;
         let fileBlob = Utility.getPathwaysBlob();
 
@@ -267,7 +265,7 @@ describe('GTFS Pathways service', () => {
 
   describe('List stations', () => {
     //TODO: feed from seeder or configuration
-    const orgId = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+    const project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
     describe('Functional', () => {
 
       it('When passed with valid token, should return return 200 status with list of stations', async () => {
@@ -287,10 +285,10 @@ describe('GTFS Pathways service', () => {
         })
       })
 
-      it('When passed with valid token and orgId, should return the stations', async () => {
+      it('When passed with valid token and project_group_id, should return the stations', async () => {
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
 
-        let stations = await pathwaysAPI.listStations(orgId);
+        let stations = await pathwaysAPI.listStations(project_group_id);
 
         expect(stations.status).toBe(200);
         expect(Array.isArray(stations.data)).toBe(true);
@@ -326,11 +324,11 @@ describe('GTFS Pathways service', () => {
         await expect(stations).rejects.toMatchObject({ response: { status: 401 } });
       })
 
-      it('When passed with valid token and invalid orgId, should return 200 status with 0 stations', async () => {
-        let orgId = "dummyOrgID";
+      it('When passed with valid token and invalid project_group_id, should return 200 status with 0 stations', async () => {
+        let project_group_id = "dummyproject_group_id";
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
 
-        let stations = await pathwaysAPI.listStations(orgId);
+        let stations = await pathwaysAPI.listStations(project_group_id);
 
         expect(stations.status).toBe(200);
         expect(stations.data.length).toBe(0);

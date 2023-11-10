@@ -9,7 +9,7 @@
 
 # Testing with different credentials
 - If you are testing with different credentials, change the following variables in the collection variables payloads
-    - tdei_org_id
+    - tdei_project_group_id
     - station_id
     - service_id
     

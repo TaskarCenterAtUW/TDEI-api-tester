@@ -1,14 +1,11 @@
 
 
-import { AuthenticationApi, Feature, GeneralApi, GeoJsonObject, GeoJsonObjectTypeEnum, GTFSFlexApi, GtfsFlexDownload, GtfsFlexDownloadCollectionMethodEnum, GtfsFlexDownloadDataSourceEnum, GtfsFlexServiceModel, GtfsFlexUpload, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeoJsonObject, GTFSFlexApi, GtfsFlexDownload, GtfsFlexServiceModel, GtfsFlexUpload, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
-import path from "path";
 import * as fs from "fs";
 import { Seeder } from "../seeder";
-import { version } from "os";
 import AdmZip from "adm-zip";
-import exp from "constants";
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/gtfs-flex-tmp`;
 
@@ -62,7 +59,7 @@ describe('GTFS Flex service', () => {
                 expectPolygon(element.polygon);
                 expect(element).toMatchObject(<GtfsFlexDownload>{
                     tdei_record_id: expect.any(String),
-                    tdei_org_id: expect.any(String),
+                    tdei_project_group_id: expect.any(String),
                     tdei_service_id: expect.any(String),
                     collected_by: expect.any(String),
                     collection_date: expect.any(String),
@@ -117,7 +114,7 @@ describe('GTFS Flex service', () => {
                 expectPolygon(element.polygon);
                 expect(element).toMatchObject(<GtfsFlexDownload>{
                     tdei_record_id: expect.any(String),
-                    tdei_org_id: expect.any(String),
+                    tdei_project_group_id: expect.any(String),
                     tdei_service_id: tdei_service_id,
                     collected_by: expect.any(String),
                     collection_date: expect.any(String),
@@ -153,7 +150,7 @@ describe('GTFS Flex service', () => {
                 expectPolygon(element.polygon);
                 expect(element).toMatchObject(<GtfsFlexDownload>{
                     tdei_record_id: tdei_record_id,
-                    tdei_org_id: expect.any(String),
+                    tdei_project_group_id: expect.any(String),
                     tdei_service_id: expect.any(String),
                     collected_by: expect.any(String),
                     collection_date: expect.any(String),
@@ -207,7 +204,7 @@ describe('GTFS Flex service', () => {
                 const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
                 let metaToUpload = Utility.getRandomGtfsFlexUpload();
                 metaToUpload.tdei_service_id = serviceId;
-                metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
                 let fileBlob = Utility.getFlexBlob();
 
                 const uploadedFileResponse = await flexApi.uploadGtfsFlexFileForm(metaToUpload, fileBlob);
@@ -223,7 +220,7 @@ describe('GTFS Flex service', () => {
                 let flexApi = new GTFSFlexApi(configuration);
                 const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
                 let metaToUpload = Utility.getRandomGtfsFlexUpload();
-                metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
                 metaToUpload.data_source = <any>"Test";
                 let fileBlob = Utility.getFlexBlob();
 
@@ -241,7 +238,7 @@ describe('GTFS Flex service', () => {
                 const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
                 let metaToUpload = Utility.getRandomGtfsFlexUpload();
                 metaToUpload.tdei_service_id = serviceId;
-                metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
                 let fileBlob = Utility.getFlexBlob();
 
                 const uploadedFileResponse = flexApi.uploadGtfsFlexFileForm(metaToUpload, fileBlob);
@@ -274,23 +271,23 @@ describe('GTFS Flex service', () => {
                 })
             });
 
-            it('When passed with valid token and orgId, should return status 200 with list for same orgId', async () => {
+            it('When passed with valid token and project_group_id, should return status 200 with list for same project_group_id', async () => {
 
-                let orgId = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                let project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
                 let flexApi = new GTFSFlexApi(configuration);
 
-                const services = await flexApi.listFlexServices(orgId);
+                const services = await flexApi.listFlexServices(project_group_id);
 
                 expect(services.status).toBe(200);
                 expect(Array.isArray(services.data)).toBe(true);
             });
 
-            it('When passed with valid token and invalid orgId, should return status 200 with empty list', async () => {
+            it('When passed with valid token and invalid project_group_id, should return status 200 with empty list', async () => {
 
-                let orgId = 'dummyOrgId';
+                let project_group_id = 'dummyproject_group_id';
                 let flexApi = new GTFSFlexApi(configuration);
 
-                const services = await flexApi.listFlexServices(orgId);
+                const services = await flexApi.listFlexServices(project_group_id);
 
                 expect(services.status).toBe(200);
                 expect(services.data.length).toBe(0);
