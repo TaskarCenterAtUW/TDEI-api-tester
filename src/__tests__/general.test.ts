@@ -1,9 +1,5 @@
-import { AuthenticationApi, GeneralApi, Organization, RecordStatus, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeneralApi, RecordStatus, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
-import { AxiosError } from "axios";
-import { isAxiosError } from "axios";
-import exp from "constants";
-import { type } from "os";
 
 
 describe("General service", () => {
@@ -59,37 +55,37 @@ describe("General service", () => {
     });
   })
 
-  describe('List Organizations', () => {
+  describe('List ProjectGroups', () => {
 
     describe('Functional', () => {
 
-      it('When valid token provided, expect to return 200 status and list of organizations', async () => {
+      it('When valid token provided, expect to return 200 status and list of project groups', async () => {
         let generalAPI = new GeneralApi(configuration);
 
-        const orgList = await generalAPI.listOrganizations();
+        const projectGroupList = await generalAPI.listProjectGroups();
 
-        expect(orgList.status).toBe(200);
-        expect(Array.isArray(orgList.data)).toBe(true);
+        expect(projectGroupList.status).toBe(200);
+        expect(Array.isArray(projectGroupList.data)).toBe(true);
 
-        orgList.data.forEach(data => {
-          expect(data).toMatchObject(<Organization>{
-            tdei_org_id: expect.any(String),
-            org_name: expect.any(String),
+        projectGroupList.data.forEach(data => {
+          expect(data).toMatchObject(<any>{
+            tdei_project_group_id: expect.any(String),
+            project_group_name: expect.any(String),
             polygon: expect.any(Object || null)
           })
         })
       }, 30000)
 
-      //Commenting below test case, we cannot predict orgid to be present in list unless we filter by org_id. 
-      //Currently org_id filter is not defined as part of API spec, when introduced we can modify below test case
-      //by applying org_id filter and expect the desired output
+      //Commenting below test case, we cannot predict project_group_id to be present in list unless we filter by project_group_id. 
+      //Currently project_group_id filter is not defined as part of API spec, when introduced we can modify below test case
+      //by applying project_group_id filter and expect the desired output
 
-      // it('When valid token provided, expect to return 200 status and contain orgId that is predefined ', async () => {
+      // it('When valid token provided, expect to return 200 status and contain project_group_id that is predefined ', async () => {
       //   let generalAPI = new GeneralApi(configuration);
-      //   const orgList = await generalAPI.listOrganizations();
+      //   const projectGroupList = await generalAPI.listProjectGroups();
 
-      //   expect(orgList.status).toBe(200);
-      //   expect(orgList.data).toEqual(expect.arrayContaining([expect.objectContaining({ tdei_org_id: 'c552d5d1-0719-4647-b86d-6ae9b25327b7' })]));
+      //   expect(projectGroupList.status).toBe(200);
+      //   expect(projectGroupList.data).toEqual(expect.arrayContaining([expect.objectContaining({ tdei_project_group_id: 'c552d5d1-0719-4647-b86d-6ae9b25327b7' })]));
       // }, 30000)
     })
 
@@ -97,9 +93,9 @@ describe("General service", () => {
       it('When requested without token, it should return 401 status', async () => {
         let generalAPI = new GeneralApi(Utility.getConfiguration());
 
-        const orgList = generalAPI.listOrganizations();
+        const projectGroupList = generalAPI.listProjectGroups();
 
-        await expect(orgList).rejects.toMatchObject({ response: { status: 401 } });
+        await expect(projectGroupList).rejects.toMatchObject({ response: { status: 401 } });
 
       }, 30000)
     })

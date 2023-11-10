@@ -1,7 +1,6 @@
-import { AuthenticationApi, Feature, GeneralApi, GeoJsonObject, OSWApi, OswDownload, OswUpload, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeoJsonObject, OSWApi, OswDownload, OswUpload, VersionSpec } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
-import path from "path";
 import * as fs from "fs";
 import AdmZip from "adm-zip";
 
@@ -58,7 +57,7 @@ describe('OSW service', () => {
         expect(Array.isArray(oswFiles.data)).toBe(true);
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
-            tdei_org_id: expect.any(String),
+            tdei_project_group_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
             collection_method: expect.any(String),
@@ -86,7 +85,7 @@ describe('OSW service', () => {
         expect(oswFiles.data.length).toBeLessThanOrEqual(page_size);
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
-            tdei_org_id: expect.any(String),
+            tdei_project_group_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
             collection_method: expect.any(String),
@@ -105,17 +104,17 @@ describe('OSW service', () => {
 
       })
 
-      it('When passed with valid token and valid org ID, should return 200 status with files of the same org', async () => {
+      it('When passed with valid token and valid project group ID, should return 200 status with files of the same project group', async () => {
         let oswAPI = new OSWApi(configuration);
         //TODO: read from seeder or config
-        let orgId = '5e339544-3b12-40a5-8acd-78c66d1fa981';
+        let project_group_id = '5e339544-3b12-40a5-8acd-78c66d1fa981';
 
-        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, orgId);
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, project_group_id);
 
         expect(oswFiles.status).toBe(200);
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
-            tdei_org_id: orgId,
+            tdei_project_group_id: project_group_id,
             collected_by: expect.any(String),
             collection_date: expect.any(String),
             collection_method: expect.any(String),
@@ -145,7 +144,7 @@ describe('OSW service', () => {
         expect(oswFiles.data.length).toBe(1);
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
-            tdei_org_id: expect.any(String),
+            tdei_project_group_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
             collection_method: expect.any(String),
@@ -196,7 +195,7 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getRandomOswUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
         //TODO: feed from seeder or configuration
-        metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+        metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
         let fileBlob = Utility.getOSWBlob();
 
         const uploadedFileResponse = await oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
@@ -213,7 +212,7 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getRandomOswUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
         //TODO: feed from seeder or configuration
-        metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+        metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
         metaToUpload.collection_date = "";
         let fileBlob = Utility.getOSWBlob();
 
@@ -230,7 +229,7 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getRandomOswUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
         //TODO: feed from seeder or configuraiton
-        metaToUpload.tdei_org_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+        metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
         let fileBlob = Utility.getOSWBlob();
 
         const uploadedFileResponse = oswAPI.uploadOswFileForm(metaToUpload, fileBlob);

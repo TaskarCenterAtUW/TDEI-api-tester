@@ -74,7 +74,7 @@ export class Utility {
 
     static getRandomOswUpload(): OswUpload {
         return {
-            tdei_org_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
+            tdei_project_group_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
             collected_by: "Collector name",
             collection_date: "2023-03-03T02:22:45.374Z",
             collection_method: OswUploadCollectionMethodEnum.Manual,
@@ -88,7 +88,7 @@ export class Utility {
     static getRandomGtfsFlexUpload(): GtfsFlexUpload {
 
         return {
-            tdei_org_id: "0c29017c-f0b9-433e-ae13-556982f2520b",
+            tdei_project_group_id: "0c29017c-f0b9-433e-ae13-556982f2520b",
             tdei_service_id: "9066ad72-d044-4199-9f6c-b71f75ece7e8",
             collected_by: "test user",
             collection_date: "2023-03-03T02:22:45.374Z",
@@ -104,7 +104,7 @@ export class Utility {
     static getRandomPathwaysUpload(): GtfsPathwaysUpload {
 
         return {
-            tdei_org_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
+            tdei_project_group_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
             tdei_station_id: "472877cb-edb3-40d2-b0b4-d124b90e5cd1",
             collected_by: "testuser",
             collection_date: "2023-03-02T04:22:42.493Z",
@@ -117,9 +117,9 @@ export class Utility {
         };
     }
 
-    static getRandomOrganizationUpload() {
+    static getRandomProjectGroupUpload() {
         return {
-            org_name: faker.company.name(),
+            project_group_name: faker.company.name(),
             phone: faker.phone.number('###-###-####'),
             url: faker.internet.url(),
             address: `${faker.address.streetAddress()}, ${faker.address.stateAbbr()}, ${faker.address.country()}`,
@@ -137,17 +137,17 @@ export class Utility {
         }
     }
 
-    static getStationUpload(orgId: string) {
+    static getStationUpload(project_group_id: string) {
         return {
-            tdei_org_id: orgId,
+            tdei_project_group_id: project_group_id,
             station_name: `${faker.animal.dog()} Station`,
             polygon: this.getRandomPolygon()
         }
     }
 
-    static getServiceUpload(orgId: string) {
+    static getServiceUpload(project_group_id: string) {
         return {
-            tdei_org_id: orgId,
+            tdei_project_group_id: project_group_id,
             service_name: `${faker.company.name()} Service`,
             polygon: this.getRandomPolygon()
         }

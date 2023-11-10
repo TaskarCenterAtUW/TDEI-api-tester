@@ -50,10 +50,10 @@ describe('my-awesome-test', () => {
   some scripts that allow generation of users and other seed data required for testing.
 - Here are the requirements for seed data generation
 
-- Create an organization with random org data
+- Create an project group with random project group data
 - Create/register a user for POC role
 - Create a user for each role 
-- Assign the roles to the users for the generated organization
+- Assign the roles to the users for the generated project group
 - Create a pathways station
 - Create a flex service
 
@@ -69,7 +69,7 @@ The above seeder should generate all of this and respond with a json or object w
 		"pathwaydg":"<pathways data generator api key>",
 		"oswdg":"<osw data generator api key>"
 	},
-	"tdei_org_id":"<generated org ID>",
+	"tdei_project_group_id":"<generated project group ID>",
 	"station_id":"<generated station ID>",
 	"service_id":"<service ID>"
 }

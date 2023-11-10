@@ -1,6 +1,6 @@
-import {Utility} from './utils'
-import {SeedData} from './models/types'
-import axios, {AxiosInstance} from "axios";
+import { Utility } from './utils'
+import { SeedData } from './models/types'
+import axios, { AxiosInstance } from "axios";
 import config from "./test-harness.json";
 
 export class Seeder {
@@ -15,38 +15,38 @@ export class Seeder {
     public async seed(): Promise<{} | SeedData> {
         await this.client.login()
         let seedData = {}
-        const orgId = await this.client.createOrg()
-        console.info(`Created Organisation with ID: ${orgId}`)
-        seedData['tdei_org_id'] = orgId
-        const serviceId = await this.client.createService(orgId)
+        const project_group_id = await this.client.createProjectGroup()
+        console.info(`Created Project Group with ID: ${project_group_id}`)
+        seedData['tdei_project_group_id'] = project_group_id
+        const serviceId = await this.client.createService(project_group_id)
         console.info(`Created Service with ID: ${serviceId}`)
         seedData['service_id'] = serviceId
-        const stationId = await this.client.createStation(orgId)
+        const stationId = await this.client.createStation(project_group_id)
         seedData['station_id'] = stationId
         console.info(`Created Station with ID: ${stationId}`)
-        seedData['users'] = await this.createUsers(orgId)
+        seedData['users'] = await this.createUsers(project_group_id)
         return seedData
     }
 
-    public async createStation(orgId:string): Promise<string>{
+    public async createStation(project_group_id: string): Promise<string> {
         await this.client.login()
-        return this.client.createStation(orgId);
+        return this.client.createStation(project_group_id);
     }
 
-    public async createService(orgId:string): Promise<string> {
+    public async createService(project_group_id: string): Promise<string> {
         await this.client.login()
-        return this.client.createService(orgId);
+        return this.client.createService(project_group_id);
     }
 
-    public async removeHeader(){
+    public async removeHeader() {
         axios.defaults.headers.common.Authorization = null;
     }
 
-    private async createUsers(orgId): Promise<object> {
+    private async createUsers(project_group_id): Promise<object> {
         const users = {}
         for await (const role of this.roles) {
             const userDetails = await this.client.createUser()
-            await this.client.addPermission(orgId, userDetails.username, role)
+            await this.client.addPermission(project_group_id, userDetails.username, role)
             console.info(`Added ${role} permission to username: ${userDetails.username}`)
             users[role] = {
                 username: userDetails.username,
@@ -56,12 +56,12 @@ export class Seeder {
         return users
     }
 
-    public async deactivateOrg(orgId: string): Promise<boolean> {
-        return await this.client.activateOrDeactivateOrg(orgId, false)
+    public async deactivateProjectGroup(project_group_id: string): Promise<boolean> {
+        return await this.client.activateOrDeactivateProjectGroup(project_group_id, false)
     }
 
-    public async activateOrg(orgId: string): Promise<boolean> {
-        return await this.client.activateOrDeactivateOrg(orgId, true)
+    public async activateProjectGroup(project_group_id: string): Promise<boolean> {
+        return await this.client.activateOrDeactivateProjectGroup(project_group_id, true)
     }
 }
 
@@ -72,7 +72,7 @@ class APIUtility {
     constructor() {
         axios.defaults.baseURL = config.seed.baseUrl;
         this.instance = axios.create();
-        // console.log(Utility.getRandomOrganizationUpload())
+        // console.log(Utility.getRandomProjectGroupUpload())
     }
 
     async login(): Promise<void> {
@@ -92,12 +92,12 @@ class APIUtility {
         }
     }
 
-    async createOrg(): Promise<string> {
+    async createProjectGroup(): Promise<string> {
         try {
             const resp = await axios({
                 method: 'post',
-                url: '/api/v1/organization',
-                data: Utility.getRandomOrganizationUpload()
+                url: '/api/v1/project-group',
+                data: Utility.getRandomProjectGroupUpload()
             })
             return resp?.data?.data
         } catch (err: any) {
@@ -118,13 +118,13 @@ class APIUtility {
         }
     }
 
-    async addPermission(orgId: string, username: string, role: string): Promise<void> {
+    async addPermission(project_group_id: string, username: string, role: string): Promise<void> {
         try {
             const resp = await axios({
                 method: 'post',
                 url: '/api/v1/permission',
                 data: {
-                    tdei_org_id: orgId,
+                    tdei_project_group_id: project_group_id,
                     user_name: username,
                     roles: [role]
                 }
@@ -135,12 +135,12 @@ class APIUtility {
         }
     }
 
-    async createStation(orgId: string): Promise<string> {
+    async createStation(project_group_id: string): Promise<string> {
         try {
             const resp = await axios({
                 method: 'post',
                 url: '/api/v1/station',
-                data: Utility.getStationUpload(orgId)
+                data: Utility.getStationUpload(project_group_id)
             })
             return resp?.data?.data
         } catch (err: any) {
@@ -148,12 +148,12 @@ class APIUtility {
         }
     }
 
-    async createService(orgId: string): Promise<string> {
+    async createService(project_group_id: string): Promise<string> {
         try {
             const resp = await axios({
                 method: 'post',
                 url: '/api/v1/service',
-                data: Utility.getServiceUpload(orgId)
+                data: Utility.getServiceUpload(project_group_id)
             })
             return resp?.data?.data
         } catch (err: any) {
@@ -161,14 +161,14 @@ class APIUtility {
         }
     }
 
-    async activateOrDeactivateOrg(orgId: string, isActive: boolean): Promise<boolean> {
+    async activateOrDeactivateProjectGroup(project_group_id: string, isActive: boolean): Promise<boolean> {
         if (!axios.defaults.headers.common['Authorization']) {
             await this.login()
         }
         try {
             const resp = await axios({
                 method: 'delete',
-                url: `/api/v1/organization/${orgId}/active/${isActive}`,
+                url: `/api/v1/project-group/${project_group_id}/active/${isActive}`,
             })
             return resp?.data
         } catch (err: any) {

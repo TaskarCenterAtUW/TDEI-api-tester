@@ -1,44 +1,44 @@
 {
-    "tdei_org_id": "5e339544-3b12-40a5-8acd-78c66d1fa981",
-    "collected_by": "sfsd",
-    "collection_date": "2023-03-03T02:22:45.374Z",
-    "collection_method": "manual",
-    "publication_date": "2023-03-02T04:22:42.493Z",
-    "data_source": "InHouse",
-    "polygon": {
-        "type": "FeatureCollection",
-        "features": [
-          {
-            "type": "Feature",
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [
-                [
-                  [
-                    77.588807608,
-                    12.976222962
-                  ],
-                  [
-                    77.589285425,
-                    12.972094479
-                  ],
-                  [
-                    77.593012392,
-                    12.974608826
-                  ],
-                  [
-                    77.588839463,
-                    12.976254003
-                  ],
-                  [
-                    77.588807608,
-                    12.976222962
-                  ]
-                ]
+  "tdei_project_group_id": "5e339544-3b12-40a5-8acd-78c66d1fa981",
+  "collected_by": "sfsd",
+  "collection_date": "2023-03-03T02:22:45.374Z",
+  "collection_method": "manual",
+  "publication_date": "2023-03-02T04:22:42.493Z",
+  "data_source": "InHouse",
+  "polygon": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                77.588807608,
+                12.976222962
+              ],
+              [
+                77.589285425,
+                12.972094479
+              ],
+              [
+                77.593012392,
+                12.974608826
+              ],
+              [
+                77.588839463,
+                12.976254003
+              ],
+              [
+                77.588807608,
+                12.976222962
               ]
-            }
-          }
-        ]
-      },
-    "osw_schema_version": "v0.1"
-  }
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "osw_schema_version": "v0.1"
+}
