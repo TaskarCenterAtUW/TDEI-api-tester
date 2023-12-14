@@ -13,7 +13,7 @@ import {
     OswUploadCollectionMethodEnum,
     OswUploadDataSourceEnum,
 } from "tdei-client";
-import config from "./test-harness.json";
+import { environment } from "./environment/environment";
 import { faker } from '@faker-js/faker'
 import path from "path";
 import * as fs from "fs";
@@ -24,9 +24,9 @@ import * as fs from "fs";
 export class Utility {
     static getConfiguration(): Configuration {
         return new Configuration({
-            username: config.system.username,
-            password: config.system.password,
-            basePath: config.system.baseUrl
+            username: environment.system.username,
+            password: environment.system.password,
+            basePath: environment.system.baseUrl
         });
     }
 

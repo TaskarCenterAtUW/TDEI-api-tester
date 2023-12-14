@@ -1,8 +1,7 @@
 import { Utility } from './utils'
 import { SeedData } from './models/types'
 import axios, { AxiosInstance } from "axios";
-import config from "./test-harness.json";
-
+import { environment } from './environment/environment';
 export class Seeder {
     private client: APIUtility;
     private readonly roles: Array<string>
@@ -70,7 +69,7 @@ class APIUtility {
     private instance: AxiosInstance;
 
     constructor() {
-        axios.defaults.baseURL = config.seed.baseUrl;
+        axios.defaults.baseURL = environment.seed.baseUrl;
         this.instance = axios.create();
         // console.log(Utility.getRandomProjectGroupUpload())
     }
@@ -81,8 +80,8 @@ class APIUtility {
                 method: 'post',
                 url: '/api/v1/authenticate',
                 data: {
-                    username: config.seed.adminUser,
-                    password: config.seed.adminPassword
+                    username: environment.seed.adminUser,
+                    password: environment.seed.adminPassword
                 }
             })
             const accessToken = resp?.data?.access_token
