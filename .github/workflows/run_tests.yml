@@ -42,3 +42,16 @@ jobs:
 
       - name: Run unit test cases
         run : npm run test
+
+      - name: send email notification
+        uses: dawidd6/action-send-mail@V2
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: Tests failed for the new API Spec
+          to: rakeshd@gaussiansolutions.com,gs-tdei-coreteam@gaussiansolutions.com
+          from: Lets see
+          body: The unit tests failed. Please check the API Spec, the generated client and make necessary changes
+          attachments: test-report.html
