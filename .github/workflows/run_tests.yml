@@ -44,11 +44,12 @@ jobs:
         run : npm run test
 
       - name: send email notification
-        uses: devellany/send-mail@v1.0.2
+        if: always()
+        uses: dawidd6/action-send-mail@v2
         with:
           host: smtp.gmail.com
           server_port: 587
-          account: ${{ secrets.EMAIL_USER }}
+          username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           sender: Rakesh Sender
           subject: Tests failed for the new API Spec
