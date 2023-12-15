@@ -40,8 +40,8 @@ jobs:
         run: |
             echo "${{ secrets.ENV_FILE }}" > .env
 
-      #- name: Run unit test cases
-      #  run : npm run test
+      - name: Run unit test cases
+        run : npm run test
 
       - name: send email notification
         if: always()
@@ -51,7 +51,10 @@ jobs:
           server_port: 587
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: Tests failed for the new API Spec
-          to: rakeshd@gaussiansolutions.com
-          from: rakeshd@gaussiansolutions.com
-          body: The unit tests failed
+          subject: API testing with the modified OpenAPI spec has status - ${{ job.status }}
+          to: gs-tdei-coreteam@gaussiansolutions.com
+          cc: sureshd@gaussiansolutions.com
+          bcc: rakeshd@gaussiansolutions.com
+          from: Workflow Notification
+          body: API Tester Status attached
+          attachments: test-report.html
