@@ -1,14 +1,5 @@
----
-#################################
-#################################
-## Super Linter GitHub Actions ##
-#################################
-#################################
-name: Code Review
+name: run_api_tests
 
-#############################
-# Start the job on all push #
-#############################
 on:
   push:
     branches-ignore:
@@ -16,6 +7,8 @@ on:
     # Remove the line above to run when pushing to master
   pull_request:
     branches: [main, dev]
+  repository_dispatch:
+    types: [ run_api_tests ]
 
 ###############
 # Set the Job #
@@ -51,7 +44,7 @@ jobs:
           server_port: 587
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: API testing with the modified OpenAPI spec has status - ${{ job.status }}
+          subject: API testing with the modified OpenAPI spec status - ${{ job.status }}
           to: gs-tdei-coreteam@gaussiansolutions.com
           cc: sureshd@gaussiansolutions.com
           bcc: rakeshd@gaussiansolutions.com
