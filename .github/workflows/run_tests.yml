@@ -51,6 +51,6 @@ jobs:
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: Tests failed for the new API Spec
-          to: rakeshd@gaussiansolutions.com,gs-tdei-coreteam@gaussiansolutions.com
+          to: rakeshd@gaussiansolutions.com
           from: rakeshd@gaussiansolutions.com
-          body: The unit tests failed. Please check the API Spec, the generated client and make necessary changes
+          body: The unit tests failed
