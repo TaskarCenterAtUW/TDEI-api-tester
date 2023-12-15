@@ -1,0 +1,53 @@
+name: run_api_tests
+
+on:
+  push:
+    branches-ignore:
+      - '**'
+    # Remove the line above to run when pushing to master
+  pull_request:
+    branches: [main, dev]
+  repository_dispatch:
+    types: [ run_api_tests ]
+
+###############
+# Set the Job #
+###############
+jobs:
+  UnitTest:
+    name: Unit Test Cases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          # Full git history is needed to get a proper
+          # list of changed files within `super-linter`
+          fetch-depth: 0
+
+      - name: Install npm dependencies
+        run : npm install
+
+      - name: Create env file
+        run: |
+            echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Run unit test cases
+        run : npm run test
+
+      - name: send email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: API testing with the modified OpenAPI spec status - ${{ job.status }}
+          to: gs-tdei-coreteam@gaussiansolutions.com
+          cc: sureshd@gaussiansolutions.com
+          bcc: rakeshd@gaussiansolutions.com
+          from: Workflow Notification
+          body: API Tester Status attached
+          attachments: test-report.html
