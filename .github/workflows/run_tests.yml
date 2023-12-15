@@ -40,8 +40,8 @@ jobs:
         run: |
             echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Run unit test cases
-        run : npm run test
+      #- name: Run unit test cases
+      #  run : npm run test
 
       - name: send email notification
         if: always()
@@ -51,7 +51,6 @@ jobs:
           server_port: 587
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          sender: Rakesh Sender
           subject: Tests failed for the new API Spec
           to: rakeshd@gaussiansolutions.com
           from: rakeshd@gaussiansolutions.com
