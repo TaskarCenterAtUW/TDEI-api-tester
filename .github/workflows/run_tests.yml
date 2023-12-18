@@ -44,7 +44,7 @@ jobs:
           server_port: 587
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: API testing with the modified OpenAPI spec status - ${{ job.status }}
+          subject: ${{ job.status }} - API testing with the modified OpenAPI spec status
           to: gs-tdei-coreteam@gaussiansolutions.com
           cc: sureshd@gaussiansolutions.com
           bcc: rakeshd@gaussiansolutions.com
