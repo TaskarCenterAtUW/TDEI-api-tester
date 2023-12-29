@@ -1,4 +1,4 @@
-import { AuthenticationApi, GeoJsonObject, OSWApi, OswDownload, OswDownloadStatusEnum, OswUpload, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeoJsonObject, OSWApi, OswDownload, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OswUpload, VersionSpec } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import * as fs from "fs";
@@ -57,19 +57,20 @@ describe('OSW service', () => {
 
         expect(Array.isArray(oswFiles.data)).toBe(true);
         oswFiles.data.forEach(file => {
-          // expect(file).toMatchObject(<OswDownload>{
-          //   tdei_project_group_id: expect.any(String),
-          //   collected_by: expect.any(String),
-          //   collection_date: expect.any(String),
-          //   collection_method: expect.any(String),
-          //   status:expect.any(OswDownloadStatusEnum),
-            
-          //   data_source: expect.any(String),
-          //   polygon: expect.anything() as null | GeoJsonObject,
-          //   tdei_record_id: expect.any(String),
-          //   osw_schema_version: expect.any(String),
-          //   download_url: expect.any(String)
-          // })
+          expect(file).toMatchObject(<OswDownload>{
+            tdei_project_group_id: expect.any(String),
+            collected_by: expect.any(String),
+            collection_date: expect.any(String),
+            collection_method: expect.any(OswDownloadCollectionMethodEnum),
+            publication_date: expect.any(String),
+            confidence_level: expect.any(Number),
+            data_source: expect.any(OswDownloadDataSourceEnum),
+            polygon: expect.anything() as null | GeoJsonObject,
+            tdei_record_id: expect.any(String),
+            osw_schema_version: expect.any(String),
+            download_url: expect.any(String)
+          })
+          
           expect(file).toMatchObject(<OswDownload>{
             tdei_project_group_id: expect.any(String),
             
