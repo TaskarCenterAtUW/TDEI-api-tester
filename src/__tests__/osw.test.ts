@@ -1,4 +1,4 @@
-import { AuthenticationApi, GeoJsonObject, OSWApi, OswDownload, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OswDownloadStatusEnum, OswUpload, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeoJsonObject, GeoJsonObjectTypeEnum, OSWApi, OswDownload, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OswDownloadStatusEnum, OswUpload, VersionSpec } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import * as fs from "fs";
@@ -73,7 +73,7 @@ describe('OSW service', () => {
             valid_to: expect.any(String),
             confidence_level: expect.any(Number),
             data_source: expect.any(OswDownloadDataSourceEnum),
-            dataset_area: expect.anything() as null | GeoJsonObject,
+            dataset_area: expect.objectContaining({}),
             tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)   
@@ -105,7 +105,7 @@ describe('OSW service', () => {
             valid_to: expect.any(String),
             confidence_level: expect.any(Number),
             data_source: expect.any(OswDownloadDataSourceEnum),
-            dataset_area: expect.anything() as null | GeoJsonObject,
+            dataset_area: expect.objectContaining({}),
             tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)  
@@ -139,7 +139,7 @@ describe('OSW service', () => {
             valid_to: expect.any(String),
             confidence_level: expect.any(Number),
             data_source: expect.any(OswDownloadDataSourceEnum),
-            dataset_area: expect.anything() as null | GeoJsonObject,
+            dataset_area: expect.objectContaining({}),
             tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)  
@@ -174,7 +174,7 @@ describe('OSW service', () => {
             valid_to: expect.any(String),
             confidence_level: expect.any(Number),
             data_source: expect.any(OswDownloadDataSourceEnum),
-            dataset_area: expect.anything() as null | GeoJsonObject,
+            dataset_area: expect.objectContaining({}),
             tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)  
@@ -262,6 +262,7 @@ describe('OSW service', () => {
 
     })
   })
+
   describe('List OSW Versions', () => {
     it('When passed with valid token, should respond with 200 status', async () => {
       let oswAPI = new OSWApi(configuration);
