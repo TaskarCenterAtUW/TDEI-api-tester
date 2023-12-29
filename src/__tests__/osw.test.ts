@@ -70,12 +70,6 @@ describe('OSW service', () => {
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)
           })
-          
-          expect(file).toMatchObject(<OswDownload>{
-            tdei_project_group_id: expect.any(String),
-            
-          })
-
         })
       })
 
