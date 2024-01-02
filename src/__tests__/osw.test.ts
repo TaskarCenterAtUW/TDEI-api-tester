@@ -84,7 +84,7 @@ describe('OSW service', () => {
         let oswAPI = new OSWApi(configuration);
         let page_size = 5;
 
-        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, page_size);
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, String(page_size));
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBeLessThanOrEqual(page_size);
