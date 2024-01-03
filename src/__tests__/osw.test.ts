@@ -280,7 +280,7 @@ describe('OSW service', () => {
       let oswAPI = new OSWApi(configuration);
 
       let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
-      let publishOswResponse = await oswAPI.publishOswFile(tdei_record_id);
+      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
 
       await expect(publishOswResponse).rejects.toMatchObject({response: {status: 400}});
     })
