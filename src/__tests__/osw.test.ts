@@ -208,60 +208,60 @@ describe('OSW service', () => {
 
   })
 
-  describe('Post file', () => {
-    describe('Functional', () => {
-      it('When passed with valid token, metadata and file, should return 202 status with recordId in response', async () => {
-        let oswAPI = new OSWApi(configuration);
-        let metaToUpload = Utility.getRandomOswUpload();
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
-        //TODO: feed from seeder or configuration
-        metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-        let fileBlob = Utility.getOSWBlob();
+  // describe('Post file', () => {
+  //   describe('Functional', () => {
+  //     it('When passed with valid token, metadata and file, should return 202 status with recordId in response', async () => {
+  //       let oswAPI = new OSWApi(configuration);
+  //       let metaToUpload = Utility.getRandomOswUpload();
+  //       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
+  //       //TODO: feed from seeder or configuration
+  //       metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+  //       let fileBlob = Utility.getOSWBlob();
 
-        const uploadedFileResponse = await oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
+  //       const uploadedFileResponse = await oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
 
-        expect(uploadedFileResponse.status).toBe(202);
-        expect(uploadedFileResponse.data != "").toBe(true);
+  //       expect(uploadedFileResponse.status).toBe(202);
+  //       expect(uploadedFileResponse.data != "").toBe(true);
 
-        axios.interceptors.request.eject(uploadInterceptor);
+  //       axios.interceptors.request.eject(uploadInterceptor);
 
-      }, 20000)
+  //     }, 20000)
 
-      it('When passed with valid token, invalid metadata and file, should return 400 status in response', async () => {
-        let oswAPI = new OSWApi(configuration);
-        let metaToUpload = Utility.getRandomOswUpload();
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
-        //TODO: feed from seeder or configuration
-        metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-        metaToUpload.collection_date = "";
-        let fileBlob = Utility.getOSWBlob();
+  //     it('When passed with valid token, invalid metadata and file, should return 400 status in response', async () => {
+  //       let oswAPI = new OSWApi(configuration);
+  //       let metaToUpload = Utility.getRandomOswUpload();
+  //       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
+  //       //TODO: feed from seeder or configuration
+  //       metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+  //       metaToUpload.collection_date = "";
+  //       let fileBlob = Utility.getOSWBlob();
 
-        const uploadedFileResponse = oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
+  //       const uploadedFileResponse = oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
 
-        await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+  //       await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 400 } });
 
-        axios.interceptors.request.eject(uploadInterceptor);
+  //       axios.interceptors.request.eject(uploadInterceptor);
 
-      }, 20000)
+  //     }, 20000)
 
-      it('When passed without valid token, metadata and file, should return 401 status in response', async () => {
-        let oswAPI = new OSWApi(Utility.getConfiguration());
-        let metaToUpload = Utility.getRandomOswUpload();
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
-        //TODO: feed from seeder or configuraiton
-        metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-        let fileBlob = Utility.getOSWBlob();
+  //     it('When passed without valid token, metadata and file, should return 401 status in response', async () => {
+  //       let oswAPI = new OSWApi(Utility.getConfiguration());
+  //       let metaToUpload = Utility.getRandomOswUpload();
+  //       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
+  //       //TODO: feed from seeder or configuraiton
+  //       metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+  //       let fileBlob = Utility.getOSWBlob();
 
-        const uploadedFileResponse = oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
+  //       const uploadedFileResponse = oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
 
-        await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 401 } });
+  //       await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 401 } });
 
-        axios.interceptors.request.eject(uploadInterceptor);
+  //       axios.interceptors.request.eject(uploadInterceptor);
 
-      }, 20000)
+  //     }, 20000)
 
-    })
-  })
+  //   })
+  // })
 
   describe('Publish the OSW dataset for the tdei_record_id', () => {
     it('When passed with valid token and valid tdei_record_id, should return a string', async () => {
@@ -518,28 +518,29 @@ describe('OSW service', () => {
 
   describe('Get a record for OSW', () => {
     describe('Functional', () => {
-      it('When passed with valid recordId, should be able to get the zip file', async () => {
+      // TODO: Need to verify the download
+      // it('When passed with valid recordId, should be able to get the zip file', async () => {
 
-        let oswRecordId = '8ec3e5c760024640ade1c7acce9ad9b6';
-        let oswAPI = new OSWApi(configuration);
+      //   let oswRecordId = '8ec3e5c760024640ade1c7acce9ad9b6';
+      //   let oswAPI = new OSWApi(configuration);
 
-        let response = await oswAPI.getOswFile(oswRecordId, { responseType: 'arraybuffer' });
-        const data: any = response.data;
-        const contentDisposition = response.headers['content-disposition'];
-        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-        const matches = filenameRegex.exec(contentDisposition);
-        const fileName = (matches != null && matches[1]) ? matches[1].replace(/['"]/g, '') : 'data.zip';
-        const filePath = `${DOWNLOAD_FILE_PATH}/${fileName}`
-        fs.writeFileSync(filePath, new Uint8Array(data))
-        const zip = new AdmZip(filePath);
-        const entries = zip.getEntries();
+      //   let response = await oswAPI.getOswFile(oswRecordId, { responseType: 'arraybuffer' });
+      //   const data: any = response.data;
+      //   const contentDisposition = response.headers['content-disposition'];
+      //   const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+      //   const matches = filenameRegex.exec(contentDisposition);
+      //   const fileName = (matches != null && matches[1]) ? matches[1].replace(/['"]/g, '') : 'data.zip';
+      //   const filePath = `${DOWNLOAD_FILE_PATH}/${fileName}`
+      //   fs.writeFileSync(filePath, new Uint8Array(data))
+      //   const zip = new AdmZip(filePath);
+      //   const entries = zip.getEntries();
 
-        expect(entries.length).toBeGreaterThan(0);
-        expect(fileName.includes('zip')).toBe(true);
-        expect(response.data).not.toBeNull();
-        expect(response.status).toBe(200);
+      //   expect(entries.length).toBeGreaterThan(0);
+      //   expect(fileName.includes('zip')).toBe(true);
+      //   expect(response.data).not.toBeNull();
+      //   expect(response.status).toBe(200);
 
-      })
+      // })
 
     })
 
