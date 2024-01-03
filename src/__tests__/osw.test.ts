@@ -1,4 +1,4 @@
-import { AuthenticationApi, GeoJsonObject, OSWApi, OswDownload, OswDownloadStatusEnum, OswUpload, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeoJsonObject, OSWApi, OswDownload, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OswDownloadStatusEnum, OswUpload, VersionSpec } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import * as fs from "fs";
@@ -83,22 +83,27 @@ describe('OSW service', () => {
         let page_size = 5;
 
         const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, page_size);
-
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBeLessThanOrEqual(page_size);
         oswFiles.data.forEach(file => {
+          const result = createInstance();
           expect(file).toMatchObject(<OswDownload>{
+            status: expect.any(OswDownloadStatusEnum),
+            name: expect.any(String),
+            description: expect.any(String),
+            version: expect.any(String),
+            derived_from_dataset_id: expect.any(String),
+            custom_metadata: expect(result).toEqual(expect.any(Object)),
+            uploaded_timestamp:  expect.any(String),
             tdei_project_group_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
-            collection_method: expect.any(String),
-            //TODO:
-            // collection_method: expect.any(OswDownloadCollectionMethodEnum),
-            //TODO:
-            // publication_date: expect.any(String),
-            // confidence_level: expect.any(String),
-            data_source: expect.any(String),
-            polygon: expect.anything() as null | GeoJsonObject,
+            collection_method: expect.any(OswDownloadCollectionMethodEnum),
+            valid_from : expect.any(String),
+            valid_to : expect.any(String),
+            confidence_level : expect.any(Number),
+            data_source : expect.any(OswDownloadDataSourceEnum),
+            dataset_area : expect.anything() as null | GeoJsonObject,
             tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)
@@ -117,17 +122,22 @@ describe('OSW service', () => {
         expect(oswFiles.status).toBe(200);
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
-            tdei_project_group_id: project_group_id,
+            status: expect.any(OswDownloadStatusEnum),
+            name: expect.any(String),
+            description: expect.any(String),
+            version: expect.any(String),
+            derived_from_dataset_id: expect.any(String),
+            custom_metadata: expect.anything(),
+            uploaded_timestamp:  expect.any(String),
+            tdei_project_group_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
-            collection_method: expect.any(String),
-            //TODO:
-            // collection_method: expect.any(OswDownloadCollectionMethodEnum),
-            //TODO:
-            // publication_date: expect.any(String),
-            // confidence_level: expect.any(String),
-            data_source: expect.any(String),
-            polygon: expect.anything() as null | GeoJsonObject,
+            collection_method: expect.any(OswDownloadCollectionMethodEnum),
+            valid_from : expect.any(String),
+            valid_to : expect.any(String),
+            confidence_level : expect.any(Number),
+            data_source : expect.any(OswDownloadDataSourceEnum),
+            dataset_area : expect.anything() as null | GeoJsonObject,
             tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)
@@ -147,18 +157,22 @@ describe('OSW service', () => {
         expect(oswFiles.data.length).toBe(1);
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
+            status: expect.any(OswDownloadStatusEnum),
+            name: expect.any(String),
+            description: expect.any(String),
+            version: expect.any(String),
+            custom_metadata: expect.anything(),
+            uploaded_timestamp:  expect.any(String),
             tdei_project_group_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
-            collection_method: expect.any(String),
-            //TODO:
-            // collection_method: expect.any(OswDownloadCollectionMethodEnum),
-            //TODO:
-            // publication_date: expect.any(String),
-            // confidence_level: expect.any(String),
-            data_source: expect.any(String),
-            polygon: expect.anything() as null | GeoJsonObject,
-            tdei_record_id: recordId,
+            collection_method: expect.any(OswDownloadCollectionMethodEnum),
+            valid_from : expect.any(String),
+            valid_to : expect.any(String),
+            confidence_level : expect.any(Number),
+            data_source : expect.any(OswDownloadDataSourceEnum),
+            dataset_area : expect.anything() as null | GeoJsonObject,
+            tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
             download_url: expect.any(String)
           })
@@ -198,7 +212,7 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getRandomOswUpload();
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
         //TODO: feed from seeder or configuration
-        metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+        // metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
         let fileBlob = Utility.getOSWBlob();
 
         const uploadedFileResponse = await oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
@@ -328,3 +342,7 @@ describe('OSW service', () => {
   })
 
 })
+function createInstance() {
+  throw new Error("Function not implemented.");
+}
+
