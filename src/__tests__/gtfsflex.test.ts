@@ -1,6 +1,6 @@
 
 
-import { AuthenticationApi, GeoJsonObject, GTFSFlexApi, GtfsFlexDownload, GtfsFlexServiceModel, GtfsFlexUpload, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GeoJsonObject, GTFSFlexApi, GtfsFlexDownload, GtfsFlexUpload, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import * as fs from "fs";
@@ -250,72 +250,73 @@ describe('GTFS Flex service', () => {
         })
     })
 
-    describe('List services', () => {
+    // service is no longer available.
+    // describe('List services', () => {
 
-        describe('Functional', () => {
-            it('When passed with valid token, should return status 200 with list of services', async () => {
+    //     describe('Functional', () => {
+    //         it('When passed with valid token, should return status 200 with list of services', async () => {
 
-                let flexApi = new GTFSFlexApi(configuration);
+    //             let flexApi = new GTFSFlexApi(configuration);
 
-                const services = await flexApi.listFlexServices();
+    //             const services = await flexApi.listFlexServices();
 
-                expect(services.status).toBe(200);
-                expect(Array.isArray(services.data)).toBe(true);
-                services.data.forEach(element => {
-                    expectPolygon(element.polygon);
-                    expect(element).toMatchObject(<GtfsFlexServiceModel>{
-                        polygon: expect.any(Object || null),
-                        service_name: expect.any(String),
-                        tdei_service_id: expect.any(String)
-                    })
-                })
-            });
+    //             expect(services.status).toBe(200);
+    //             expect(Array.isArray(services.data)).toBe(true);
+    //             services.data.forEach(element => {
+    //                 expectPolygon(element.polygon);
+    //                 expect(element).toMatchObject(<GtfsFlexServiceModel>{
+    //                     polygon: expect.any(Object || null),
+    //                     service_name: expect.any(String),
+    //                     tdei_service_id: expect.any(String)
+    //                 })
+    //             })
+    //         });
 
-            it('When passed with valid token and project_group_id, should return status 200 with list for same project_group_id', async () => {
+    //         it('When passed with valid token and project_group_id, should return status 200 with list for same project_group_id', async () => {
 
-                let project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-                let flexApi = new GTFSFlexApi(configuration);
+    //             let project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+    //             let flexApi = new GTFSFlexApi(configuration);
 
-                const services = await flexApi.listFlexServices(project_group_id);
+    //             const services = await flexApi.listFlexServices(project_group_id); // Sunsetted API
 
-                expect(services.status).toBe(200);
-                expect(Array.isArray(services.data)).toBe(true);
-            });
+    //             expect(services.status).toBe(200);
+    //             expect(Array.isArray(services.data)).toBe(true);
+    //         });
 
-            it('When passed with valid token and invalid project_group_id, should return status 200 with empty list', async () => {
+    //         it('When passed with valid token and invalid project_group_id, should return status 200 with empty list', async () => {
 
-                let project_group_id = 'dummyproject_group_id';
-                let flexApi = new GTFSFlexApi(configuration);
+    //             let project_group_id = 'dummyproject_group_id';
+    //             let flexApi = new GTFSFlexApi(configuration);
 
-                const services = await flexApi.listFlexServices(project_group_id);
+    //             const services = await flexApi.listFlexServices(project_group_id);
 
-                expect(services.status).toBe(200);
-                expect(services.data.length).toBe(0);
-            });
+    //             expect(services.status).toBe(200);
+    //             expect(services.data.length).toBe(0);
+    //         });
 
-            it('When passed with valid token and page limit, should return status 200 with list less than or equal', async () => {
-                let page_size = 5;
-                let flexApi = new GTFSFlexApi(configuration);
+    //         it('When passed with valid token and page limit, should return status 200 with list less than or equal', async () => {
+    //             let page_size = 5;
+    //             let flexApi = new GTFSFlexApi(configuration);
 
-                const services = await flexApi.listFlexServices(undefined, undefined, page_size);
+    //             const services = await flexApi.listFlexServices(undefined, undefined, page_size);
 
-                expect(services.status).toBe(200);
-                expect(Array.isArray(services.data)).toBe(true);
-                expect(services.data.length).toBeLessThanOrEqual(page_size);
-            });
+    //             expect(services.status).toBe(200);
+    //             expect(Array.isArray(services.data)).toBe(true);
+    //             expect(services.data.length).toBeLessThanOrEqual(page_size);
+    //         });
 
-            it('When passed with invalid token, should return 401 status', async () => {
+    //         it('When passed with invalid token, should return 401 status', async () => {
 
-                let flexApi = new GTFSFlexApi(Utility.getConfiguration());
+    //             let flexApi = new GTFSFlexApi(Utility.getConfiguration());
 
-                const services = flexApi.listFlexServices();
+    //             const services = flexApi.listFlexServices();
 
-                await expect(services).rejects.toMatchObject({ response: { status: 401 } });
-            });
+    //             await expect(services).rejects.toMatchObject({ response: { status: 401 } });
+    //         });
 
 
-        })
-    })
+    //     })
+    // })
 
     describe('List Flex versions', () => {
         describe('Functional', () => {
