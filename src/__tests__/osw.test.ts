@@ -46,6 +46,230 @@ describe('OSW service', () => {
     fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
   })
 
+
+  describe('Publish the OSW dataset for the tdei_record_id', () => {
+    it('When passed with valid token and valid tdei_record_id, should return a string', async () => {
+
+      let oswAPI = new OSWApi(configuration);
+
+      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
+      let publishOsw = await oswAPI.publishOswFile(tdei_record_id);
+      
+      expect(publishOsw.status).toBe(202);
+      expect(publishOsw).toBe(String);
+    })
+
+    it('When passed with already published tdei_record_id, should respond with 400 status', async () => {
+
+      let oswAPI = new OSWApi(configuration);
+
+      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
+      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
+
+      await expect(publishOswResponse).rejects.toMatchObject({response: {status: 400}});
+    })
+
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
+      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
+      
+      await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 401 } });
+    })
+  })
+
+  describe('Calculate Confidence', () => {
+    
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let tdei_record_id = "1";
+      let calculateConfidenceResponse = oswAPI.oswConfidenceCalculate({tdei_record_id: tdei_record_id});
+
+      await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 401 }});
+    })
+
+    it('When passed with invalid tdei_record_id, should respond with 404 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let tdei_record_id = "1";
+      let calculateConfidence = oswAPI.oswConfidenceCalculate({ tdei_record_id: tdei_record_id});
+
+      await expect(calculateConfidence).rejects.toMatchObject({ response: { status: 404 } });
+    })
+
+    it('When passed with valid token, should respond with 202 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let tdei_record_id = "1";
+
+      let calculateConfidence = await oswAPI.oswConfidenceCalculate({tdei_record_id: tdei_record_id});
+
+      expect(calculateConfidence.status).toBe(202);
+      
+      expect(calculateConfidence.data).toMatchObject(<OSWConfidenceResponse>{
+        tdei_record_id: expect.any(String),
+        job_id: expect.any(Number)
+      })
+    })
+  })
+
+  describe('Confidence Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let job_id = "1";
+      let confidenceStatusResponse = oswAPI.getOSWConfidenceStatus(job_id);
+
+      await expect(confidenceStatusResponse).rejects.toMatchObject({response: { status: 401 }});
+    })
+
+    it('When passed with valid token and valid job id, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let job_id = "1";
+
+      let confidenceStatus = await oswAPI.getOSWConfidenceStatus(job_id);
+
+      expect(confidenceStatus.status).toBe(200);
+      
+      expect(confidenceStatus.data).toMatchObject(<OSWConfidenceStatus>{
+        job_id: expect.any(String),
+        confidenceValue: expect.any(Number),
+        updatedAt: expect.any(String),
+        status: expect.any(String),
+        message: expect.any(String)    
+      })
+    })
+  })
+
+  describe('Fetch Format Request Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let job_id = "1";
+
+      let formatStatusResponse = oswAPI.oswFormatStatus(job_id);
+
+      await expect(formatStatusResponse).rejects.toMatchObject({response: { status: 401 }});
+    })
+
+    it('When passed with valid token and job_id. should respond with 200 status',async () => {
+      let oswAPI = new OSWApi(configuration);
+      let job_id = "1";
+
+      let formatStatus = await oswAPI.oswFormatStatus(job_id);
+
+      
+
+      expect(formatStatus.data).toMatchObject(<OSWFormatStatusResponse>{
+        job_id: expect.any(String),
+        status: expect.any(OSWFormatStatusResponseStatusEnum),
+        message: expect.any(String),
+        download_url: expect.any(String),
+        conversion: expect.any(String)
+      })
+    })
+  })
+
+  describe('Download converted file', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let job_id = "1";
+
+      let downloadResponse = oswAPI.oswFormatDownload(job_id);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
+    })
+  })
+
+  describe('Download OSW File as zip', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let tdei_record_id = "1";
+
+      let downloadResponse = oswAPI.getOswFile(tdei_record_id);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
+    })
+  })
+
+  describe('Get Upload Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let tdei_record_id = "1";
+
+      let downloadResponse = oswAPI.getUploadStatus(tdei_record_id);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
+    })
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let tdei_record_id = "1";
+      let uploadStatus = await oswAPI.getUploadStatus(tdei_record_id);
+
+      expect(uploadStatus.status).toBe(200);
+      expect(uploadStatus.data).toMatchObject(<RecordUploadStatus>{
+        completed: expect.any(Boolean)
+      })
+    })
+  })
+
+  describe('Get Publish Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let tdei_record_id = "1";
+
+      let downloadResponse = oswAPI.getPublishStatus(tdei_record_id);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
+    })
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let tdei_record_id = "1";
+      let uploadStatus = await oswAPI.getPublishStatus(tdei_record_id);
+
+      expect(uploadStatus.status).toBe(200);
+      expect(uploadStatus.data).toMatchObject(<RecordPublishStatus>{
+        tdei_record_id: expect.any(String),
+        stage: expect.any(String),
+        status: expect.any(String),
+        completed: expect.any(Boolean)
+      })
+    })
+  })
+
+  describe('Validate Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let job_id = "1";
+
+      let validateStatusResponse = oswAPI.getValidateStatus(job_id);
+
+      await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 }});
+    })
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let job_id = "1";
+      let validateStatus = await oswAPI.getValidateStatus(job_id);
+
+      expect(validateStatus.status).toBe(200);
+      expect(validateStatus.data).toMatchObject(<ValidationStatus>{
+        job_id: expect.any(String),
+        validation_result: expect.any(String),
+        updated_at: expect.any(String),
+        status: expect.any(String)
+      })
+    })
+  })
+
+
   describe('List Files', () => {
     describe('Functional', () => {
       it('When passed with valid token, should return 200 status with list of osw records', async () => {
@@ -263,233 +487,7 @@ describe('OSW service', () => {
   //   })
   // })
 
-  describe('Publish the OSW dataset for the tdei_record_id', () => {
-    it('When passed with valid token and valid tdei_record_id, should return a string', async () => {
-
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
-      let publishOsw = await oswAPI.publishOswFile(tdei_record_id);
-
-      expect(publishOsw.status).toBe(202);
-      expect(publishOsw).toBe(String);
-    })
-
-    it('When passed with already published tdei_record_id, should respond with 400 status', async () => {
-
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
-      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
-
-      await expect(publishOswResponse).rejects.toMatchObject({response: {status: 400}});
-    })
-
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-
-      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
-      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
-      
-      await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 401 } });
-    })
-  })
-
-
-  describe('Calculate Confidence', () => {
-    
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-
-      let tdei_record_id = "1";
-      let calculateConfidenceResponse = oswAPI.oswConfidenceCalculate({tdei_record_id: tdei_record_id});
-
-      await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-
-    it('When passed with invalid tdei_record_id, should respond with 404 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "1";
-      let calculateConfidence = await oswAPI.oswConfidenceCalculate({ tdei_record_id: tdei_record_id});
-
-      expect(calculateConfidence.status).toBe(404);
-      expect(calculateConfidence).toBe(String);
-    })
-
-    it('When passed with valid token, should respond with 202 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "1";
-
-      let calculateConfidence = await oswAPI.oswConfidenceCalculate({tdei_record_id: tdei_record_id});
-
-      expect(calculateConfidence.status).toBe(202);
-      
-      expect(calculateConfidence.data).toMatchObject(<OSWConfidenceResponse>{
-        tdei_record_id: expect.any(String),
-        job_id: expect.any(Number)
-      })
-    })
-  })
-
-  describe('Confidence Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-
-      let job_id = "1";
-      let confidenceStatusResponse = oswAPI.getOSWConfidenceStatus(job_id);
-
-      await expect(confidenceStatusResponse).rejects.toMatchObject({response: { status: 401 }});
-    })
-
-    it('When passed with valid token and valid job id, should respond with 200 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let job_id = "1";
-
-      let confidenceStatus = await oswAPI.getOSWConfidenceStatus(job_id);
-
-      expect(confidenceStatus.status).toBe(200);
-      
-      expect(confidenceStatus.data).toMatchObject(<OSWConfidenceStatus>{
-        job_id: expect.any(Number),
-        confidenceValue: expect.any(Number),
-        updatedAt: expect.any(String),
-        status: expect.any(OSWConfidenceStatusStatusEnum),
-        message: expect.any(String)    
-      })
-    })
-  })
-
-  describe('Fetch Format Request Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let job_id = "1";
-
-      let formatStatusResponse = oswAPI.oswFormatStatus(job_id);
-
-      await expect(formatStatusResponse).rejects.toMatchObject({response: { status: 401 }});
-    })
-
-    it('When passed with valid token and job_id. should respond with 200 status',async () => {
-      let oswAPI = new OSWApi(configuration);
-      let job_id = "1";
-
-      let formatStatus = await oswAPI.oswFormatStatus(job_id);
-
-      
-
-      expect(formatStatus.data).toMatchObject(<OSWFormatStatusResponse>{
-        job_id: expect.any(String),
-        status: expect.any(OSWFormatStatusResponseStatusEnum),
-        message: expect.any(String),
-        download_url: expect.any(String),
-        conversion: expect.any(String)
-      })
-    })
-  })
-
-  describe('Download converted file', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let job_id = "1";
-
-      let downloadResponse = oswAPI.oswFormatDownload(job_id);
-
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-  })
-
-  describe('Download OSW File as zip', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let tdei_record_id = "1";
-
-      let downloadResponse = oswAPI.getOswFile(tdei_record_id);
-
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-  })
-
-  describe('Get Upload Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let tdei_record_id = "1";
-
-      let downloadResponse = oswAPI.getUploadStatus(tdei_record_id);
-
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-
-    it('When passed with valid token, should respond with 200 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "1";
-      let uploadStatus = await oswAPI.getUploadStatus(tdei_record_id);
-
-      expect(uploadStatus.status).toBe(200);
-      expect(uploadStatus.data).toMatchObject(<RecordUploadStatus>{
-        tdei_record_id: expect.any(String),
-        stage: expect.any(String),
-        status: expect.any(String),
-        completed: expect.any(Boolean)
-      })
-    })
-  })
-
-  describe('Get Publish Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let tdei_record_id = "1";
-
-      let downloadResponse = oswAPI.getPublishStatus(tdei_record_id);
-
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-
-    it('When passed with valid token, should respond with 200 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "1";
-      let uploadStatus = await oswAPI.getPublishStatus(tdei_record_id);
-
-      expect(uploadStatus.status).toBe(200);
-      expect(uploadStatus.data).toMatchObject(<RecordPublishStatus>{
-        tdei_record_id: expect.any(String),
-        stage: expect.any(String),
-        status: expect.any(String),
-        completed: expect.any(Boolean)
-      })
-    })
-  })
-
-  describe('Validate Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let job_id = "1";
-
-      let validateStatusResponse = oswAPI.getValidateStatus(job_id);
-
-      await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-
-    it('When passed with valid token, should respond with 200 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let job_id = "1";
-      let validateStatus = await oswAPI.getValidateStatus(job_id);
-
-      expect(validateStatus.status).toBe(200);
-      expect(validateStatus.data).toMatchObject(<ValidationStatus>{
-        job_id: expect.any(Number),
-        validation_result: expect.any(String),
-        updated_at: expect.any(String),
-        status: expect.any(ValidationStatusStatusEnum)
-      })
-    })
-  })
-
+  
   describe('List OSW Versions', () => {
     it('When passed with valid token, should respond with 200 status', async () => {
       let oswAPI = new OSWApi(configuration);
