@@ -3,12 +3,12 @@ name: run_api_tests
 on:
   push:
     branches-ignore:
-      - '**'
+      - "**"
     # Remove the line above to run when pushing to master
   pull_request:
     branches: [main, dev]
   repository_dispatch:
-    types: [ run_api_tests ]
+    types: [run_api_tests]
 
 ###############
 # Set the Job #
@@ -27,14 +27,14 @@ jobs:
           fetch-depth: 0
 
       - name: Install npm dependencies
-        run : npm install
+        run: npm install
 
       - name: Create env file
         run: |
-            echo "${{ secrets.ENV_FILE }}" > .env
+          echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: Run unit test cases
-        run : npm run test
+        run: npm run test
 
       - name: send email notification
         if: always()
@@ -49,5 +49,5 @@ jobs:
           cc: sureshd@gaussiansolutions.com
           bcc: rakeshd@gaussiansolutions.com
           from: Workflow Notification
-          body: API Tester Status attached
+          body: API Tester Status attached. Run details can be found here https://github.com/TaskarCenterAtUW/TDEI-api-tester/actions/runs/${{ github.run_id }}
           attachments: test-report.html
