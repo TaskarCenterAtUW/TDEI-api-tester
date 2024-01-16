@@ -72,19 +72,7 @@ export class Utility {
         return parseFloat((min + Math.random() * diff).toFixed(6));
     }
 
-    static getRandomOswUpload(): OswUpload {
-        return {
-            tdei_project_group_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
-            collected_by: "Collector name",
-            collection_date: "2023-03-03T02:22:45.374Z",
-            collection_method: OswUploadCollectionMethodEnum.Manual,
-            data_source: OswUploadDataSourceEnum.InHouse,
-            publication_date: "2023-03-02T04:22:42.493Z",
-            polygon: this.getRandomPolygon(),
-            osw_schema_version: "v0.1"
-        };
-    }
-
+  
     static getRandomGtfsFlexUpload(): GtfsFlexUpload {
 
         return {
