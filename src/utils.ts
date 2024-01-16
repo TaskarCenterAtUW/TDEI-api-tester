@@ -156,12 +156,39 @@ export class Utility {
         return this.getFileBlob('osw', 'valid.zip');
     }
 
+    // Change the implementation
+    static getChangesetBlob() : Blob {
+        return this.getFileBlob('osw','changeset.txt','text/plain');
+    }
+    // Change the implementation  here
+    static getOSWMetadataBlob() : Blob {
+        //const blob = new Blob([jsonString], { type: 'application/json' });
+        let randomMetadata = {
+            "name": "Upload testing",
+            "version": "v2.0",
+            "descption": "Bootstrap",
+            "custom_metadata": {
+                "name": "Lara",
+                "gender": "female"
+            },
+            "collected_by": "See best practices document",
+            "collection_date": "2019-02-10T09:30Z",
+            "collection_method": "manual",
+            "data_source": "3rdParty",
+            "osw_schema_version": "v0.1"
+        }
+        randomMetadata['name'] = faker.random.alphaNumeric(9);
+        let jsonString = JSON.stringify(randomMetadata);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        return blob;
+    }
 
-    static getFileBlob(directory: string, filename: string): Blob {
+    static getFileBlob(directory: string, filename: string, type:string = "application/zip" ) : Blob {
         let fileDir = path.dirname(__dirname);
         let payloadFilePath = path.join(fileDir, "assets/payloads/" + directory + "/files/" + filename);
         let filestream = fs.readFileSync(payloadFilePath);
-        const blob = new Blob([filestream], { type: "application/zip" });
+        const blob = new Blob([filestream], { type: type });
         return blob
 
     }

@@ -26,9 +26,9 @@
   },
   "dependencies": {
     "@faker-js/faker": "^7.6.0",
-    "axios": "1.3.5",
+    "axios": "1.6.5",
     "dotenv": "^16.3.1",
-    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#24c79233cc23088c566ad1d6c2b7de3cfdb2f257",
+    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#4eedd362f968b21f17b8ae459135f52bab6218ef",
     "typescript": "5.0.4"
   }
 }

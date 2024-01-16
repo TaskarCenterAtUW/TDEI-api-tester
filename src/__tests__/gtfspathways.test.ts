@@ -205,62 +205,62 @@ describe('GTFS Pathways service', () => {
 
     beforeAll(async () => {
       //TODO: Add this again
-      // const seeder = new Seeder();
-      // stationId = await seeder.createStation(project_group_id);
-      // seeder.removeHeader();
+      const seeder = new Seeder();
+      stationId = await seeder.createStation(project_group_id);
+      seeder.removeHeader();
     })
 
     describe('Functional', () => {
 
       it('When passed with valid token, metadata and file, should return 202 with recordId', async () => {
         // TODO: Add back when needed
-        // let pathwaysAPI = new GTFSPathwaysApi(configuration);
-        // let metaToUpload = Utility.getRandomPathwaysUpload();
-        // const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        // metaToUpload.tdei_project_group_id = project_group_id;
-        // metaToUpload.tdei_station_id = stationId;
-        // let fileBlob = Utility.getPathwaysBlob();
+        let pathwaysAPI = new GTFSPathwaysApi(configuration);
+        let metaToUpload = Utility.getRandomPathwaysUpload();
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
+        metaToUpload.tdei_project_group_id = project_group_id;
+        metaToUpload.tdei_station_id = stationId;
+        let fileBlob = Utility.getPathwaysBlob();
 
-        // const uploadedFileResponse = await pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
+        const uploadedFileResponse = await pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
 
-        // expect(uploadedFileResponse.status).toBe(202);
-        // expect(uploadedFileResponse.data != "").toBe(true);
+        expect(uploadedFileResponse.status).toBe(202);
+        expect(uploadedFileResponse.data != "").toBe(true);
 
-        // axios.interceptors.request.eject(uploadInterceptor);
+        axios.interceptors.request.eject(uploadInterceptor);
 
       }, 20000)
 
       it('When passed with valid token, file and invalid metadata, should return 400 status', async () => {
         // TODO: Add back when needed
-        // let pathwaysAPI = new GTFSPathwaysApi(configuration);
-        // let metaToUpload = Utility.getRandomPathwaysUpload();
-        // const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        // metaToUpload.tdei_project_group_id = project_group_id;
-        // metaToUpload.tdei_station_id = stationId;
-        // metaToUpload.collection_date = "";
-        // let fileBlob = Utility.getPathwaysBlob();
+        let pathwaysAPI = new GTFSPathwaysApi(configuration);
+        let metaToUpload = Utility.getRandomPathwaysUpload();
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
+        metaToUpload.tdei_project_group_id = project_group_id;
+        metaToUpload.tdei_station_id = stationId;
+        metaToUpload.collection_date = "";
+        let fileBlob = Utility.getPathwaysBlob();
 
-        // const uploadedFileResponse = pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
+        const uploadedFileResponse = pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
 
-        // await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+        await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 400 } });
 
-        // axios.interceptors.request.eject(uploadInterceptor);
+        axios.interceptors.request.eject(uploadInterceptor);
       }, 20000)
 
       it('When passed with invalid token, valid metadata and file, should return 401 status', async () => {
         //TODO: Add back when needed
-        // let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
-        // let metaToUpload = Utility.getRandomPathwaysUpload();
-        // const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        // metaToUpload.tdei_project_group_id = project_group_id;
-        // metaToUpload.tdei_station_id = stationId;
-        // let fileBlob = Utility.getPathwaysBlob();
+        let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+        let metaToUpload = Utility.getRandomPathwaysUpload();
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
+        metaToUpload.tdei_project_group_id = project_group_id;
+        metaToUpload.tdei_station_id = stationId;
+        let fileBlob = Utility.getPathwaysBlob();
 
-        // const uploadedFileResponse = pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
+        const uploadedFileResponse = pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
 
-        // await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 401 } });
+        await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 401 } });
 
-        // axios.interceptors.request.eject(uploadInterceptor);
+        axios.interceptors.request.eject(uploadInterceptor);
       })
     })
   })
