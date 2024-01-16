@@ -1,5 +1,5 @@
 import { AuthenticationApi, GeoJsonObject, GeoJsonObjectTypeEnum, OSWApi, OSWConfidenceStatus, OSWConfidenceStatusStatusEnum, OswDownload, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OswDownloadStatusEnum, OSWFormatStatusResponse, OSWFormatStatusResponseStatusEnum, OswUpload, RecordPublishStatus, RecordUploadStatus, ValidationStatus, ValidationStatusStatusEnum, VersionSpec, OSWConfidenceRequest, OSWConfidenceResponse } from "tdei-client";
-import axios, { InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import * as fs from "fs";
 import AdmZip from "adm-zip";
@@ -9,16 +9,25 @@ const DOWNLOAD_FILE_PATH = `${__dirname}/osw-tmp`;
 describe('OSW service', () => {
   let configuration = Utility.getConfiguration();
   const NULL_PARAM = void 0;
-  const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string, metaToUpload: OswUpload) => {
+  
+  const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig,tdei_project_group_id:string,service_id:string ,datasetName:string, changestName:string, metafileName:string) => {
+    // console.log("AAAAAA");
+    // console.log(request.url);
     if (
-      request.url === `${configuration.basePath}/api/v1/osw`
-    ) {
+      request.url === `${configuration.basePath}/api/v1/osw/upload/${tdei_project_group_id}/${service_id}`
+    ) 
+    {
+      // console.log('Applying stuff');
       let data = request.data as FormData;
-      let file = data.get("file") as File;
-      delete data["file"];
-      delete data["meta"];
-      data.set("file", file, fileName);
-      data.set("meta", JSON.stringify(metaToUpload));
+      let datasetFile = data.get("dataset") as File;
+      let metaFile = data.get('metadata') as File;
+      let changesetFile = data.get('changeset') as File;
+      delete data['dataset'];
+      delete data['metadata'];
+      delete data['changeset'];
+      data.set('dataset',datasetFile,datasetName);
+      data.set('metadata',metaFile,metafileName);
+      data.set('changeset',changesetFile,changestName);
     }
     return request;
   };
@@ -164,6 +173,8 @@ describe('OSW service', () => {
       } catch (e)  {
         console.log(e)
         // May happen if already published
+        // expect(e).toBeInstanceOf(AxiosError)
+         
       }
     })
 
@@ -403,60 +414,49 @@ describe('OSW service', () => {
     })
   })
 
-  // describe('Post file', () => {
-  //   describe('Functional', () => {
-  //     it('When passed with valid token, metadata and file, should return 202 status with recordId in response', async () => {
-  //       let oswAPI = new OSWApi(configuration);
-  //       let metaToUpload = Utility.getRandomOswUpload();
-  //       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
-  //       //TODO: feed from seeder or configuration
-  //       metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-  //       let fileBlob = Utility.getOSWBlob();
+  describe('Post OSW dataset', () => {
+    describe('Functional', ()=>{
+      it('When passed with valid token, metafile and changeset, should return 202 status with recordId in response', async () =>{
+        let oswAPI = new OSWApi(configuration);
+        let metaToUpload = Utility.getOSWMetadataBlob();
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getOSWBlob();
+        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
+        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
+        try {
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig)=> oswUploadRequestInterceptor(req,tdei_project_group_id,service_id,'osw-valid.zip','changeset.txt','metadata.json'))
+        const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset,metaToUpload,changesetToUpload,tdei_project_group_id,service_id)
 
-  //       const uploadedFileResponse = await oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
+        expect(uploadFileResponse.status).toBe(202);
+        
+        axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+          console.log(e);
+        }
 
-  //       expect(uploadedFileResponse.status).toBe(202);
-  //       expect(uploadedFileResponse.data != "").toBe(true);
+      }, 20000)
 
-  //       axios.interceptors.request.eject(uploadInterceptor);
+    })
 
-  //     }, 20000)
+    describe('Validation', () =>{
+      it('When passed with invalid token, metafile and changeset, should return 401 status with recordId in response', async () =>{
+        let oswAPI = new OSWApi(Utility.getConfiguration());
+        let metaToUpload = Utility.getOSWMetadataBlob();
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getOSWBlob();
+        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
+        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
+        
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig)=> oswUploadRequestInterceptor(req,tdei_project_group_id,service_id,'osw-valid.zip','changeset.txt','metadata.json'))
+        const uploadFileResponse = oswAPI.uploadOswFileForm(dataset,metaToUpload,changesetToUpload,tdei_project_group_id,service_id)
 
-  //     it('When passed with valid token, invalid metadata and file, should return 400 status in response', async () => {
-  //       let oswAPI = new OSWApi(configuration);
-  //       let metaToUpload = Utility.getRandomOswUpload();
-  //       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
-  //       //TODO: feed from seeder or configuration
-  //       metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-  //       metaToUpload.collection_date = "";
-  //       let fileBlob = Utility.getOSWBlob();
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
+        axios.interceptors.request.eject(uploadInterceptor);
 
-  //       const uploadedFileResponse = oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
-
-  //       await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 400 } });
-
-  //       axios.interceptors.request.eject(uploadInterceptor);
-
-  //     }, 20000)
-
-  //     it('When passed without valid token, metadata and file, should return 401 status in response', async () => {
-  //       let oswAPI = new OSWApi(Utility.getConfiguration());
-  //       let metaToUpload = Utility.getRandomOswUpload();
-  //       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
-  //       //TODO: feed from seeder or configuraiton
-  //       metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-  //       let fileBlob = Utility.getOSWBlob();
-
-  //       const uploadedFileResponse = oswAPI.uploadOswFileForm(metaToUpload, fileBlob);
-
-  //       await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 401 } });
-
-  //       axios.interceptors.request.eject(uploadInterceptor);
-
-  //     }, 20000)
-
-  //   })
-  // })
+      }, 20000)
+      
+    })
+  })
 
   
   
