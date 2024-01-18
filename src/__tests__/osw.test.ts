@@ -3,6 +3,7 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import * as fs from "fs";
 import AdmZip from "adm-zip";
+import exp from "constants";
 
 
 describe('OSW service', () => {
@@ -89,6 +90,25 @@ describe('OSW service', () => {
           expect(uploadFileResponse.data).not.toBeNull();
           uploadedTdeiRecordId = uploadFileResponse.data;
           console.log("uploaded tdei_record_id", uploadedTdeiRecordId);
+          axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+          console.log(e);
+        }
+      }, 20000);
+
+      it('When passed with valid token, dataset and invalid metafile, should return 400 status with errors', async () => {
+        let oswAPI = new OSWApi(configuration);
+        let metaToUpload = Utility.getInvalidOSWMetadataBlob();
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getOSWBlob();
+        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
+        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
+        try {
+          const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+          const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+
+          expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+
           axios.interceptors.request.eject(uploadInterceptor);
         } catch (e) {
           console.log(e);
