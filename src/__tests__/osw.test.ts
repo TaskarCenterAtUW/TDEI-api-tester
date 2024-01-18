@@ -1,22 +1,24 @@
-import { AuthenticationApi, GeoJsonObject, GeoJsonObjectTypeEnum, OSWApi, OSWConfidenceStatus, OSWConfidenceStatusStatusEnum, OswDownload, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OswDownloadStatusEnum, OSWFormatStatusResponse, OSWFormatStatusResponseStatusEnum, OswUpload, RecordPublishStatus, RecordUploadStatus, ValidationStatus, ValidationStatusStatusEnum, VersionSpec, OSWConfidenceRequest, OSWConfidenceResponse } from "tdei-client";
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { AuthenticationApi, OSWApi, OSWConfidenceStatus, OswDownload, OSWFormatStatusResponse, RecordPublishStatus, RecordUploadStatus, ValidationStatus, VersionSpec, OSWConfidenceResponse, OswDownloadStatusEnum, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OSWFormatResponse } from "tdei-client";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import * as fs from "fs";
-import AdmZip from "adm-zip";
 
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/osw-tmp`;
 describe('OSW service', () => {
   let configuration = Utility.getConfiguration();
   const NULL_PARAM = void 0;
-  
-  const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig,tdei_project_group_id:string,service_id:string ,datasetName:string, changestName:string, metafileName:string) => {
+  let uploadedTdeiRecordId: string = '';
+  let confidenceJobId: number = 1;
+  let convertJobId: string = '1';
+  let validationJobId: string = '1';
+
+  const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
     // console.log("AAAAAA");
     // console.log(request.url);
     if (
       request.url === `${configuration.basePath}/api/v1/osw/upload/${tdei_project_group_id}/${service_id}`
-    ) 
-    {
+    ) {
       // console.log('Applying stuff');
       let data = request.data as FormData;
       let datasetFile = data.get("dataset") as File;
@@ -25,9 +27,33 @@ describe('OSW service', () => {
       delete data['dataset'];
       delete data['metadata'];
       delete data['changeset'];
-      data.set('dataset',datasetFile,datasetName);
-      data.set('metadata',metaFile,metafileName);
-      data.set('changeset',changesetFile,changestName);
+      data.set('dataset', datasetFile, datasetName);
+      data.set('metadata', metaFile, metafileName);
+      data.set('changeset', changesetFile, changestName);
+    }
+    return request;
+  };
+
+  const oswValidateRequestInterceptor = (request: InternalAxiosRequestConfig, datasetName: string) => {
+    if (
+      request.url === `${configuration.basePath}/api/v1/osw/validate`
+    ) {
+      let data = request.data as FormData;
+      let datasetFile = data.get("dataset") as File;
+      delete data['dataset'];
+      data.set('dataset', datasetFile, datasetName);
+    }
+    return request;
+  };
+
+  const oswConvertRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string) => {
+    if (
+      request.url === `${configuration.basePath}/api/v1/osw/convert`
+    ) {
+      let data = request.data as FormData;
+      let file = data.get("file") as File;
+      delete data['file'];
+      data.set('file', file, fileName);
     }
     return request;
   };
@@ -53,7 +79,188 @@ describe('OSW service', () => {
 
   afterAll(async () => {
     fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
-  })
+  });
+
+  describe('Upload OSW dataset', () => {
+    describe('Functional', () => {
+      it('When passed with valid token, metafile and changeset, should return 202 status with recordId in response', async () => {
+        let oswAPI = new OSWApi(configuration);
+        let metaToUpload = Utility.getOSWMetadataBlob();
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getOSWBlob();
+        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
+        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
+        try {
+          const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+          const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+
+          expect(uploadFileResponse.status).toBe(202);
+          expect(uploadFileResponse.data).not.toBeNull();
+          uploadedTdeiRecordId = uploadFileResponse.data;
+          console.log("uploaded tdei_record_id", uploadedTdeiRecordId);
+          axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+          console.log(e);
+        }
+      }, 20000)
+    });
+    describe('Validation', () => {
+      it('When passed with invalid token, metafile and changeset, should return 401 status with recordId in response', async () => {
+        let oswAPI = new OSWApi(Utility.getConfiguration());
+        let metaToUpload = Utility.getOSWMetadataBlob();
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getOSWBlob();
+        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
+        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
+
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+        const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
+        axios.interceptors.request.eject(uploadInterceptor);
+
+      }, 20000)
+
+    });
+  });
+
+  describe('Get Upload Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let downloadResponse = oswAPI.getUploadStatus(uploadedTdeiRecordId);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+      await new Promise((r) => setTimeout(r, 40000));
+
+      let uploadStatus = await oswAPI.getUploadStatus(uploadedTdeiRecordId);
+      expect(uploadStatus.status).toBe(200);
+      expect(uploadStatus.data).toMatchObject(<RecordUploadStatus>{
+        tdei_record_id: expect.any(String),
+        stage: expect.any(String),
+        status: expect.anything(),
+        completed: expect.any(Boolean)
+      })
+    }, 45000);
+  });
+
+  describe('Publish the OSW dataset for the tdei_record_id', () => {
+    it('When passed with valid token and valid tdei_record_id, should return a string', async () => {
+
+      let oswAPI = new OSWApi(configuration);
+      let publishOsw = await oswAPI.publishOswFile(uploadedTdeiRecordId);
+      expect(publishOsw.status).toBe(202);
+      expect(publishOsw.data).not.toBeNull();
+    });
+
+    it('When passed with already published tdei_record_id, should respond with 400 status', async () => {
+
+      let oswAPI = new OSWApi(configuration);
+      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
+
+      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
+
+      await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 400 } });
+    })
+
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let publishOswResponse = oswAPI.publishOswFile(uploadedTdeiRecordId);
+
+      await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 401 } });
+    })
+  });
+
+  describe('Get Publish Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let downloadResponse = oswAPI.getPublishStatus(uploadedTdeiRecordId);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    })
+
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+      await new Promise((r) => setTimeout(r, 60000));
+
+      let uploadStatus = await oswAPI.getPublishStatus(uploadedTdeiRecordId);
+
+      expect(uploadStatus.status).toBe(200);
+      expect(uploadStatus.data).toMatchObject(<RecordPublishStatus>{
+        tdei_record_id: expect.any(String),
+        stage: expect.any(String),
+        status: expect.any(String),
+        published: expect.any(Boolean)
+      })
+    }, 65000);
+  });
+
+  describe('Validate OSW dataset', () => {
+    describe('Functional', () => {
+      it('When passed with valid dataset, should return 202 status with job_id in response', async () => {
+        let oswAPI = new OSWApi(configuration);
+        let dataset = Utility.getOSWBlob();
+        try {
+          const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
+          const uploadFileResponse = await oswAPI.validateOswFileForm(dataset);
+
+          expect(uploadFileResponse.status).toBe(202);
+          expect(uploadFileResponse.data).not.toBeNull();
+          validationJobId = uploadFileResponse.data;
+          console.log("validation job_id", validationJobId);
+          axios.interceptors.request.eject(validateInterceptor);
+        } catch (e) {
+          console.log(e);
+        }
+      }, 20000)
+    });
+
+    describe('Validation', () => {
+      it('When passed with invalid token, dataset, should return 401 status with recordId in response', async () => {
+        let oswAPI = new OSWApi(Utility.getConfiguration());
+        let dataset = Utility.getOSWBlob();
+
+        const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
+        const uploadFileResponse = oswAPI.validateOswFileForm(dataset);
+
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
+        axios.interceptors.request.eject(validateInterceptor);
+
+      }, 20000);
+
+    });
+  });
+
+  describe('Validate Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let validateStatusResponse = oswAPI.getValidateStatus(validationJobId);
+      await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+    })
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      await new Promise((r) => setTimeout(r, 50000));
+      let validateStatus = await oswAPI.getValidateStatus(validationJobId);
+
+      expect(validateStatus.status).toBe(200);
+      expect(validateStatus.data).toMatchObject(<ValidationStatus>{
+        job_id: expect.any(String),
+        status: expect.any(String),
+        validation_result: expect.toBeOneOf([null, expect.any(String)]),
+        updated_at: expect.any(String),
+      });
+    }, 55000);
+  });
 
   describe('List Files', () => {
     describe('Functional', () => {
@@ -68,31 +275,36 @@ describe('OSW service', () => {
 
         oswFiles.data.forEach(file => {
           expect(file).toMatchObject(<OswDownload>{
-            status: expect.any(String),
+            status: expect.toBeOneOf([OswDownloadStatusEnum.PreRelease.toString(), OswDownloadStatusEnum.Publish.toString()]),
             name: expect.any(String),
-            // description: expect.any(String || null),
+            description: expect.toBeOneOf([null, expect.any(String)]),
             version: expect.any(String),
-            // derived_from_dataset_id: expect.any(String || null),
+            derived_from_dataset_id: expect.toBeOneOf([null, expect.any(String)]),
             custom_metadata: expect.anything(),
             uploaded_timestamp: expect.any(String),
             tdei_project_group_id: expect.any(String),
             collected_by: expect.any(String),
             collection_date: expect.any(String),
-            collection_method: expect.any(String),
+            collection_method: expect.toBeOneOf([
+              OswDownloadCollectionMethodEnum.Generated.toString(),
+              OswDownloadCollectionMethodEnum.Other.toString(),
+              OswDownloadCollectionMethodEnum.Transform.toString(),
+              OswDownloadCollectionMethodEnum.Manual.toString()]),
             valid_from: expect.any(String),
-            // valid_to: expect.any(String || null),
+            valid_to: expect.toBeOneOf([null, expect.any(String)]),
             confidence_level: expect.any(Number),
-            data_source: expect.any(String),
-            // dataset_area: expect.anything(),
+            data_source: expect.toBeOneOf([
+              OswDownloadDataSourceEnum.InHouse.toString(),
+              OswDownloadDataSourceEnum.TDEITools.toString(),
+              OswDownloadDataSourceEnum._3rdParty.toString()]),
+            dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
             tdei_record_id: expect.any(String),
             osw_schema_version: expect.any(String),
-            download_url: expect.any(String)   
-          })
+            download_url: expect.any(String)
+          });
+        });
+      });
 
-        })
-
-      })
-      
 
       it('When passed with valid token and page size, should return 200 status with files less than or equal to 5', async () => {
         let oswAPI = new OSWApi(configuration);
@@ -102,7 +314,7 @@ describe('OSW service', () => {
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBeLessThanOrEqual(page_size);
-        
+
 
       })
 
@@ -122,15 +334,14 @@ describe('OSW service', () => {
 
       it('When passed with valid token and valid recordId, should return 200 status with same record ID', async () => {
         let oswAPI = new OSWApi(configuration);
-        //TODO: feed from seeder
-        let recordId = 'fb0ae8ed553e40b99112dec89c309445';
+        let recordId = uploadedTdeiRecordId;
 
-        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,recordId);
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, "All", NULL_PARAM, NULL_PARAM, NULL_PARAM, recordId);
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBe(1);
         oswFiles.data.forEach(file => {
-           expect(file.tdei_record_id).toBe(recordId)
+          expect(file.tdei_record_id).toBe(recordId)
         })
       })
 
@@ -141,7 +352,7 @@ describe('OSW service', () => {
         let oswAPI = new OSWApi(configuration);
         let recordId = 'dummyRecordId';
 
-        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,NULL_PARAM,recordId);
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, recordId);
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBe(0);
@@ -158,62 +369,22 @@ describe('OSW service', () => {
 
     })
 
-  })
-
-  describe('Publish the OSW dataset for the tdei_record_id', () => {
-    it('When passed with valid token and valid tdei_record_id, should return a string', async () => {
-
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
-      try {
-      let publishOsw = await oswAPI.publishOswFile(tdei_record_id);
-      expect(publishOsw.status).toBe(202);
-      expect(publishOsw).toBe(String);
-      } catch (e)  {
-        console.log(e)
-        // May happen if already published
-        // expect(e).toBeInstanceOf(AxiosError)
-         
-      }
-    })
-
-    it('When passed with already published tdei_record_id, should respond with 400 status', async () => {
-
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
-      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
-
-      await expect(publishOswResponse).rejects.toMatchObject({response: {status: 400}});
-    })
-
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-
-      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
-      let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
-      
-      await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 401 } });
-    })
-  })
+  });
 
   describe('Calculate Confidence', () => {
-    
+
     it('When passed without valid token, should respond with 401 status', async () => {
       let oswAPI = new OSWApi(Utility.getConfiguration());
 
-      let tdei_record_id = "1";
-      let calculateConfidenceResponse = oswAPI.oswConfidenceCalculate({tdei_record_id: tdei_record_id});
+      let calculateConfidenceResponse = oswAPI.oswConfidenceCalculate({ tdei_record_id: uploadedTdeiRecordId });
 
-      await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 401 }});
+      await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 401 } });
     })
 
     it('When passed with invalid tdei_record_id, should respond with 404 status', async () => {
       let oswAPI = new OSWApi(configuration);
 
-      let tdei_record_id = "1";
-      let calculateConfidence = oswAPI.oswConfidenceCalculate({ tdei_record_id: tdei_record_id});
+      let calculateConfidence = oswAPI.oswConfidenceCalculate({ tdei_record_id: "dummytdeirecordid" });
 
       await expect(calculateConfidence).rejects.toMatchObject({ response: { status: 404 } });
     })
@@ -221,18 +392,47 @@ describe('OSW service', () => {
     it('When passed with valid token, should respond with 202 status', async () => {
       let oswAPI = new OSWApi(configuration);
 
-      let tdei_record_id = "fb0ae8ed553e40b99112dec89c309445";
-
-      let calculateConfidence = await oswAPI.oswConfidenceCalculate({tdei_record_id: tdei_record_id});
+      let calculateConfidence = await oswAPI.oswConfidenceCalculate({ tdei_record_id: uploadedTdeiRecordId });
 
       expect(calculateConfidence.status).toBe(202);
-      
+
       expect(calculateConfidence.data).toMatchObject(<OSWConfidenceResponse>{
         tdei_record_id: expect.any(String),
         job_id: expect.any(String)
-      })
+      });
+
+      confidenceJobId = calculateConfidence.data.job_id!;
+      console.log("confidence job_id", confidenceJobId);
+    });
+  });
+
+  describe('Confidence Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let job_id = "1";
+      let confidenceStatusResponse = oswAPI.getOSWConfidenceStatus(job_id);
+
+      await expect(confidenceStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
     })
-  })
+
+
+
+    it('When passed with valid token and valid job id, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+      await new Promise((r) => setTimeout(r, 10000));
+      let confidenceStatus = await oswAPI.getOSWConfidenceStatus(confidenceJobId.toString());
+
+      expect(confidenceStatus.status).toBe(200);
+
+      expect(confidenceStatus.data).toMatchObject(<OSWConfidenceStatus>{
+        job_id: expect.any(String),
+        confidenceValue: expect.any(Number),
+        updatedAt: expect.any(String),
+        status: expect.any(String),
+        message: expect.any(String)
+      })
+    }, 15000);
+  });
 
   describe('List OSW Versions', () => {
     it('When passed with valid token, should respond with 200 status', async () => {
@@ -258,54 +458,51 @@ describe('OSW service', () => {
 
       await expect(oswVersionsResponse).rejects.toMatchObject({ response: { status: 401 } });
     })
-  })
+  });
 
-  describe('Confidence Status', () => {
+  describe('Convert Request', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let oswBlob = Utility.getOSWBlob();
+
+      const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+      let formatResponse = oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+
+      await expect(formatResponse).rejects.toMatchObject({ response: { status: 401 } });
+      axios.interceptors.request.eject(convertInterceptor);
+    });
+
+    it('When passed with valid token, should respond with job_id', async () => {
+      let oswAPI = new OSWApi(configuration);
+      let oswBlob = Utility.getOSWBlob();
+
+      const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+      let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+
+      expect(formatResponse.status).toBe(202);
+      expect(formatResponse.data).toMatchObject(<OSWFormatResponse>{
+        job_id: expect.any(String)
+      });
+      convertJobId = formatResponse.data!.job_id!;
+      console.log("convert job_id", convertJobId);
+      axios.interceptors.request.eject(convertInterceptor);
+    });
+  });
+
+  describe('Fetch Convert Request Status', () => {
     it('When passed without valid token, should respond with 401 status', async () => {
       let oswAPI = new OSWApi(Utility.getConfiguration());
 
-      let job_id = "1";
-      let confidenceStatusResponse = oswAPI.getOSWConfidenceStatus(job_id);
+      let formatStatusResponse = oswAPI.oswFormatStatus(convertJobId);
 
-      await expect(confidenceStatusResponse).rejects.toMatchObject({response: { status: 401 }});
-    })
+      await expect(formatStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
 
-    it('When passed with valid token and valid job id, should respond with 200 status', async () => {
+    it('When passed with valid token and job_id. should respond with 200 status', async () => {
       let oswAPI = new OSWApi(configuration);
+      await new Promise((r) => setTimeout(r, 20000));
 
-      let job_id = "1";
-
-      let confidenceStatus = await oswAPI.getOSWConfidenceStatus(job_id);
-
-      expect(confidenceStatus.status).toBe(200);
-      
-      expect(confidenceStatus.data).toMatchObject(<OSWConfidenceStatus>{
-        job_id: expect.any(String),
-        confidenceValue: expect.any(Number),
-        updatedAt: expect.any(String),
-        status: expect.any(String),
-        message: expect.any(String)    
-      })
-    })
-  })
-
-  describe('Fetch Format Request Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let job_id = "1";
-
-      let formatStatusResponse = oswAPI.oswFormatStatus(job_id);
-
-      await expect(formatStatusResponse).rejects.toMatchObject({response: { status: 401 }});
-    })
-
-    it('When passed with valid token and job_id. should respond with 200 status',async () => {
-      let oswAPI = new OSWApi(configuration);
-      let job_id = "4";
-
-      let formatStatus = await oswAPI.oswFormatStatus(job_id);
-
-      
+      let formatStatus = await oswAPI.oswFormatStatus(convertJobId);
 
       expect(formatStatus.data).toMatchObject(<OSWFormatStatusResponse>{
         job_id: expect.any(String),
@@ -314,154 +511,20 @@ describe('OSW service', () => {
         downloadUrl: expect.any(String),
         conversion: expect.any(String)
       })
-    })
+    }, 25000);
   })
 
   describe('Download converted file', () => {
     it('When passed without valid token, should respond with 401 status', async () => {
       let oswAPI = new OSWApi(Utility.getConfiguration());
-      let job_id = "1";
 
-      let downloadResponse = oswAPI.oswFormatDownload(job_id);
+      let downloadResponse = oswAPI.oswFormatDownload(convertJobId);
 
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-  })
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+  });
 
   describe('Download OSW File as zip', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let tdei_record_id = "1";
-
-      let downloadResponse = oswAPI.getOswFile(tdei_record_id);
-
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-  })
-
-  describe('Get Upload Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let tdei_record_id = "1";
-
-      let downloadResponse = oswAPI.getUploadStatus(tdei_record_id);
-
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-
-    it('When passed with valid token, should respond with 200 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "1";
-      let uploadStatus = await oswAPI.getUploadStatus(tdei_record_id);
-
-      expect(uploadStatus.status).toBe(200);
-      expect(uploadStatus.data).toMatchObject(<RecordUploadStatus>{
-        completed: expect.any(Boolean)
-      })
-    })
-  })
-
-  describe('Get Publish Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let tdei_record_id = "1";
-
-      let downloadResponse = oswAPI.getPublishStatus(tdei_record_id);
-
-      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-
-    it('When passed with valid token, should respond with 200 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let tdei_record_id = "fb0ae8ed553e40b99112dec89c309445";
-      let uploadStatus = await oswAPI.getPublishStatus(tdei_record_id);
-
-      expect(uploadStatus.status).toBe(200);
-      expect(uploadStatus.data).toMatchObject(<RecordPublishStatus>{
-        tdei_record_id: expect.any(String),
-        stage: expect.any(String),
-        status: expect.any(String),
-        completed: expect.any(Boolean)
-      })
-    })
-  })
-
-  describe('Validate Status', () => {
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-      let job_id = "1";
-
-      let validateStatusResponse = oswAPI.getValidateStatus(job_id);
-
-      await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 }});
-    })
-
-    it('When passed with valid token, should respond with 200 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let job_id = "1";
-      let validateStatus = await oswAPI.getValidateStatus(job_id);
-
-      expect(validateStatus.status).toBe(200);
-      expect(validateStatus.data).toMatchObject(<ValidationStatus>{
-        job_id: expect.any(String),
-        validation_result: expect.any(String),
-        updated_at: expect.any(String),
-        status: expect.any(String)
-      })
-    })
-  })
-
-  describe('Post OSW dataset', () => {
-    describe('Functional', ()=>{
-      it('When passed with valid token, metafile and changeset, should return 202 status with recordId in response', async () =>{
-        let oswAPI = new OSWApi(configuration);
-        let metaToUpload = Utility.getOSWMetadataBlob();
-        let changesetToUpload = Utility.getChangesetBlob();
-        let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
-        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
-        try {
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig)=> oswUploadRequestInterceptor(req,tdei_project_group_id,service_id,'osw-valid.zip','changeset.txt','metadata.json'))
-        const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset,metaToUpload,changesetToUpload,tdei_project_group_id,service_id)
-
-        expect(uploadFileResponse.status).toBe(202);
-        
-        axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-          console.log(e);
-        }
-
-      }, 20000)
-
-    })
-
-    describe('Validation', () =>{
-      it('When passed with invalid token, metafile and changeset, should return 401 status with recordId in response', async () =>{
-        let oswAPI = new OSWApi(Utility.getConfiguration());
-        let metaToUpload = Utility.getOSWMetadataBlob();
-        let changesetToUpload = Utility.getChangesetBlob();
-        let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
-        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
-        
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig)=> oswUploadRequestInterceptor(req,tdei_project_group_id,service_id,'osw-valid.zip','changeset.txt','metadata.json'))
-        const uploadFileResponse = oswAPI.uploadOswFileForm(dataset,metaToUpload,changesetToUpload,tdei_project_group_id,service_id)
-
-        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
-        axios.interceptors.request.eject(uploadInterceptor);
-
-      }, 20000)
-      
-    })
-  })
-
-  
-  
-
-  describe('Get a record for OSW', () => {
     describe('Functional', () => {
       // TODO: Need to verify the download
       // it('When passed with valid recordId, should be able to get the zip file', async () => {
@@ -492,10 +555,9 @@ describe('OSW service', () => {
     describe('Validation', () => {
       it('When passed with valid recordId and invalid token, should return 401 status', async () => {
 
-        let oswRecordId = '8ec3e5c760024640ade1c7acce9ad9b6';
         let oswAPI = new OSWApi(Utility.getConfiguration());
 
-        let response = oswAPI.getOswFile(oswRecordId);
+        let response = oswAPI.getOswFile(uploadedTdeiRecordId);
 
         await expect(response).rejects.toMatchObject({ response: { status: 401 } });
 
@@ -511,6 +573,27 @@ describe('OSW service', () => {
         await expect(response).rejects.toMatchObject({ response: { status: 404 } });
 
       })
-    })
-  })
-})
+    });
+  });
+
+  //This test should be ran at last as it will invalidate the uploaded file
+  describe('Invalidate the OSW file', () => {
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let downloadResponse = oswAPI.deleteOsw(uploadedTdeiRecordId);
+
+      await expect((await downloadResponse).status).toBe(200);
+    });
+
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let downloadResponse = oswAPI.deleteOsw(uploadedTdeiRecordId);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+  });
+
+});

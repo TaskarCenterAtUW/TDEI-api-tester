@@ -72,7 +72,7 @@ export class Utility {
         return parseFloat((min + Math.random() * diff).toFixed(6));
     }
 
-  
+
     static getRandomGtfsFlexUpload(): GtfsFlexUpload {
 
         return {
@@ -153,15 +153,15 @@ export class Utility {
     }
 
     static getOSWBlob(): Blob {
-        return this.getFileBlob('osw', 'valid.zip');
+        return this.getFileBlob('osw', 'osm.zip');
     }
 
     // Change the implementation
-    static getChangesetBlob() : Blob {
-        return this.getFileBlob('osw','changeset.txt','text/plain');
+    static getChangesetBlob(): Blob {
+        return this.getFileBlob('osw', 'changeset.txt', 'text/plain');
     }
     // Change the implementation  here
-    static getOSWMetadataBlob() : Blob {
+    static getOSWMetadataBlob(): Blob {
         //const blob = new Blob([jsonString], { type: 'application/json' });
         let randomMetadata = {
             "name": "Upload testing",
@@ -180,11 +180,11 @@ export class Utility {
         randomMetadata['name'] = faker.random.alphaNumeric(9);
         let jsonString = JSON.stringify(randomMetadata);
         const blob = new Blob([jsonString], { type: 'application/json' });
-        
+
         return blob;
     }
 
-    static getFileBlob(directory: string, filename: string, type:string = "application/zip" ) : Blob {
+    static getFileBlob(directory: string, filename: string, type: string = "application/zip"): Blob {
         let fileDir = path.dirname(__dirname);
         let payloadFilePath = path.join(fileDir, "assets/payloads/" + directory + "/files/" + filename);
         let filestream = fs.readFileSync(payloadFilePath);
