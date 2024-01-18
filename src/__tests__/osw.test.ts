@@ -2,9 +2,9 @@ import { AuthenticationApi, OSWApi, OSWConfidenceStatus, OswDownload, OSWFormatS
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import * as fs from "fs";
+import AdmZip from "adm-zip";
 
 
-const DOWNLOAD_FILE_PATH = `${__dirname}/osw-tmp`;
 describe('OSW service', () => {
   let configuration = Utility.getConfiguration();
   const NULL_PARAM = void 0;
@@ -67,18 +67,9 @@ describe('OSW service', () => {
     configuration.baseOptions = {
       headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
     };
-
-    // Create a cleand up download folder
-    if (!fs.existsSync(DOWNLOAD_FILE_PATH)) {
-      fs.mkdirSync(DOWNLOAD_FILE_PATH)
-    } else {
-      fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
-      fs.mkdirSync(DOWNLOAD_FILE_PATH);
-    }
   });
 
   afterAll(async () => {
-    fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
   });
 
   describe('Upload OSW dataset', () => {
@@ -522,35 +513,44 @@ describe('OSW service', () => {
 
       await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
     });
+
+    it('When passed valid token, should respond with 200 status and stream', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let response = await oswAPI.oswFormatDownload(convertJobId, { responseType: 'arraybuffer' });
+      const data: any = response.data;
+      const contentType = response.headers['content-type'];
+
+      expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+      expect(response.data).not.toBeNull();
+      expect(response.status).toBe(200);
+      if (contentType === "application/zip") {
+        const zip = new AdmZip(data);
+        const entries = zip.getEntries();
+        expect(entries.length).toBe(1);
+      }
+    });
   });
 
   describe('Download OSW File as zip', () => {
     describe('Functional', () => {
-      // TODO: Need to verify the download
-      // it('When passed with valid recordId, should be able to get the zip file', async () => {
+      it('When passed with valid recordId, should be able to get the zip file', async () => {
 
-      //   let oswRecordId = '8ec3e5c760024640ade1c7acce9ad9b6';
-      //   let oswAPI = new OSWApi(configuration);
+        // let oswRecordId = 'b52ca07e81174b978d3c9baef4198c87';
+        let oswAPI = new OSWApi(configuration);
 
-      //   let response = await oswAPI.getOswFile(oswRecordId, { responseType: 'arraybuffer' });
-      //   const data: any = response.data;
-      //   const contentDisposition = response.headers['content-disposition'];
-      //   const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-      //   const matches = filenameRegex.exec(contentDisposition);
-      //   const fileName = (matches != null && matches[1]) ? matches[1].replace(/['"]/g, '') : 'data.zip';
-      //   const filePath = `${DOWNLOAD_FILE_PATH}/${fileName}`
-      //   fs.writeFileSync(filePath, new Uint8Array(data))
-      //   const zip = new AdmZip(filePath);
-      //   const entries = zip.getEntries();
+        let response = await oswAPI.getOswFile(uploadedTdeiRecordId, "osw", { responseType: 'arraybuffer' });
+        const data: any = response.data;
+        const contentType = response.headers['content-type'];
+        const zip = new AdmZip(data);
+        const entries = zip.getEntries();
 
-      //   expect(entries.length).toBeGreaterThan(0);
-      //   expect(fileName.includes('zip')).toBe(true);
-      //   expect(response.data).not.toBeNull();
-      //   expect(response.status).toBe(200);
-
-      // })
-
-    })
+        expect(entries.length).toBeGreaterThanOrEqual(2);
+        expect(contentType).toBe("application/zip");
+        expect(response.data).not.toBeNull();
+        expect(response.status).toBe(200);
+      });
+    });
 
     describe('Validation', () => {
       it('When passed with valid recordId and invalid token, should return 401 status', async () => {
