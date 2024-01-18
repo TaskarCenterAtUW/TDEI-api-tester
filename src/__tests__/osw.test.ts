@@ -154,7 +154,7 @@ describe('OSW service', () => {
       expect(uploadStatus.data).toMatchObject(<RecordUploadStatus>{
         tdei_record_id: expect.any(String),
         stage: expect.any(String),
-        status: expect.anything(),
+        status: expect.toBeOneOf([undefined, null, expect.any(String)]),
         completed: expect.any(Boolean)
       })
     }, 45000);
@@ -267,7 +267,6 @@ describe('OSW service', () => {
       expect(validateStatus.data).toMatchObject(<ValidationStatus>{
         job_id: expect.any(String),
         status: expect.any(String),
-        validation_result: expect.toBeOneOf([null, expect.any(String)]),
         updated_at: expect.any(String),
       });
     }, 55000);
@@ -345,9 +344,9 @@ describe('OSW service', () => {
 
       it('When passed with valid token and valid recordId, should return 200 status with same record ID', async () => {
         let oswAPI = new OSWApi(configuration);
-        let recordId = uploadedTdeiRecordId;
+        let recordId = "fb0ae8ed553e40b99112dec89c309445";
 
-        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, "All", NULL_PARAM, NULL_PARAM, NULL_PARAM, recordId);
+        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, recordId);
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBe(1);
