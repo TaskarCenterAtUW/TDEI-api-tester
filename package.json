@@ -19,6 +19,7 @@
     "@types/jest": "29.5.0",
     "@types/node": "18.15.11",
     "adm-zip": "0.5.10",
+    "jest-extended": "^4.0.2",
     "jest-html-reporter": "3.7.1",
     "rimraf": "^3.0.2",
     "ts-jest": "29.1.0",
@@ -28,7 +29,7 @@
     "@faker-js/faker": "^7.6.0",
     "axios": "1.6.5",
     "dotenv": "^16.3.1",
-    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#4eedd362f968b21f17b8ae459135f52bab6218ef",
+    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#1f1e935fcd3cd69b66756096ac8d35ba5a51eb5d",
     "typescript": "5.0.4"
   }
 }
