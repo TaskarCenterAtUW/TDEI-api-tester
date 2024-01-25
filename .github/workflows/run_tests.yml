@@ -54,6 +54,6 @@ jobs:
             <h2>API Testing Report</h2>
             <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.workflow }}</a></p>
             <p>Repository: <a href="${{ github.server_url }}/${{ github.repository }}">${{ github.repository }}</a></p>
-            <#if github.event_name == 'pull_request'>
+            <#if ${{github.event_name}} == 'pull_request'>
               <p>Pull Request: <a href="${{ github.event.pull_request.html_url }}">${{ github.event.pull_request.title }}</a></p>
             </#if>

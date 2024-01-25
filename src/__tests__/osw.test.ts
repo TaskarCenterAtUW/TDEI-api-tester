@@ -15,12 +15,9 @@ describe('OSW service', () => {
   let validationJobId: string = '1';
 
   const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
-    // console.log("AAAAAA");
-    // console.log(request.url);
     if (
-      request.url === `${configuration.basePath}/api/v1/osw/upload/${tdei_project_group_id}/${service_id}`
+      request.url?.includes(`${configuration.basePath}/api/v1/osw/upload/${tdei_project_group_id}/${service_id}`)
     ) {
-      // console.log('Applying stuff');
       let data = request.data as FormData;
       let datasetFile = data.get("dataset") as File;
       let metaFile = data.get('metadata') as File;
