@@ -171,7 +171,7 @@ export class Utility {
                 "name": "Lara",
                 "gender": "female"
             },
-            "collected_by": "See best practices document",
+            "collected_by": "John Doe",
             "collection_date": "2019-02-10T09:30Z",
             "collection_method": "manual",
             "data_source": "3rdParty",
@@ -192,7 +192,7 @@ export class Utility {
                 "name": "Lara",
                 "gender": "female"
             },
-            "collected_by": "See best practices document",
+            "collected_by": "John Doe",
             "collection_date": "2019-02-10T09:30Z",
             "collection_method": "manual",
             "data_source": "3rdParty",

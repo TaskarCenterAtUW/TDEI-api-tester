@@ -44,10 +44,16 @@ jobs:
           server_port: 587
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: ${{ job.status }} - API testing with the modified OpenAPI spec status
+          subject: ${{ job.status }} - API Testing Report | ${{ github.event_name == 'pull_request' && format('{0}-{1}', 'PR', github.event.pull_request.title)  || 'Triggered via Schema Changed' }}
           to: gs-tdei-coreteam@gaussiansolutions.com
           cc: sureshd@gaussiansolutions.com
           bcc: rakeshd@gaussiansolutions.com
           from: Workflow Notification
-          body: API Tester Status attached. Run details can be found here https://github.com/TaskarCenterAtUW/TDEI-api-tester/actions/runs/${{ github.run_id }}
           attachments: test-report.html
+          html_body: |
+            <h2>API Testing Report</h2>
+            <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.workflow }}</a></p>
+            <p>Repository: <a href="${{ github.server_url }}/${{ github.repository }}">${{ github.repository }}</a></p>
+            <#if github.event_name == 'pull_request'>
+              <p>Pull Request: <a href="${{ github.event.pull_request.html_url }}">${{ github.event.pull_request.title }}</a></p>
+            </#if>
