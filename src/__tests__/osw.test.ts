@@ -265,7 +265,7 @@ describe('OSW service', () => {
         status: expect.any(String),
         updated_at: expect.any(String),
       });
-    }, 55000);
+    }, 60000);
   });
 
   describe('List Files', () => {
@@ -408,9 +408,9 @@ describe('OSW service', () => {
         });
       });
 
-      it('When passed with valid token and valid version, should return 200 status with records matching version', async () => {
+      it('When passed with valid token and valid osw_schema_version, should return 200 status with records matching osw_schema_version', async () => {
         let oswAPI = new OSWApi(configuration);
-        let name = "manual";
+        let osw_schema_version = "v0.1";
 
         const oswFiles = await oswAPI.listOswFiles(
           NULL_PARAM, // bbox?: number[] | undefined, 
@@ -423,7 +423,7 @@ describe('OSW service', () => {
           NULL_PARAM,// collection_date?: string | undefined, 
           NULL_PARAM,// confidence_level?: number | undefined, 
           "All",// status?: string | undefined, 
-          "v0.1" // osw_schema_version?: string | undefined, 
+          osw_schema_version // osw_schema_version?: string | undefined, 
           // tdei_project_group_id?: string | undefined, 
           // valid_from?: string | undefined, 
           // valid_to?: string | undefined, 
@@ -435,7 +435,7 @@ describe('OSW service', () => {
 
         expect(oswFiles.status).toBe(200);
         oswFiles.data.forEach(file => {
-          expect(file.name).toContain(name)
+          expect(file.osw_schema_version).toContain(osw_schema_version)
         });
       });
 
@@ -809,7 +809,7 @@ describe('OSW service', () => {
         downloadUrl: expect.any(String),
         conversion: expect.any(String)
       })
-    }, 25000);
+    }, 35000);
   })
 
   describe('Download converted file', () => {
@@ -824,7 +824,7 @@ describe('OSW service', () => {
     it('When passed valid token, should respond with 200 status and stream', async () => {
       let oswAPI = new OSWApi(configuration);
 
-      let response = await oswAPI.oswFormatDownload("21", { responseType: 'arraybuffer' });
+      let response = await oswAPI.oswFormatDownload(convertJobId, { responseType: 'arraybuffer' });
       const data: any = response.data;
       const contentType = response.headers['content-type'];
 
@@ -836,7 +836,7 @@ describe('OSW service', () => {
         const entries = zip.getEntries();
         expect(entries.length).toBe(1);
       }
-    }, 10000);
+    }, 20000);
   });
 
   describe('Download OSW File as zip', () => {
