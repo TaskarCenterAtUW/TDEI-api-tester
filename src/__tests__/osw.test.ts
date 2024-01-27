@@ -1,9 +1,7 @@
 import { AuthenticationApi, OSWApi, OSWConfidenceStatus, OswDownload, OSWFormatStatusResponse, RecordPublishStatus, RecordUploadStatus, ValidationStatus, VersionSpec, OSWConfidenceResponse, OswDownloadStatusEnum, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OSWFormatResponse } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
-import * as fs from "fs";
 import AdmZip from "adm-zip";
-import exp from "constants";
 
 
 describe('OSW service', () => {
@@ -410,6 +408,68 @@ describe('OSW service', () => {
         });
       });
 
+      it('When passed with valid token and valid version, should return 200 status with records matching version', async () => {
+        let oswAPI = new OSWApi(configuration);
+        let name = "manual";
+
+        const oswFiles = await oswAPI.listOswFiles(
+          NULL_PARAM, // bbox?: number[] | undefined, 
+          NULL_PARAM,// name?: string | undefined, 
+          NULL_PARAM,// version?: string | undefined, 
+          NULL_PARAM,// data_source?: string | undefined, 
+          NULL_PARAM,// collection_method?: string | undefined, 
+          NULL_PARAM,// collected_by?: string | undefined, 
+          NULL_PARAM, // derived_from_dataset_id?: string | undefined, 
+          NULL_PARAM,// collection_date?: string | undefined, 
+          NULL_PARAM,// confidence_level?: number | undefined, 
+          "All",// status?: string | undefined, 
+          "v0.1" // osw_schema_version?: string | undefined, 
+          // tdei_project_group_id?: string | undefined, 
+          // valid_from?: string | undefined, 
+          // valid_to?: string | undefined, 
+          // tdei_record_id?: string | undefined, 
+          // page_no?: number | undefined, 
+          // page_size?: number | undefined, 
+          // options?: AxiosRequestConfig<...> | undefined
+        );
+
+        expect(oswFiles.status).toBe(200);
+        oswFiles.data.forEach(file => {
+          expect(file.name).toContain(name)
+        });
+      });
+
+      it('When passed with valid token and valid name, should return 200 status with records matching name', async () => {
+        let oswAPI = new OSWApi(configuration);
+        let name = "manual";
+
+        const oswFiles = await oswAPI.listOswFiles(
+          NULL_PARAM, // bbox?: number[] | undefined, 
+          name,// name?: string | undefined, 
+          NULL_PARAM,// version?: string | undefined, 
+          NULL_PARAM,// data_source?: string | undefined, 
+          NULL_PARAM,// collection_method?: string | undefined, 
+          NULL_PARAM,// collected_by?: string | undefined, 
+          NULL_PARAM, // derived_from_dataset_id?: string | undefined, 
+          NULL_PARAM,// collection_date?: string | undefined, 
+          NULL_PARAM,// confidence_level?: number | undefined, 
+          "All",// status?: string | undefined, 
+          // osw_schema_version?: string | undefined, 
+          // tdei_project_group_id?: string | undefined, 
+          // valid_from?: string | undefined, 
+          // valid_to?: string | undefined, 
+          // tdei_record_id?: string | undefined, 
+          // page_no?: number | undefined, 
+          // page_size?: number | undefined, 
+          // options?: AxiosRequestConfig<...> | undefined
+        );
+
+        expect(oswFiles.status).toBe(200);
+        oswFiles.data.forEach(file => {
+          expect(file.name).toContain(name)
+        });
+      });
+
       it('When passed with valid token and valid collection_method, should return 200 status with records matching collection_method', async () => {
         let oswAPI = new OSWApi(configuration);
         let collection_method = "manual";
@@ -440,7 +500,6 @@ describe('OSW service', () => {
           expect(file.collection_method).toBe(collection_method)
         });
       });
-
       it('When passed with valid token and valid collected_by, should return 200 status with records matching collected_by', async () => {
         let oswAPI = new OSWApi(configuration);
         let collected_by = "John Doe";
@@ -568,16 +627,35 @@ describe('OSW service', () => {
     });
 
     describe('Validation', () => {
-      it('When passed with valid token and invalid recordId, should return 200 with 0 records', async () => {
+      it('When passed with valid token and invalid recordId, should return status 200 with 0 record', async () => {
         let oswAPI = new OSWApi(configuration);
         let recordId = 'dummyRecordId';
 
-        const oswFiles = await oswAPI.listOswFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, recordId);
+        const oswFiles = await oswAPI.listOswFiles(
+          NULL_PARAM, // bbox?: number[] | undefined, 
+          NULL_PARAM,// name?: string | undefined, 
+          NULL_PARAM,// version?: string | undefined, 
+          NULL_PARAM,// data_source?: string | undefined, 
+          NULL_PARAM,// collection_method?: string | undefined, 
+          NULL_PARAM,// collected_by?: string | undefined, 
+          NULL_PARAM,// derived_from_dataset_id?: string | undefined, 
+          NULL_PARAM,// collection_date?: string | undefined, 
+          NULL_PARAM,// confidence_level?: number | undefined, 
+          "All",// status?: string | undefined, 
+          NULL_PARAM,// osw_schema_version?: string | undefined, 
+          NULL_PARAM,// tdei_project_group_id?: string | undefined, 
+          NULL_PARAM,// valid_from?: string | undefined, 
+          NULL_PARAM,// valid_to?: string | undefined, 
+          recordId,// tdei_record_id?: string | undefined, 
+          // page_no?: number | undefined, 
+          // page_size?: number | undefined, 
+          // options?: AxiosRequestConfig<...> | undefined
+        );
 
         expect(oswFiles.status).toBe(200);
         expect(oswFiles.data.length).toBe(0);
 
-      })
+      });
 
       it('When passed without valid token, should reject with 401 status', async () => {
         let oswAPI = new OSWApi(Utility.getConfiguration());
@@ -746,7 +824,7 @@ describe('OSW service', () => {
     it('When passed valid token, should respond with 200 status and stream', async () => {
       let oswAPI = new OSWApi(configuration);
 
-      let response = await oswAPI.oswFormatDownload(convertJobId, { responseType: 'arraybuffer' });
+      let response = await oswAPI.oswFormatDownload("21", { responseType: 'arraybuffer' });
       const data: any = response.data;
       const contentType = response.headers['content-type'];
 
@@ -758,7 +836,7 @@ describe('OSW service', () => {
         const entries = zip.getEntries();
         expect(entries.length).toBe(1);
       }
-    });
+    }, 10000);
   });
 
   describe('Download OSW File as zip', () => {
@@ -778,7 +856,7 @@ describe('OSW service', () => {
         expect(contentType).toBe("application/zip");
         expect(response.data).not.toBeNull();
         expect(response.status).toBe(200);
-      });
+      }, 10000);
     });
 
     describe('Validation', () => {

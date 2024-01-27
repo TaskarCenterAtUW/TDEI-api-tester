@@ -9,9 +9,6 @@ import {
     GtfsPathwaysUpload,
     GtfsPathwaysUploadCollectionMethodEnum,
     GtfsPathwaysUploadDataSourceEnum,
-    OswUpload,
-    OswUploadCollectionMethodEnum,
-    OswUploadDataSourceEnum,
 } from "tdei-client";
 import { environment } from "./environment/environment";
 import { faker } from '@faker-js/faker'
