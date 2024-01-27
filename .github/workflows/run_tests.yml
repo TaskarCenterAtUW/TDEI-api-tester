@@ -36,20 +36,6 @@ jobs:
       - name: Run unit test cases
         run: npm run test
 
-      - name: Generate HTML body
-        id: generate-html
-        run: |
-          if ("${{ github.event_name }}" === "pull_request") {
-            echo "::set-output name=html_body::<h2>API Testing Report</h2>
-            <p>Workflow: <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">${{ github.workflow }}</a></p>
-            <p>Repository: <a href=\"${{ github.server_url }}/${{ github.repository }}\">${{ github.repository }}</a></p>
-            <p>Pull Request: <a href=\"${{ github.event.pull_request.html_url }}\">${{ github.event.pull_request.title }}</a></p>";
-          } else {
-            echo "::set-output name=html_body::<h2>API Testing Report</h2>
-            <p>Workflow: <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">${{ github.workflow }}</a></p>
-            <p>Repository: <a href=\"${{ github.server_url }}/${{ github.repository }}\">${{ github.repository }}</a></p>";
-          }
-
       - name: send email notification
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -68,4 +54,6 @@ jobs:
             <h2>API Testing Report</h2>
             <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.workflow }}</a></p>
             <p>Repository: <a href="${{ github.server_url }}/${{ github.repository }}">${{ github.repository }}</a></p>
-            ${{ steps.generate-html.outputs.html_body }}
+            <#if '${{github.event_name}}' == 'pull_request'>
+              <p>Pull Request: <a href="${{ github.event.pull_request.html_url }}">${{ github.event.pull_request.title }}</a></p>
+            </#if>
