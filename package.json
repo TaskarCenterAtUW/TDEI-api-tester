@@ -29,7 +29,7 @@
     "@faker-js/faker": "^7.6.0",
     "axios": "1.6.5",
     "dotenv": "^16.3.1",
-    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#162b5933f445be1e19faf99d8cf96d11cb278dd7",
+    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#5e93cb908803ba00afcf860ffef13fe7be25a160",
     "typescript": "5.0.4"
   }
 }

@@ -1,4 +1,4 @@
-import { AuthenticationApi, OSWApi, OSWConfidenceStatus, OswDownload, OSWFormatStatusResponse, RecordPublishStatus, RecordUploadStatus, ValidationStatus, VersionSpec, OSWConfidenceResponse, OswDownloadStatusEnum, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OSWFormatResponse } from "tdei-client";
+import { AuthenticationApi, OSWApi, OSWConfidenceStatus, OswDownload, OSWFormatStatusResponse, RecordPublishStatus, RecordUploadStatus, ValidationStatus, VersionSpec, OSWConfidenceResponse, OswDownloadStatusEnum, OswDownloadCollectionMethodEnum, OswDownloadDataSourceEnum, OSWFormatResponse, DatasetBboxStatus, FlatteningStatus } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
@@ -10,6 +10,7 @@ describe('OSW service', () => {
   let uploadedTdeiRecordId: string = '';
   let confidenceJobId: number = 1;
   let convertJobId: string = '1';
+  let datasetBboxJobId: string = '1';
   let validationJobId: string = '1';
 
   const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
@@ -75,9 +76,9 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getOSWMetadataBlob();
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
-        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
-        let derived_from_dataset_id = 'a042a1b3aa874701929cb33a98f28e9d';
+        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
+        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
+        let derived_from_dataset_id = '40566429d02c4c80aee68c970977bed8';
         try {
           const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
           const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
@@ -97,8 +98,8 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getInvalidOSWMetadataBlob();
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
-        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
+        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
+        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
         try {
           const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
           const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
@@ -117,8 +118,8 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getOSWMetadataBlob();
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = '0c29017c-f0b9-433e-ae13-556982f2520b';
-        let service_id = 'f5002a09-3ac1-4353-bb67-cb7a7c6fcc40';
+        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
+        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
 
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
         const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
@@ -168,7 +169,7 @@ describe('OSW service', () => {
     it('When passed with already published tdei_record_id, should respond with 400 status', async () => {
 
       let oswAPI = new OSWApi(configuration);
-      let tdei_record_id = "93e39bfc527d4a25a1d8af54695aa05d";
+      let tdei_record_id = "40566429d02c4c80aee68c970977bed8";
 
       let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
 
@@ -378,7 +379,7 @@ describe('OSW service', () => {
 
       it('When passed with valid token and valid recordId, should return 200 status with same record ID', async () => {
         let oswAPI = new OSWApi(configuration);
-        let recordId = "fb0ae8ed553e40b99112dec89c309445";
+        let recordId = "40566429d02c4c80aee68c970977bed8";
 
         const oswFiles = await oswAPI.listOswFiles(
           NULL_PARAM, // bbox?: number[] | undefined, 
@@ -901,6 +902,145 @@ describe('OSW service', () => {
 
       await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
     });
+  });
+
+  let flatteningRecordId = 'd5a4abc2cd024e818a2f560bbf66326e';
+  let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
+  let dataFlatteningJobId = "1";
+  describe('Dataset Flattening', () => {
+
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let datasetFlatternByIdRequest = oswAPI.datasetFlatternById(flatteningRecordId);
+
+      await expect(datasetFlatternByIdRequest).rejects.toMatchObject({ response: { status: 401 } });
+    })
+
+    it('When passed with invalid tdei_record_id, should respond with 404 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let datasetFlatternByIdRequest = oswAPI.datasetFlatternById("test_flatteningRecordId");
+
+      await expect(datasetFlatternByIdRequest).rejects.toMatchObject({ response: { status: 404 } });
+    });
+
+    it('When passed with valid token, should respond with 202 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let datasetFlatternByIdRequest = await oswAPI.datasetFlatternById(flatteningRecordId, true);
+
+      expect(datasetFlatternByIdRequest.status).toBe(202);
+
+      expect(datasetFlatternByIdRequest.data).toStrictEqual(expect.any(Number));
+
+      dataFlatteningJobId = datasetFlatternByIdRequest.data!;
+      console.log("dataset flattening job_id", dataFlatteningJobId);
+    });
+
+    it('When requesting for already flattened dataset without override flag, should respond with 400 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let datasetFlatternByIdRequest = oswAPI.datasetFlatternById(bboxRecordId);
+
+      await expect(datasetFlatternByIdRequest).rejects.toMatchObject({ response: { status: 400 } });
+    });
+  });
+
+  describe('Dataset Flattening Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+      let job_id = "1";
+      let flatteningStatusRequest = oswAPI.getdatasetFlatternStatus(job_id);
+
+      await expect(flatteningStatusRequest).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+    it('When passed with valid token and valid job id, should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+      await new Promise((r) => setTimeout(r, 10000));
+      let flatteningStatus = await oswAPI.getdatasetFlatternStatus(dataFlatteningJobId.toString());
+
+      expect(flatteningStatus.status).toBe(200);
+
+      expect(flatteningStatus.data).toMatchObject(<FlatteningStatus>{
+        job_id: expect.toBeOneOf([`${dataFlatteningJobId}`]),
+        status: expect.any(String),
+        message: expect.stringContaining('Data loaded successfully')
+      })
+    }, 15000);
+  });
+
+  describe('Dataset Bbox Request', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let bboxRequest = oswAPI.datasetBbox(bboxRecordId, [-122.264913, 47.558543, -122.10549, 47.691327]);
+
+      await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+    it('When passed with valid token, should respond with job_id', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, [-122.264913, 47.558543, -122.10549, 47.691327]);
+
+      expect(bboxRequest.status).toBe(202);
+      expect(bboxRequest.data).toStrictEqual(expect.any(Number));
+      datasetBboxJobId = bboxRequest.data!;
+      console.log("dataset bbox job_id", datasetBboxJobId);
+    });
+  });
+
+  describe('Fetch Dataset Bbox Request Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let bboxStatusResponse = oswAPI.datsetBboxStatus(datasetBboxJobId);
+
+      await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+    it('When passed with valid token and job_id. should respond with 200 status', async () => {
+      let oswAPI = new OSWApi(configuration);
+      await new Promise((r) => setTimeout(r, 20000));
+
+      let formatStatus = await oswAPI.datsetBboxStatus(datasetBboxJobId);
+
+      expect(formatStatus.data).toMatchObject(<DatasetBboxStatus>{
+        job_id: expect.toBeOneOf([`${datasetBboxJobId}`]),
+        status: expect.toBeOneOf(["COMPLETED"]),
+        message: expect.any(String),
+        download_url: expect.any(String)
+      })
+    }, 35000);
+  });
+
+  describe('Download Dataset Bbox request file', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let downloadResponse = oswAPI.datasetBboxDownload(datasetBboxJobId);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+    it('When passed valid token, should respond with 200 status and stream', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let response = await oswAPI.datasetBboxDownload(datasetBboxJobId, { responseType: 'arraybuffer' });
+      const data: any = response.data;
+      const contentType = response.headers['content-type'];
+
+      expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+      expect(response.data).not.toBeNull();
+      expect(response.status).toBe(200);
+      if (contentType === "application/zip") {
+        const zip = new AdmZip(data);
+        const entries = zip.getEntries();
+        expect(entries.length).toBeGreaterThan(1);
+      }
+    }, 20000);
   });
 
 });
