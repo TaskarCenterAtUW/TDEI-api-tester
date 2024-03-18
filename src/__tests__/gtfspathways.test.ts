@@ -144,7 +144,7 @@ describe('GTFS Pathways service', () => {
 
       it('When passed with valid token and recordId, should return record with same recordId', async () => {
         //TODO: feed from seeder or configuration
-        let recordId = '90d81b53e2e54abebd66986d2fdab169';
+        let recordId = '64cbd71dcde34527b37fd325e94451d8';
         let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
 
         const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, recordId);
@@ -201,7 +201,7 @@ describe('GTFS Pathways service', () => {
   describe('Post Pathway File', () => {
     var stationId: string = '';
     //TODO: feed from seeder or configuration
-    const project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+    const project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
 
     beforeAll(async () => {
       //TODO: Add this again
@@ -267,7 +267,7 @@ describe('GTFS Pathways service', () => {
 
   describe('List stations', () => {
     //TODO: feed from seeder or configuration
-    const project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+    const project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
     describe('Functional', () => {
 
       it('When passed with valid token, should return return 200 status with list of stations', async () => {
@@ -373,7 +373,7 @@ describe('GTFS Pathways service', () => {
     describe('Functional', () => {
       it('When passed with valid recordId, should be able to get the zip file', async () => {
 
-        let pathwaysRecordId = '7cd301eb50ea413f90be12598d158149';
+        let pathwaysRecordId = '64cbd71dcde34527b37fd325e94451d8';
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
 
         let response = await pathwaysAPI.getPathwaysFile(pathwaysRecordId, { responseType: 'arraybuffer' });
@@ -399,7 +399,7 @@ describe('GTFS Pathways service', () => {
     describe('Validation', () => {
       it('When passed with valid recordId and invalid token, should return 401 status', async () => {
 
-        let pathwaysRecordId = '7cd301eb50ea413f90be12598d158149';
+        let pathwaysRecordId = '64cbd71dcde34527b37fd325e94451d8';
         let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
 
         let response = pathwaysAPI.getPathwaysFile(pathwaysRecordId);

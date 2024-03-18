@@ -1,5 +1,6 @@
 import { AuthenticationApi, GeneralApi, RecordStatus, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
+import { Seeder } from "../seeder";
 
 
 describe("General service", () => {
@@ -17,6 +18,15 @@ describe("General service", () => {
     };
   }, 30000);
 
+  // describe('Generate seed data', () =>{
+  //   it('Should generate data', async () =>{
+  //     const seeder = new Seeder();
+  //   const seededData = await seeder.seed()
+  //   console.log(seededData);
+  //   expect(seededData).toBeTruthy();
+  //   })
+     
+  // })
 
 
   describe("List API versions", () => {

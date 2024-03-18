@@ -139,7 +139,7 @@ describe('GTFS Flex service', () => {
 
         it('When passed with valid token and valid recordId, should return 200 status with only single record with same record Id', async () => {
 
-            let tdei_record_id = '2bf7f70127b146cbb96319b5d39ada93';
+            let tdei_record_id = 'c480a459c8f94a8cba738ded7ed241f8';
             let flexApi = new GTFSFlexApi(configuration);
 
             const files = await flexApi.listFlexFiles(undefined, undefined, undefined, undefined, undefined, tdei_record_id);
@@ -190,7 +190,7 @@ describe('GTFS Flex service', () => {
 
         beforeAll(async () => {
             const seeder = new Seeder();
-            serviceId = await seeder.createService('c552d5d1-0719-4647-b86d-6ae9b25327b7');
+            serviceId = await seeder.createService('0c2e6ce3-9421-4f67-95af-6a9843ded5cf');
             seeder.removeHeader();
 
         })
@@ -204,7 +204,7 @@ describe('GTFS Flex service', () => {
                 const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
                 let metaToUpload = Utility.getRandomGtfsFlexUpload();
                 metaToUpload.tdei_service_id = serviceId;
-                metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                metaToUpload.tdei_project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
                 let fileBlob = Utility.getFlexBlob();
 
                 const uploadedFileResponse = await flexApi.uploadGtfsFlexFileForm(metaToUpload, fileBlob);
@@ -220,7 +220,7 @@ describe('GTFS Flex service', () => {
                 let flexApi = new GTFSFlexApi(configuration);
                 const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
                 let metaToUpload = Utility.getRandomGtfsFlexUpload();
-                metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                metaToUpload.tdei_project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
                 metaToUpload.data_source = <any>"Test";
                 let fileBlob = Utility.getFlexBlob();
 
@@ -238,7 +238,7 @@ describe('GTFS Flex service', () => {
                 const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "flex-test-upload.zip", metaToUpload))
                 let metaToUpload = Utility.getRandomGtfsFlexUpload();
                 metaToUpload.tdei_service_id = serviceId;
-                metaToUpload.tdei_project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
+                metaToUpload.tdei_project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
                 let fileBlob = Utility.getFlexBlob();
                 
                 const uploadedFileResponse =  flexApi.uploadGtfsFlexFileForm(metaToUpload, fileBlob);
@@ -283,7 +283,7 @@ describe('GTFS Flex service', () => {
         describe('Functional', () => {
             it('When passed with valid recordId, should be able to get the zip file', async () => {
 
-                let flexRecordId = '8c6c92c8cb38415e9e2775733a4bf52e';
+                let flexRecordId = 'c480a459c8f94a8cba738ded7ed241f8';
                 let flexAPI = new GTFSFlexApi(configuration);
 
                 let response = await flexAPI.getFlexFile(flexRecordId, { responseType: 'arraybuffer' });

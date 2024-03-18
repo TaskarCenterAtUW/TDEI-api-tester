@@ -2,6 +2,7 @@ import { AuthenticationApi, OSWApi, OSWConfidenceStatus, OswDownload, OSWFormatS
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
+import { Seeder } from "../seeder";
 
 
 describe('OSW service', () => {
@@ -56,6 +57,7 @@ describe('OSW service', () => {
   };
 
   beforeAll(async () => {
+    
     let authAPI = new AuthenticationApi(configuration);
     const loginResponse = await authAPI.authenticate({
       username: configuration.username,
@@ -76,9 +78,9 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getOSWMetadataBlob();
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
-        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
-        let derived_from_dataset_id = '40566429d02c4c80aee68c970977bed8';
+        let tdei_project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
+        let service_id = '2d45e7bf-c998-4837-9d9d-0d6febb5818a';
+        let derived_from_dataset_id = '93526a5157a446ef89f45ea79dfb2fc3';
         try {
           const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
           const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
@@ -91,15 +93,15 @@ describe('OSW service', () => {
         } catch (e) {
           console.log(e);
         }
-      }, 20000);
+      }, 25000);
 
       it('When passed with valid token, dataset and invalid metafile, should return 400 status with errors', async () => {
         let oswAPI = new OSWApi(configuration);
         let metaToUpload = Utility.getInvalidOSWMetadataBlob();
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
-        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
+        let tdei_project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
+        let service_id = '2d45e7bf-c998-4837-9d9d-0d6febb5818a';
         try {
           const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
           const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
@@ -118,8 +120,8 @@ describe('OSW service', () => {
         let metaToUpload = Utility.getOSWMetadataBlob();
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getOSWBlob();
-        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
-        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
+        let tdei_project_group_id = '0c2e6ce3-9421-4f67-95af-6a9843ded5cf';
+        let service_id = '2d45e7bf-c998-4837-9d9d-0d6febb5818a';
 
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
         const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
@@ -169,7 +171,7 @@ describe('OSW service', () => {
     it('When passed with already published tdei_record_id, should respond with 400 status', async () => {
 
       let oswAPI = new OSWApi(configuration);
-      let tdei_record_id = "40566429d02c4c80aee68c970977bed8";
+      let tdei_record_id = "5406308c933547a3899b4d5bba309cf2";
 
       let publishOswResponse = oswAPI.publishOswFile(tdei_record_id);
 
@@ -379,7 +381,7 @@ describe('OSW service', () => {
 
       it('When passed with valid token and valid recordId, should return 200 status with same record ID', async () => {
         let oswAPI = new OSWApi(configuration);
-        let recordId = "40566429d02c4c80aee68c970977bed8";
+        let recordId = "5406308c933547a3899b4d5bba309cf2";
 
         const oswFiles = await oswAPI.listOswFiles(
           NULL_PARAM, // bbox?: number[] | undefined, 
@@ -904,9 +906,12 @@ describe('OSW service', () => {
     });
   });
 
-  let flatteningRecordId = 'd5a4abc2cd024e818a2f560bbf66326e';
-  let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
-  let dataFlatteningJobId = "1";
+  // let flatteningRecordId = 'd5a4abc2cd024e818a2f560bbf66326e';
+  // let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
+  // let dataFlatteningJobId = "1";
+  let flatteningRecordId = '2acba477aaaa4c5e8684fa2724f133d3';
+  let bboxRecordId = 'bc6b12c8d17c468fb5b91d24dcac5270';
+  let dataFlatteningJobId = "1"; // this is default value
   describe('Dataset Flattening', () => {
 
     it('When passed without valid token, should respond with 401 status', async () => {
