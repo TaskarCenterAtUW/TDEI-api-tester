@@ -1,6 +1,9 @@
 # TDEI-api-tester
 API tester for the client-API received from swagger
 
+# Node Environment
+v18.16.0 
+
 # Steps
 - The testing rig is currently configured based on `.env` file.
 - `npm i`
