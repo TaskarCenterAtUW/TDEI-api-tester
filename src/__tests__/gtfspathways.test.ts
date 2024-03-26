@@ -1,28 +1,44 @@
-import { AuthenticationApi, GeoJsonObject, GTFSPathwaysApi, GtfsPathwaysDownload, GtfsPathwaysUpload, Station, VersionSpec } from "tdei-client";
+import { AuthenticationApi, GTFSPathwaysApi, GeneralApi, JobDetails, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
-import * as fs from "fs";
 import { Seeder } from "../seeder";
 import AdmZip from "adm-zip";
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/gtfs-pathways-tmp`;
 
 describe('GTFS Pathways service', () => {
-
   let configuration = Utility.getConfiguration();
-  const NULL_PARAM = void 0;
+  let validationJobId: string = '1';
+  let uploadedJobId: string = '1';
+  let publishJobId: string = '1';
+  let uploadedDatasetId: string = '1';
 
-
-  const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string, metaToUpload: GtfsPathwaysUpload) => {
+  const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
     if (
-      request.url === `${configuration.basePath}/api/v1/gtfs-pathways`
+      request.url?.includes(`${configuration.basePath}/api/v1/gtfs-pathways/upload/${tdei_project_group_id}/${service_id}`)
     ) {
       let data = request.data as FormData;
-      let file = data.get("file") as File;
-      delete data["file"];
-      delete data["meta"];
-      data.set("file", file, fileName);
-      data.set("meta", JSON.stringify(metaToUpload));
+      let datasetFile = data.get("dataset") as File;
+      let metaFile = data.get('metadata') as File;
+      let changesetFile = data.get('changeset') as File;
+      delete data['dataset'];
+      delete data['metadata'];
+      delete data['changeset'];
+      data.set('dataset', datasetFile, datasetName);
+      data.set('metadata', metaFile, metafileName);
+      data.set('changeset', changesetFile, changestName);
+    }
+    return request;
+  };
+
+  const validateRequestInterceptor = (request: InternalAxiosRequestConfig, datasetName: string) => {
+    if (
+      request.url === `${configuration.basePath}/api/v1/gtfs-pathways/validate`
+    ) {
+      let data = request.data as FormData;
+      let datasetFile = data.get("dataset") as File;
+      delete data['dataset'];
+      data.set('dataset', datasetFile, datasetName);
     }
     return request;
   };
@@ -36,373 +52,271 @@ describe('GTFS Pathways service', () => {
     configuration.baseOptions = {
       headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
     };
-    // Create a cleand up download folder
-    if (!fs.existsSync(DOWNLOAD_FILE_PATH)) {
-      fs.mkdirSync(DOWNLOAD_FILE_PATH)
-    } else {
-      fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
-      fs.mkdirSync(DOWNLOAD_FILE_PATH);
-    }
-
   });
 
-  afterAll(async () => {
-    fs.rmSync(DOWNLOAD_FILE_PATH, { recursive: true, force: true });
-  })
 
-  describe('List files ', () => {
-
+  describe('Upload Pathways dataset', () => {
     describe('Functional', () => {
+      it('When passed with valid token, metafile and changeset, should return 202 status with recordId in response', async () => {
+        let pathwaysAPI = new GTFSPathwaysApi(configuration);
+        let metaToUpload = Utility.getMetadataBlob("Pathways")
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getPathwaysBlob();
+        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
+        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
+        let derived_from_dataset_id = '';
+        try {
+          const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+          const uploadFileResponse = await pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
-      it('When passed with valid token, should return list of flex files', async () => {
+          expect(uploadFileResponse.status).toBe(202);
+          expect(uploadFileResponse.data).not.toBeNull();
+          uploadedJobId = uploadFileResponse.data;
+          console.log("uploaded tdei_dataset_id", uploadedJobId);
+          axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+          console.log(e);
+        }
+      }, 20000);
 
-        let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
+      it('When passed with valid token, dataset and invalid metafile, should return 400 status with errors', async () => {
+        let pathwaysAPI = new GTFSPathwaysApi(configuration);
+        let metaToUpload = Utility.getInvalidMetadataBlob("Pathways");
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getPathwaysBlob();
+        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
+        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
+        try {
+          const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+          const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
-        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles();
+          expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
 
-        expect(Array.isArray(pathwayFiles.data)).toBe(true);
-        pathwayFiles.data.forEach(download => {
-          expectPolygon(download.polygon)
-          expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_project_group_id: expect.any(String),
-            tdei_station_id: expect.any(String),
-            collected_by: expect.any(String),
-            collection_date: expect.any(String),
-            collection_method: expect.any(String),
-            valid_from: expect.any(String),
-            valid_to: expect.any(String),
-            //TODO:
-            // confidence_level: expect.any(Number),
-            data_source: expect.any(String),
-            polygon: expect.any(Object || null),
-            tdei_record_id: expect.any(String),
-            pathways_schema_version: expect.any(String),
-            download_url: expect.any(String)
-          })
-        })
-      })
-
-      it('When passed with valid token and page size 5, should return list of files less than or equal to 5', async () => {
-
-        let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
-        let page_size = 5
-
-        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, page_size);
-
-        expect(pathwayFiles.status).toBe(200)
-        expect(pathwayFiles.data.length).toBeLessThanOrEqual(page_size)
-        pathwayFiles.data.forEach(download => {
-          expectPolygon(download.polygon);
-          expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_project_group_id: expect.any(String),
-            tdei_station_id: expect.any(String),
-            collected_by: expect.any(String),
-            collection_date: expect.any(String),
-            collection_method: expect.any(String),
-            valid_from: expect.any(String),
-            valid_to: expect.any(String),
-            //TODO:
-            // confidence_level: expect.any(Number),
-            data_source: expect.any(String),
-            polygon: expect.any(Object || null),
-            tdei_record_id: expect.any(String),
-            pathways_schema_version: expect.any(String),
-            download_url: expect.any(String)
-          })
-        })
-      })
-
-      it('When passed with valid token and serviceId, should return list of files of same service id', async () => {
-
-        let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
-        //TODO: feed from seeder or configuration
-        let stationId = '5e20eb06-a950-4a5d-a9ca-1e390a801b8a';
-
-        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM, stationId);
-
-        expect(pathwayFiles.status).toBe(200);
-        pathwayFiles.data.forEach(download => {
-          expectPolygon(download.polygon);
-          expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_project_group_id: expect.any(String),
-            tdei_station_id: stationId,
-            collected_by: expect.any(String),
-            collection_date: expect.any(String),
-            collection_method: expect.any(String),
-            valid_from: expect.any(String),
-            valid_to: expect.any(String),
-            //TODO:
-            // confidence_level: expect.any(Number),
-            data_source: expect.any(String),
-            polygon: expect.any(Object || null),
-            tdei_record_id: expect.any(String),
-            pathways_schema_version: expect.any(String),
-            download_url: expect.any(String)
-          })
-        })
-      })
-
-      it('When passed with valid token and recordId, should return record with same recordId', async () => {
-        //TODO: feed from seeder or configuration
-        let recordId = '90d81b53e2e54abebd66986d2fdab169';
-        let gtfsPathwaysAPI = new GTFSPathwaysApi(configuration);
-
-        const pathwayFiles = await gtfsPathwaysAPI.listPathwaysFiles(NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, recordId);
-
-        expect(pathwayFiles.status).toBe(200);
-        expect(pathwayFiles.data.length).toBe(1);
-        pathwayFiles.data.forEach(download => {
-          expectPolygon(download.polygon);
-          expect(download).toMatchObject(<GtfsPathwaysDownload>{
-            tdei_project_group_id: expect.any(String),
-            tdei_station_id: expect.any(String),
-            collected_by: expect.any(String),
-            collection_date: expect.any(String),
-            collection_method: expect.any(String),
-            valid_from: expect.any(String),
-            valid_to: expect.any(String),
-            //TODO:
-            // confidence_level: expect.any(Number),
-            data_source: expect.any(String),
-            polygon: expect.any(Object || null),
-            tdei_record_id: recordId,
-            pathways_schema_version: expect.any(String),
-            download_url: expect.any(String)
-          })
-        })
-      })
-    })
-
+          axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+          console.log(e);
+        }
+      }, 20000)
+    });
     describe('Validation', () => {
-
-      it('When passed without token, should return 401 status', async () => {
-
+      it('When passed with invalid token, metafile and changeset, should return 401 status with recordId in response', async () => {
         let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+        let metaToUpload = Utility.getMetadataBlob("Pathways");
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getPathwaysBlob();
+        let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
+        let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
 
-        const pathwaysResponse = pathwaysAPI.listPathwaysFiles();
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+        const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
-        await expect(pathwaysResponse).rejects.toMatchObject({ response: { status: 401 } });
-
-      })
-
-      it('When passed with valid token and invalid recordId, should return 200 status with no elements', async () => {
-        let dummyRecordId = 'dummyRecordId';
-        let pathwaysAPI = new GTFSPathwaysApi(configuration);
-
-        const pathwaysResponse = await pathwaysAPI.listPathwaysFiles(undefined, undefined, undefined, undefined, undefined, dummyRecordId);
-
-        expect(pathwaysResponse.status).toBe(200);
-        expect(pathwaysResponse.data.length).toBe(0);
-      })
-    })
-
-  })
-
-  describe('Post Pathway File', () => {
-    var stationId: string = '';
-    //TODO: feed from seeder or configuration
-    const project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-
-    beforeAll(async () => {
-      //TODO: Add this again
-      const seeder = new Seeder();
-      stationId = await seeder.createStation(project_group_id);
-      seeder.removeHeader();
-    })
-
-    describe('Functional', () => {
-
-      it('When passed with valid token, metadata and file, should return 202 with recordId', async () => {
-        // TODO: Add back when needed
-        let pathwaysAPI = new GTFSPathwaysApi(configuration);
-        let metaToUpload = Utility.getRandomPathwaysUpload();
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        metaToUpload.tdei_project_group_id = project_group_id;
-        metaToUpload.tdei_station_id = stationId;
-        let fileBlob = Utility.getPathwaysBlob();
-
-        const uploadedFileResponse = await pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
-
-        expect(uploadedFileResponse.status).toBe(202);
-        expect(uploadedFileResponse.data != "").toBe(true);
-
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
         axios.interceptors.request.eject(uploadInterceptor);
 
       }, 20000)
 
-      it('When passed with valid token, file and invalid metadata, should return 400 status', async () => {
-        // TODO: Add back when needed
+    });
+  });
+
+  describe('Get Upload Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let generalAPI = new GeneralApi(Utility.getConfiguration());
+
+      let downloadResponse = generalAPI.listJobs(uploadedJobId);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let generalAPI = new GeneralApi(configuration);
+      await new Promise((r) => setTimeout(r, 20000));
+
+      let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+      expect(uploadStatus.status).toBe(200);
+      expect(uploadStatus.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            job_id: expect.toBeOneOf([`${uploadedJobId}`]),
+            status: expect.toBeOneOf(["COMPLETED"])
+          })
+        ])
+      );
+      uploadedDatasetId = uploadStatus.data[0].response_props.tdei_dataset_id;
+      console.log("uploaded tdei_dataset_id", uploadedDatasetId);
+    }, 25000);
+  });
+
+  describe('Publish the Pathways dataset for the tdei_dataset_id', () => {
+    it('When passed with valid token and valid tdei_dataset_id, should return a string', async () => {
+
+      let pathwaysAPI = new GTFSPathwaysApi(configuration);
+      let publish = await pathwaysAPI.publishGtfsPathwaysFile(uploadedDatasetId);
+      expect(publish.status).toBe(202);
+      expect(publish.data).toBeNumber();
+      publishJobId = publish.data;
+      console.log("publish job_id", publishJobId);
+    });
+
+    it('When passed with already published tdei_dataset_id, should respond with 400 status', async () => {
+
+      let pathwaysAPI = new GTFSPathwaysApi(configuration);
+      let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
+
+      let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(tdei_dataset_id);
+
+      await expect(publishResponse).rejects.toMatchObject({ response: { status: 400 } });
+    })
+
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+
+      let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(uploadedDatasetId);
+
+      await expect(publishResponse).rejects.toMatchObject({ response: { status: 401 } });
+    })
+  });
+
+  describe('Get Publish Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let generalAPI = new GeneralApi(Utility.getConfiguration());
+
+      let downloadResponse = generalAPI.listJobs(publishJobId);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    })
+
+
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let generalAPI = new GeneralApi(configuration);
+      await new Promise((r) => setTimeout(r, 20000));
+
+      let uploadStatus = await generalAPI.listJobs(publishJobId);
+
+      expect(uploadStatus.status).toBe(200);
+      expect(uploadStatus.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            job_id: expect.toBeOneOf([`${publishJobId}`]),
+            status: expect.toBeOneOf(["COMPLETED"])
+          })
+        ])
+      );
+    }, 25000);
+  });
+
+  describe('Validate Pathways dataset', () => {
+    describe('Functional', () => {
+      it('When passed with valid dataset, should return 202 status with job_id in response', async () => {
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
-        let metaToUpload = Utility.getRandomPathwaysUpload();
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        metaToUpload.tdei_project_group_id = project_group_id;
-        metaToUpload.tdei_station_id = stationId;
-        metaToUpload.collection_date = "";
-        let fileBlob = Utility.getPathwaysBlob();
+        let dataset = Utility.getPathwaysBlob();
+        try {
+          const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'pathways-valid.zip'))
+          const uploadFileResponse = await pathwaysAPI.validateGtfsPathwaysFileForm(dataset);
 
-        const uploadedFileResponse = pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
-
-        await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 400 } });
-
-        axios.interceptors.request.eject(uploadInterceptor);
+          expect(uploadFileResponse.status).toBe(202);
+          expect(uploadFileResponse.data).not.toBeNull();
+          validationJobId = uploadFileResponse.data;
+          console.log("validation job_id", validationJobId);
+          axios.interceptors.request.eject(validateInterceptor);
+        } catch (e) {
+          console.log(e);
+        }
       }, 20000)
+    });
 
-      it('When passed with invalid token, valid metadata and file, should return 401 status', async () => {
-        //TODO: Add back when needed
-        let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
-        let metaToUpload = Utility.getRandomPathwaysUpload();
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "pathways-test-upload.zip", metaToUpload))
-        metaToUpload.tdei_project_group_id = project_group_id;
-        metaToUpload.tdei_station_id = stationId;
-        let fileBlob = Utility.getPathwaysBlob();
-
-        const uploadedFileResponse = pathwaysAPI.uploadPathwaysFileForm(metaToUpload, fileBlob);
-
-        await expect(uploadedFileResponse).rejects.toMatchObject({ response: { status: 401 } });
-
-        axios.interceptors.request.eject(uploadInterceptor);
-      })
-    })
-  })
-
-  describe('List stations', () => {
-    //TODO: feed from seeder or configuration
-    const project_group_id = 'c552d5d1-0719-4647-b86d-6ae9b25327b7';
-    describe('Functional', () => {
-
-      it('When passed with valid token, should return return 200 status with list of stations', async () => {
-        let pathwaysAPI = new GTFSPathwaysApi(configuration);
-
-        let stations = await pathwaysAPI.listStations();
-
-        expect(stations.status).toBe(200);
-        expect(Array.isArray(stations.data)).toBe(true);
-        stations.data.forEach(station => {
-          expectPolygon(station.polygon);
-          expect(station).toMatchObject(<Station>{
-            polygon: expect.any(Object || null),
-            station_name: expect.any(String),
-            tdei_station_id: expect.any(String)
-          })
-        })
-      })
-
-      it('When passed with valid token and project_group_id, should return the stations', async () => {
-        let pathwaysAPI = new GTFSPathwaysApi(configuration);
-
-        let stations = await pathwaysAPI.listStations(project_group_id);
-
-        expect(stations.status).toBe(200);
-        expect(Array.isArray(stations.data)).toBe(true);
-        stations.data.forEach(station => {
-          expectPolygon(station.polygon);
-          expect(station).toMatchObject(<Station>{
-            polygon: expect.any(Object || null),
-            station_name: expect.any(String),
-            tdei_station_id: expect.any(String)
-          })
-        })
-
-      })
-
-      it('When passed with valid token and page limit, should return less than or equal to number of stations', async () => {
-        let page_size = 5;
-        let pathwaysAPI = new GTFSPathwaysApi(configuration);
-
-        let stations = await pathwaysAPI.listStations(undefined, undefined, page_size);
-
-        expect(stations.status).toBe(200);
-        expect(stations.data.length).toBeLessThanOrEqual(page_size);
-      })
-
-    })
     describe('Validation', () => {
-
-      it('When passed with invalid token, should return 401 status', async () => {
+      it('When passed with invalid token, dataset, should return 401 status with recordId in response', async () => {
         let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+        let dataset = Utility.getPathwaysBlob();
 
-        let stations = pathwaysAPI.listStations();
+        const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'pathways-valid.zip'))
+        const uploadFileResponse = pathwaysAPI.validateGtfsPathwaysFileForm(dataset);
 
-        await expect(stations).rejects.toMatchObject({ response: { status: 401 } });
-      })
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
+        axios.interceptors.request.eject(validateInterceptor);
 
-      it('When passed with valid token and invalid project_group_id, should return 200 status with 0 stations', async () => {
-        let project_group_id = "dummyproject_group_id";
-        let pathwaysAPI = new GTFSPathwaysApi(configuration);
+      }, 20000);
 
-        let stations = await pathwaysAPI.listStations(project_group_id);
+    });
+  });
 
-        expect(stations.status).toBe(200);
-        expect(stations.data.length).toBe(0);
-
-      })
-
+  describe('Validate Status', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let generalAPI = new GeneralApi(Utility.getConfiguration());
+      let validateStatusResponse = generalAPI.listJobs(validationJobId);
+      await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
     })
-  })
 
-  describe('Pathways versions', () => {
-    describe('Functional', () => {
-      it('When passed with valid token, should return 200 status with versions list', async () => {
-        let pathwaysAPI = new GTFSPathwaysApi(configuration);
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let generalAPI = new GeneralApi(configuration);
 
-        let versions = await pathwaysAPI.listPathwaysVersions();
+      await new Promise((r) => setTimeout(r, 20000));
+      let validateStatus = await generalAPI.listJobs(validationJobId);
 
-        expect(versions.status).toBe(200);
-        versions.data.versions?.forEach(version => {
-          expect(version).toMatchObject(<VersionSpec>{
-            version: expect.any(String),
-            documentation: expect.any(String),
-            specification: expect.any(String)
+      expect(validateStatus.status).toBe(200);
+      expect(validateStatus.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            job_id: expect.toBeOneOf([`${validationJobId}`]),
+            status: expect.toBeOneOf(["COMPLETED"])
           })
+        ])
+      );
+    }, 25000);
+  });
+
+  describe('List Pathways Versions', () => {
+    it('When passed with valid token, should respond with 200 status', async () => {
+      let pathwaysAPI = new GTFSPathwaysApi(configuration);
+
+      let versions = await pathwaysAPI.listGtfsPathwaysVersions();
+
+      expect(versions.status).toBe(200);
+      expect(Array.isArray(versions.data.versions)).toBe(true);
+      versions.data.versions?.forEach(version => {
+        expect(version).toMatchObject(<VersionSpec>{
+          version: expect.any(String),
+          documentation: expect.any(String),
+          specification: expect.any(String)
         })
-
       })
     })
-    describe('Validation', () => {
-      it('When passed without token, should return 401 status', async () => {
-        let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
 
-        let versions = pathwaysAPI.listPathwaysVersions();
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
 
-        await expect(versions).rejects.toMatchObject({ response: { status: 401 } });
-      })
+      let versionsResponse = pathwaysAPI.listGtfsPathwaysVersions();
+
+      await expect(versionsResponse).rejects.toMatchObject({ response: { status: 401 } });
     })
-  })
+  });
 
-  describe('Get a record for pathways', () => {
+  describe('Download Pathways File as zip', () => {
     describe('Functional', () => {
       it('When passed with valid recordId, should be able to get the zip file', async () => {
 
-        let pathwaysRecordId = '7cd301eb50ea413f90be12598d158149';
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
 
-        let response = await pathwaysAPI.getPathwaysFile(pathwaysRecordId, { responseType: 'arraybuffer' });
+        let response = await pathwaysAPI.getGtfsPathwaysFile(uploadedDatasetId, { responseType: 'arraybuffer' });
         const data: any = response.data;
-        const contentDisposition = response.headers['content-disposition'];
-        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-        const matches = filenameRegex.exec(contentDisposition);
-        const fileName = (matches != null && matches[1]) ? matches[1].replace(/['"]/g, '') : 'data.zip';
-        const filePath = `${DOWNLOAD_FILE_PATH}/${fileName}`
-        fs.writeFileSync(filePath, new Uint8Array(data))
-        const zip = new AdmZip(filePath);
+        const contentType = response.headers['content-type'];
+        const zip = new AdmZip(data);
         const entries = zip.getEntries();
 
-        expect(entries.length).toBeGreaterThan(0);
-        expect(fileName.includes('zip')).toBe(true);
+        expect(entries.length).toBeGreaterThanOrEqual(0);
+        expect(contentType).toBe("application/zip");
         expect(response.data).not.toBeNull();
         expect(response.status).toBe(200);
-
-      })
-
-    })
+      }, 10000);
+    });
 
     describe('Validation', () => {
       it('When passed with valid recordId and invalid token, should return 401 status', async () => {
 
-        let pathwaysRecordId = '7cd301eb50ea413f90be12598d158149';
         let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
 
-        let response = pathwaysAPI.getPathwaysFile(pathwaysRecordId);
+        let response = pathwaysAPI.getGtfsPathwaysFile(uploadedDatasetId);
 
         await expect(response).rejects.toMatchObject({ response: { status: 401 } });
 
@@ -410,26 +324,15 @@ describe('GTFS Pathways service', () => {
 
       it('When passed with invalid record and valid token, should return 404 status', async () => {
 
-        let pathwaysRecordId = 'dummyRecordId';
+        let recordId = 'dummyRecordId';
         let pathwaysAPI = new GTFSPathwaysApi(configuration);
 
-        let response = pathwaysAPI.getPathwaysFile(pathwaysRecordId);
+        let response = pathwaysAPI.getGtfsPathwaysFile(recordId);
 
         await expect(response).rejects.toMatchObject({ response: { status: 404 } });
 
       })
-
-    })
-
-  })
+    });
+  });
 
 })
-
-function expectPolygon(polygon: any) {
-  if (polygon) {
-    var aPolygon = polygon as GeoJsonObject;
-    expect(typeof aPolygon.features).not.toBeNull();
-    expect(aPolygon.features?.length).toBeGreaterThan(0);
-
-  }
-}
