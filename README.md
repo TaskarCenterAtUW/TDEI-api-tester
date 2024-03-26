@@ -1,9 +1,11 @@
 # TDEI-api-tester
 API tester for the client-API received from swagger
 
+# Node Environment
+v18.16.0 
+
 # Steps
-- The testing rig is currently configured based on `test-harness.json` file.
-- An example of the file is already given as `test-harness.example.json`
+- The testing rig is currently configured based on `.env` file.
 - `npm i`
 - `npm run test`
 
@@ -70,7 +72,6 @@ The above seeder should generate all of this and respond with a json or object w
 		"oswdg":"<osw data generator api key>"
 	},
 	"tdei_project_group_id":"<generated project group ID>",
-	"station_id":"<generated station ID>",
 	"service_id":"<service ID>"
 }
 
