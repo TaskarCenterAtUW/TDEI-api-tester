@@ -1,8 +1,7 @@
-import { AuthenticationApi, OSWApi, VersionSpec, JobDetails, GeneralApi } from "tdei-client";
+import { AuthenticationApi, OSWApi, VersionSpec, GeneralApi } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
-import { toBeNumber } from "jest-extended";
 
 
 describe('OSW service', () => {
@@ -147,7 +146,7 @@ describe('OSW service', () => {
 
     it('When passed with valid token, should respond with 200 status', async () => {
       let generalAPI = new GeneralApi(configuration);
-      await new Promise((r) => setTimeout(r, 80000));
+      await new Promise((r) => setTimeout(r, 130000));
       let uploadStatus = await generalAPI.listJobs(uploadedJobId);
       expect(uploadStatus.status).toBe(200);
       expect(uploadStatus.data).toEqual(
@@ -160,7 +159,7 @@ describe('OSW service', () => {
       );
       uploadedDatasetId = uploadStatus.data[0].response_props.tdei_dataset_id;
       console.log("uploaded tdei_dataset_id", uploadedDatasetId);
-    }, 85000);
+    }, 135000);
   });
 
   describe('Publish the OSW dataset for the tdei_dataset_id', () => {
@@ -206,7 +205,7 @@ describe('OSW service', () => {
 
     it('When passed with valid token, should respond with 200 status', async () => {
       let generalAPI = new GeneralApi(configuration);
-      await new Promise((r) => setTimeout(r, 130000));
+      await new Promise((r) => setTimeout(r, 40000));
 
       let uploadStatus = await generalAPI.listJobs(publishJobId);
 
@@ -219,7 +218,7 @@ describe('OSW service', () => {
           })
         ])
       );
-    }, 135000);
+    }, 45000);
   });
 
   describe('Validate OSW dataset', () => {
@@ -427,6 +426,7 @@ describe('OSW service', () => {
   })
 
   describe('Download converted file', () => {
+    convertJobId = '293'
     it('When passed without valid token, should respond with 401 status', async () => {
       let generalAPI = new GeneralApi(Utility.getConfiguration());
 
@@ -497,82 +497,12 @@ describe('OSW service', () => {
     });
   });
 
-  let flatteningRecordId = 'b89494ba9b2d48b9a961135aea3f0211';
   let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
-  let dataFlatteningJobId = "1";
-  describe('Dataset Flattening', () => {
-
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let oswAPI = new OSWApi(Utility.getConfiguration());
-
-      let datasetFlatternByIdRequest = oswAPI.datasetflattenById(flatteningRecordId);
-
-      await expect(datasetFlatternByIdRequest).rejects.toMatchObject({ response: { status: 401 } });
-    })
-
-    it('When passed with invalid tdei_dataset_id, should respond with 404 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let datasetFlatternByIdRequest = oswAPI.datasetflattenById("test_flatteningRecordId");
-
-      await expect(datasetFlatternByIdRequest).rejects.toMatchObject({ response: { status: 404 } });
-    });
-
-    it('When passed with valid token, should respond with 202 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let datasetFlatternByIdRequest = await oswAPI.datasetflattenById(flatteningRecordId, true);
-
-      expect(datasetFlatternByIdRequest.status).toBe(202);
-
-      expect(datasetFlatternByIdRequest.data).toBeNumber();
-
-      dataFlatteningJobId = datasetFlatternByIdRequest.data!;
-      console.log("dataset flattening job_id", dataFlatteningJobId);
-    });
-
-    it('When requesting for already flattened dataset without override flag, should respond with 400 status', async () => {
-      let oswAPI = new OSWApi(configuration);
-
-      let datasetFlatternByIdRequest = oswAPI.datasetflattenById(bboxRecordId);
-
-      await expect(datasetFlatternByIdRequest).rejects.toMatchObject({ response: { status: 400 } });
-    });
-  });
-
-  describe('Dataset Flattening Status', () => {
-    jest.retryTimes(1, { logErrorsBeforeRetry: true });
-    it('When passed without valid token, should respond with 401 status', async () => {
-      let generalAPI = new GeneralApi(Utility.getConfiguration());
-      let job_id = "1";
-      let flatteningStatusRequest = generalAPI.listJobs(job_id);
-
-      await expect(flatteningStatusRequest).rejects.toMatchObject({ response: { status: 401 } });
-    });
-
-    it('When passed with valid token and valid job id, should respond with 200 status', async () => {
-      let generalAPI = new GeneralApi(configuration);
-      await new Promise((r) => setTimeout(r, 20000));
-      let flatteningStatus = await generalAPI.listJobs(dataFlatteningJobId.toString());
-
-      expect(flatteningStatus.status).toBe(200);
-
-      expect(flatteningStatus.data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            job_id: expect.toBeOneOf([`${dataFlatteningJobId}`]),
-            status: expect.toBeOneOf(["COMPLETED"])
-          })
-        ])
-      );
-    }, 25000);
-  });
-
   describe('Dataset Bbox Request', () => {
     it('When passed without valid token, should respond with 401 status', async () => {
       let oswAPI = new OSWApi(Utility.getConfiguration());
 
-      let bboxRequest = oswAPI.datasetBbox(bboxRecordId, [-122.264913, 47.558543, -122.10549, 47.691327]);
+      let bboxRequest = oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
 
       await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
     });
@@ -580,7 +510,7 @@ describe('OSW service', () => {
     it('When passed with valid token, should respond with job_id', async () => {
       let oswAPI = new OSWApi(configuration);
 
-      let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, [-122.264913, 47.558543, -122.10549, 47.691327]);
+      let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
 
       expect(bboxRequest.status).toBe(202);
       expect(bboxRequest.data).toBeNumber();

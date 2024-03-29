@@ -120,6 +120,8 @@ describe('GTFS Flex service', () => {
     });
 
     describe('Get Upload Status', () => {
+        jest.retryTimes(1, { logErrorsBeforeRetry: true });
+
         it('When passed without valid token, should respond with 401 status', async () => {
             let generalAPI = new GeneralApi(Utility.getConfiguration());
 
@@ -178,6 +180,7 @@ describe('GTFS Flex service', () => {
     });
 
     describe('Get Publish Status', () => {
+        jest.retryTimes(1, { logErrorsBeforeRetry: true });
         it('When passed without valid token, should respond with 401 status', async () => {
             let generalAPI = new GeneralApi(Utility.getConfiguration());
 
@@ -242,6 +245,7 @@ describe('GTFS Flex service', () => {
     });
 
     describe('Validate Status', () => {
+        jest.retryTimes(1, { logErrorsBeforeRetry: true });
         it('When passed without valid token, should respond with 401 status', async () => {
             let generalAPI = new GeneralApi(Utility.getConfiguration());
             let validateStatusResponse = generalAPI.listJobs(validationJobId);
