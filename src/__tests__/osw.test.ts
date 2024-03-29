@@ -426,7 +426,7 @@ describe('OSW service', () => {
   })
 
   describe('Download converted file', () => {
-    convertJobId = '293'
+    jest.retryTimes(1, { logErrorsBeforeRetry: true });
     it('When passed without valid token, should respond with 401 status', async () => {
       let generalAPI = new GeneralApi(Utility.getConfiguration());
 
