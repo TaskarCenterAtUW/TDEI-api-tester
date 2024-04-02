@@ -460,7 +460,7 @@ describe('OSW service', () => {
         // let oswRecordId = 'b52ca07e81174b978d3c9baef4198c87';
         let oswAPI = new OSWApi(configuration);
 
-        let response = await oswAPI.getOswFile(uploadedDatasetId, "osw", { responseType: 'arraybuffer' });
+        let response = await oswAPI.getOswFile(uploadedDatasetId, "osw", "latest", { responseType: 'arraybuffer' });
         const data: any = response.data;
         const contentType = response.headers['content-type'];
         const zip = new AdmZip(data);
@@ -547,6 +547,84 @@ describe('OSW service', () => {
   });
 
   describe('Download Dataset Bbox request file', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let generalAPI = new GeneralApi(Utility.getConfiguration());
+
+      let downloadResponse = generalAPI.jobDownload(datasetBboxJobId);
+
+      await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+    it('When passed valid token, should respond with 200 status and stream', async () => {
+      let generalAPI = new GeneralApi(configuration);
+
+      let response = await generalAPI.jobDownload(datasetBboxJobId, { responseType: 'arraybuffer' });
+      const data: any = response.data;
+      const contentType = response.headers['content-type'];
+
+      expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+      expect(response.data).not.toBeNull();
+      expect(response.status).toBe(200);
+      if (contentType === "application/zip") {
+        const zip = new AdmZip(data);
+        const entries = zip.getEntries();
+        expect(entries.length).toBeGreaterThan(1);
+      }
+    }, 20000);
+  });
+
+  let datasetTagSourceRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
+  let datasetTagTargetRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
+  let datasetRoadTagJobId = '1';
+  describe('Dataset Road Tag Request', () => {
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let oswAPI = new OSWApi(Utility.getConfiguration());
+
+      let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetRecordId);
+
+      await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+    it('When passed with valid token, should respond with job_id', async () => {
+      let oswAPI = new OSWApi(configuration);
+
+      let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetRecordId);
+
+      expect(bboxRequest.status).toBe(202);
+      expect(bboxRequest.data).toBeNumber();
+      datasetRoadTagJobId = bboxRequest.data!;
+      console.log("dataset road tag job_id", datasetBboxJobId);
+    });
+  });
+
+  describe('Fetch Dataset Road Tag Request Status', () => {
+    jest.retryTimes(1, { logErrorsBeforeRetry: true });
+    it('When passed without valid token, should respond with 401 status', async () => {
+      let generalAPI = new GeneralApi(Utility.getConfiguration());
+
+      let bboxStatusResponse = generalAPI.listJobs(datasetBboxJobId);
+
+      await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+    });
+
+    it('When passed with valid token and job_id. should respond with 200 status', async () => {
+      let generalAPI = new GeneralApi(configuration);
+      await new Promise((r) => setTimeout(r, 40000));
+
+      let formatStatus = await generalAPI.listJobs(datasetBboxJobId);
+
+      expect(formatStatus.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            job_id: expect.toBeOneOf([`${datasetBboxJobId}`]),
+            status: expect.toBeOneOf(["COMPLETED"])
+          })
+        ])
+      );
+    }, 45000);
+  });
+
+  describe('Download Dataset Road Tag request file', () => {
     it('When passed without valid token, should respond with 401 status', async () => {
       let generalAPI = new GeneralApi(Utility.getConfiguration());
 
