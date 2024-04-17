@@ -9,10 +9,15 @@ export default async (): Promise<Config> => {
         setupFilesAfterEnv: ["./jest.setup.ts"],
         reporters: [
             "default",
-            ["./node_modules/jest-html-reporter", {
-                "pageTitle": "Test Report",
-                "includeFailureMsg": true
+            ["jest-html-reporters", {
+                "filename": "test-report.html",
+                "urlForTestFiles": "https://github.com/TaskarCenterAtUW/TDEI-api-tester/tree/dev",
+                "enableMergeData": true
             }]
+            // ["./node_modules/jest-html-reporter", {
+            //     "pageTitle": "Test Report",
+            //     "includeFailureMsg": true
+            // }]
         ],
         transform: {
             '^.+\\.(ts|tsx)?$': 'ts-jest'

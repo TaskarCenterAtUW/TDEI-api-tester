@@ -1,7 +1,7 @@
 {
     "name": "Upload testing",
     "version": "v2.0",
-    "descption": "Bootstrap",
+    "description": "Bootstrap",
     "custom_metadata": {
         "name": "Lara",
         "gender": "female"

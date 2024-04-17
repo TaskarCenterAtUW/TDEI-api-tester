@@ -107,3 +107,5 @@ build
 src/test-harness.json
 test-report.html
 wallaby.js
+
+jest-html-reporters-attach
