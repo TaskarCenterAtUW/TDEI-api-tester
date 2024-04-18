@@ -20,16 +20,8 @@ export class Seeder {
         const serviceId = await this.client.createService(project_group_id)
         console.info(`Created Service with ID: ${serviceId}`)
         seedData['service_id'] = serviceId
-        const stationId = await this.client.createStation(project_group_id)
-        seedData['station_id'] = stationId
-        console.info(`Created Station with ID: ${stationId}`)
         seedData['users'] = await this.createUsers(project_group_id)
         return seedData
-    }
-
-    public async createStation(project_group_id: string): Promise<string> {
-        await this.client.login()
-        return this.client.createStation(project_group_id);
     }
 
     public async createService(project_group_id: string): Promise<string> {
@@ -127,19 +119,6 @@ class APIUtility {
                     user_name: username,
                     roles: [role]
                 }
-            })
-            return resp?.data?.data
-        } catch (err: any) {
-            throw err?.response?.data?.message
-        }
-    }
-
-    async createStation(project_group_id: string): Promise<string> {
-        try {
-            const resp = await axios({
-                method: 'post',
-                url: '/api/v1/station',
-                data: Utility.getStationUpload(project_group_id)
             })
             return resp?.data?.data
         } catch (err: any) {
