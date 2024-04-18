@@ -36,6 +36,11 @@ jobs:
       - name: Run unit test cases
         run: npm run test
 
+      - uses: vimtor/action-zip@v1.2
+        with:
+          files: jest-html-reporters-attach/test-report/ test-report.html
+          dest: report.zip
+
       - name: send email notification
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -49,7 +54,7 @@ jobs:
           cc: sureshd@gaussiansolutions.com
           bcc: rakeshd@gaussiansolutions.com
           from: Workflow Notification
-          attachments: test-report.html
+          attachments: report.zip
           html_body: |
             <h2>API Testing Report</h2>
             <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.workflow }}</a></p>
