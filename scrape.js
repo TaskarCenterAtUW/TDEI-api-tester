@@ -21,14 +21,13 @@ const puppeteer = require('puppeteer');
 
     // Extract script source URLs from the HTML content
     const scriptSrcs = htmlContent.match(/<script.*?src=["'](.*?)["']/g);
-    console.log(scriptSrcs);
+    scriptSrcs.push('<script defer="defer" src="./jest-html-reporters-attach/test-report/result.js"')
     // Fetch and append content of each JavaScript file to the HTML content
     // Fetch and append content of each JavaScript file to the HTML content
     if (scriptSrcs) {
         for (const scriptSrc of scriptSrcs) {
             const src = scriptSrc.match(/src=["'](.*?)["']/)[1];
             const scriptFilePath = path.join(currentDir, src);
-
             // Read the content of the JavaScript file
             const scriptContent = fs.readFileSync(scriptFilePath, 'utf8');
 
