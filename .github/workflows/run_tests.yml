@@ -36,6 +36,9 @@ jobs:
       - name: Run unit test cases
         run: npm run test
 
+      - name: Scrape HTML and Generate report HTML
+        run: node scrape.js
+
       - name: send email notification
         if: always()
         uses: dawidd6/action-send-mail@v3

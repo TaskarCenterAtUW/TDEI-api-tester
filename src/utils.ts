@@ -173,7 +173,7 @@ export class Utility {
         let randomMetadata = {
             "name": "Upload testing",
             "version": "v2.0",
-            "descption": "Bootstrap",
+            "description": "Bootstrap",
             "custom_metadata": {
                 "name": "Lara",
                 "gender": "female"
@@ -185,6 +185,14 @@ export class Utility {
             "schema_version": "v0.1"
         }
         randomMetadata['name'] = faker.random.alphaNumeric(9) + `_${type}`;
+        if (type == 'flex') {
+            randomMetadata['schema_version'] = 'v2.0';
+        } else if (type == 'pathways') {
+            randomMetadata['schema_version'] = 'v1.0';
+        } else if (type == 'osw') {
+            randomMetadata['schema_version'] = 'v0.2';
+        }
+
         let jsonString = JSON.stringify(randomMetadata);
         const blob = new Blob([jsonString], { type: 'application/json' });
 
