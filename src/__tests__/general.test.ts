@@ -1,23 +1,66 @@
-import { AuthenticationApi, DatasetItem, DatasetItemCollectionMethodEnum, DatasetItemDataSourceEnum, DatasetItemStatusEnum, GeneralApi, VersionSpec } from "tdei-client";
+import { AuthenticationApi, Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemCollectionMethodEnum, DatasetItemDataSourceEnum, DatasetItemStatusEnum, GeneralApi, VersionSpec, DatasetItemService } from "tdei-client";
 import { Utility } from "../utils";
 
 
 const NULL_PARAM = void 0;
 
-let configuration = Utility.getConfiguration();
+let configuration = Utility.getAdminConfiguration();
+let apiKeyConfiguration = Utility.getApiKeyConfiguration();
 
 beforeAll(async () => {
-  let authAPI = new AuthenticationApi(configuration);
-  const loginResponse = await authAPI.authenticate({
-    username: configuration.username,
-    password: configuration.password
-  });
-  configuration.baseOptions = {
-    headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
-  };
+  await Utility.setAuthToken(configuration);
 }, 30000);
 
 describe('List Datasets', () => {
+
+  it('API-Key | Authenticated , When request made with no filters, should return list of dataset', async () => {
+    let oswAPI = new GeneralApi(apiKeyConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles();
+
+    expect(datasetFiles.status).toBe(200);
+
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+
+    datasetFiles.data.forEach(file => {
+      expect(file).toMatchObject(<DatasetItem>{
+        status: expect.toBeOneOf([DatasetItemStatusEnum.PreRelease.toString(), DatasetItemStatusEnum.Publish.toString()]),
+        name: expect.any(String),
+        description: expect.toBeOneOf([null, expect.any(String)]),
+        version: expect.any(String),
+        derived_from_dataset_id: expect.toBeOneOf([null, expect.any(String)]),
+        custom_metadata: expect.toBeOneOf([null, expect.anything()]),
+        uploaded_timestamp: expect.any(String),
+        project_group: expect.objectContaining(<DatasetItemProjectGroup>{
+          tdei_project_group_id: expect.any(String),
+          name: expect.any(String)
+        }),
+        service: expect.objectContaining(<DatasetItemService>{
+          tdei_service_id: expect.any(String),
+          name: expect.any(String)
+        }),
+        collected_by: expect.any(String),
+        collection_date: expect.any(String),
+        collection_method: expect.toBeOneOf([
+          DatasetItemCollectionMethodEnum.Generated.toString(),
+          DatasetItemCollectionMethodEnum.Other.toString(),
+          DatasetItemCollectionMethodEnum.Transform.toString(),
+          DatasetItemCollectionMethodEnum.Manual.toString()]),
+        valid_from: expect.any(String),
+        valid_to: expect.toBeOneOf([null, expect.any(String)]),
+        confidence_level: expect.any(Number),
+        data_source: expect.toBeOneOf([
+          DatasetItemDataSourceEnum.InHouse.toString(),
+          DatasetItemDataSourceEnum.TDEITools.toString(),
+          DatasetItemDataSourceEnum._3rdParty.toString()]),
+        dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
+        tdei_dataset_id: expect.any(String),
+        schema_version: expect.any(String),
+        download_url: expect.any(String)
+      });
+    });
+  });
+
   it('Admin | Authenticated , When request made with no filters, should return list of dataset', async () => {
     let oswAPI = new GeneralApi(configuration);
 
@@ -36,7 +79,14 @@ describe('List Datasets', () => {
         derived_from_dataset_id: expect.toBeOneOf([null, expect.any(String)]),
         custom_metadata: expect.toBeOneOf([null, expect.anything()]),
         uploaded_timestamp: expect.any(String),
-        tdei_project_group_id: expect.any(String),
+        project_group: expect.objectContaining(<DatasetItemProjectGroup>{
+          tdei_project_group_id: expect.any(String),
+          name: expect.any(String)
+        }),
+        service: expect.objectContaining(<DatasetItemService>{
+          tdei_service_id: expect.any(String),
+          name: expect.any(String)
+        }),
         collected_by: expect.any(String),
         collection_date: expect.any(String),
         collection_method: expect.toBeOneOf([
@@ -119,7 +169,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(file.tdei_project_group_id).toBe(project_group_id)
+      expect(file.project_group.tdei_project_group_id).toBe(project_group_id)
     })
 
   });
@@ -413,7 +463,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let oswAPI = new GeneralApi(Utility.getConfiguration());
+    let oswAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     const datasetFiles = oswAPI.listDatasetFiles();
 
@@ -440,11 +490,30 @@ describe("List API versions", () => {
         specification: expect.any(String)
       });
     })
+  }, 30000);
+
+  it('API-Key | Authenticated , When request made, expect to return api version list', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(apiKeyConfiguration);
+    // Action
+    const versions = await generalAPI.listApiVersions();
+
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data.versions).not.toBeNull();
+
+    versions.data.versions?.forEach(version => {
+      expect(version).toMatchObject(<VersionSpec>{
+        version: expect.any(String),
+        documentation: expect.any(String),
+        specification: expect.any(String)
+      });
+    })
   }, 30000)
 
   it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
 
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     const version = generalAPI.listApiVersions();
 
@@ -458,6 +527,23 @@ describe('List Project Groups', () => {
 
   it('Admin | Authenticated , When request made, expect to return list of project groups', async () => {
     let generalAPI = new GeneralApi(configuration);
+
+    const projectGroupList = await generalAPI.listProjectGroups();
+
+    expect(projectGroupList.status).toBe(200);
+    expect(Array.isArray(projectGroupList.data)).toBe(true);
+
+    projectGroupList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_project_group_id: expect.any(String),
+        project_group_name: expect.any(String),
+        polygon: expect.any(Object || null)
+      })
+    })
+  }, 30000);
+
+  it('API-Key | Authenticated , When request made, expect to return list of project groups', async () => {
+    let generalAPI = new GeneralApi(apiKeyConfiguration);
 
     const projectGroupList = await generalAPI.listProjectGroups();
 
@@ -485,7 +571,7 @@ describe('List Project Groups', () => {
   //   expect(projectGroupList.data).toEqual(expect.arrayContaining([expect.objectContaining({ tdei_project_group_id: 'c552d5d1-0719-4647-b86d-6ae9b25327b7' })]));
   // }, 30000)
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     const projectGroupList = generalAPI.listProjectGroups();
 

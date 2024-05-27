@@ -1,9 +1,6 @@
 import {
+    AuthenticationApi,
     Configuration,
-    DatasetItem,
-    DatasetItemCollectionMethodEnum,
-    DatasetItemDataSourceEnum,
-    DatasetItemStatusEnum,
     FeatureTypeEnum,
     GeoJsonObject,
     GeoJsonObjectTypeEnum
@@ -17,7 +14,26 @@ import * as fs from "fs";
  * Utility class.
  */
 export class Utility {
-    static getConfiguration(): Configuration {
+    static async setAuthToken(configuration: Configuration) {
+        let authAPI = new AuthenticationApi(configuration);
+        const loginResponse = await authAPI.authenticate({
+            username: configuration.username,
+            password: configuration.password
+        });
+        configuration.baseOptions = {
+            headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
+        };
+    }
+
+    static getApiKeyConfiguration() {
+        let configuration = new Configuration({
+            basePath: environment.system.baseUrl,
+            apiKey: global.seedData.api_key
+        });
+        return configuration;
+    }
+
+    static getAdminConfiguration(): Configuration {
         return new Configuration({
             username: environment.system.username,
             password: environment.system.password,
@@ -25,6 +41,37 @@ export class Utility {
         });
     }
 
+    static getPocConfiguration(): Configuration {
+        return new Configuration({
+            username: global.seedData.users.poc.username,
+            password: global.seedData.users.poc.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
+    static getOSWDataGeneratorConfiguration(): Configuration {
+        return new Configuration({
+            username: global.seedData.users.osw_data_generator.username,
+            password: global.seedData.users.osw_data_generator.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
+    static getPathwaysDataGeneratorConfiguration(): Configuration {
+        return new Configuration({
+            username: global.seedData.users.pathways_data_generator.username,
+            password: global.seedData.users.pathways_data_generator.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
+    static getFlexDataGeneratorConfiguration(): Configuration {
+        return new Configuration({
+            username: global.seedData.users.flex_data_generator.username,
+            password: global.seedData.users.flex_data_generator.password,
+            basePath: environment.system.baseUrl
+        });
+    }
     static addAuthZHeader(accessToken) {
         return { Authorization: `Bearer ${accessToken}` };
     }
@@ -67,51 +114,6 @@ export class Utility {
         return parseFloat((min + Math.random() * diff).toFixed(6));
     }
 
-
-    static getRandomGtfsFlexUpload(): DatasetItem {
-
-        return {
-            status: DatasetItemStatusEnum.Publish,
-            name: "gtfs-flex",
-            version: "v2.0",
-            tdei_project_group_id: "0c29017c-f0b9-433e-ae13-556982f2520b",
-            tdei_service_id: "9066ad72-d044-4199-9f6c-b71f75ece7e8",
-            collected_by: "test user",
-            collection_date: "2023-03-03T02:22:45.374Z",
-            collection_method: DatasetItemCollectionMethodEnum.Manual,
-            data_source: DatasetItemDataSourceEnum.InHouse,
-            valid_from: "2023-03-02T04:22:42.493Z",
-            valid_to: "2023-03-02T04:22:42.493Z",
-            dataset_area: this.getRandomPolygon(),
-            schema_version: "v2.0",
-            uploaded_timestamp: "2023-03-02T04:22:42.493Z",
-            confidence_level: 100,
-            download_url: "https://www.google.com"
-        };
-    }
-
-    static getRandomPathwaysUpload(): DatasetItem {
-
-        return {
-            status: DatasetItemStatusEnum.Publish,
-            name: "gtfs-pathways",
-            version: "v1.0",
-            tdei_project_group_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
-            tdei_service_id: "472877cb-edb3-40d2-b0b4-d124b90e5cd1",
-            collected_by: "testuser",
-            collection_date: "2023-03-02T04:22:42.493Z",
-            collection_method: DatasetItemCollectionMethodEnum.Manual,
-            valid_from: "2023-03-02T04:22:42.493Z",
-            valid_to: "2023-03-02T04:22:42.493Z",
-            data_source: DatasetItemDataSourceEnum.InHouse,
-            dataset_area: this.getRandomPolygon(),
-            schema_version: "v1.0",
-            uploaded_timestamp: "2023-03-02T04:22:42.493Z",
-            confidence_level: 100,
-            download_url: "https://www.google.com"
-        };
-    }
-
     static getRandomProjectGroupUpload() {
         return {
             project_group_name: faker.company.name(),
@@ -140,9 +142,10 @@ export class Utility {
         }
     }
 
-    static getServiceUpload(project_group_id: string) {
+    static getServiceUpload(project_group_id: string, service_type: string) {
         return {
             tdei_project_group_id: project_group_id,
+            service_type: service_type,
             service_name: `${faker.company.name()} Service`,
             dataset_area: this.getRandomPolygon()
         }

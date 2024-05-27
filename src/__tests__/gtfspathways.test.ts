@@ -6,7 +6,7 @@ import AdmZip from "adm-zip";
 
 const DOWNLOAD_FILE_PATH = `${__dirname}/gtfs-pathways-tmp`;
 
-let configuration = Utility.getConfiguration();
+let configuration = Utility.getAdminConfiguration();
 let validationJobId: string = '1';
 let uploadedJobId: string = '1';
 let publishJobId: string = '1';
@@ -96,7 +96,7 @@ describe('Upload pathways dataset', () => {
     }
   }, 20000)
   it('Admin | un-authenticated , When request made with dataset, metadata and changeset file, should respond with unauthenticated request', async () => {
-    let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+    let pathwaysAPI = new GTFSPathwaysApi(Utility.getAdminConfiguration());
     let metaToUpload = Utility.getMetadataBlob("pathways");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getPathwaysBlob();
@@ -135,7 +135,7 @@ describe('Check upload request job completion status', () => {
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.listJobs(uploadedJobId);
 
@@ -165,7 +165,7 @@ describe('Publish the flex dataset', () => {
   })
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+    let pathwaysAPI = new GTFSPathwaysApi(Utility.getAdminConfiguration());
 
     let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(uploadedDatasetId);
 
@@ -194,7 +194,7 @@ describe('Check publish request job completion status', () => {
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.listJobs(publishJobId);
 
@@ -221,7 +221,7 @@ describe('Validate-only pathways dataset request', () => {
   }, 20000)
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+    let pathwaysAPI = new GTFSPathwaysApi(Utility.getAdminConfiguration());
     let dataset = Utility.getPathwaysBlob();
 
     const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'pathways-valid.zip'))
@@ -255,7 +255,7 @@ describe('Check validation-only request job completion status', () => {
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
     let validateStatusResponse = generalAPI.listJobs(validationJobId);
     await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   })
@@ -280,7 +280,7 @@ describe('List pathways versions', () => {
   })
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+    let pathwaysAPI = new GTFSPathwaysApi(Utility.getAdminConfiguration());
 
     let versionsResponse = pathwaysAPI.listGtfsPathwaysVersions();
 
@@ -318,7 +318,7 @@ describe('Download pathways dataset', () => {
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
 
-    let pathwaysAPI = new GTFSPathwaysApi(Utility.getConfiguration());
+    let pathwaysAPI = new GTFSPathwaysApi(Utility.getAdminConfiguration());
 
     let response = pathwaysAPI.getGtfsPathwaysFile(uploadedDatasetId);
 

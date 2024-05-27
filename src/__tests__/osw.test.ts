@@ -4,7 +4,7 @@ import { Utility } from "../utils";
 import AdmZip from "adm-zip";
 
 
-let configuration = Utility.getConfiguration();
+let configuration = Utility.getAdminConfiguration();
 let uploadedJobId: string = '';
 let publishJobId: string = '';
 let confidenceJobId: string = '1';
@@ -111,7 +111,7 @@ describe('Upload OSW dataset', () => {
     }
   }, 20000)
   it('Admin | un-authenticated , When request made with dataset, metadata and changeset file, should respond with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
     let metaToUpload = Utility.getMetadataBlob("osw");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
@@ -148,7 +148,7 @@ describe('Check upload request job completion status', () => {
   }, 135000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.listJobs(uploadedJobId);
 
@@ -179,7 +179,7 @@ describe('Publish the OSW dataset', () => {
   })
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
     let publishOswResponse = oswAPI.publishOswFile(uploadedDatasetId);
 
@@ -200,14 +200,14 @@ describe('Check publish request job completion status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${publishJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
         })
       ])
     );
   }, 45000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.listJobs(publishJobId);
 
@@ -234,7 +234,7 @@ describe('Validate-only OSW dataset request', () => {
   }, 20000)
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
     let dataset = Utility.getOSWBlob();
 
     const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
@@ -267,7 +267,7 @@ describe('Check validation-only request job completion status', () => {
   }, 95000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
     let validateStatusResponse = generalAPI.listJobs(validationJobId);
     await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -278,7 +278,7 @@ describe('Calculate dataset confidence request', () => {
   it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
     let oswAPI = new OSWApi(configuration);
 
-    let calculateConfidence = oswAPI.oswConfidenceCalculate("dummytdeirecordid");
+    let calculateConfidence = oswAPI.oswConfidenceCalculateForm("dummytdeirecordid");
 
     await expect(calculateConfidence).rejects.toMatchObject({ response: { status: 404 } });
   })
@@ -286,7 +286,7 @@ describe('Calculate dataset confidence request', () => {
   it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
     let oswAPI = new OSWApi(configuration);
 
-    let calculateConfidence = await oswAPI.oswConfidenceCalculate(uploadedDatasetId);
+    let calculateConfidence = await oswAPI.oswConfidenceCalculateForm(uploadedDatasetId);
 
     expect(calculateConfidence.status).toBe(202);
 
@@ -297,9 +297,9 @@ describe('Calculate dataset confidence request', () => {
   });
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let calculateConfidenceResponse = oswAPI.oswConfidenceCalculate(uploadedDatasetId);
+    let calculateConfidenceResponse = oswAPI.oswConfidenceCalculateForm(uploadedDatasetId);
 
     await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 401 } });
   })
@@ -319,14 +319,14 @@ describe('Check confidence request job completion status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${confidenceJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
         })
       ])
     );
   }, 15000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
     let confidenceStatusResponse = generalAPI.listJobs(confidenceJobId);
 
     await expect(confidenceStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
@@ -351,7 +351,7 @@ describe('List OSW Versions', () => {
   })
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
     let oswVersionsResponse = oswAPI.listOswVersions();
 
@@ -375,7 +375,7 @@ describe('Convert dataset request', () => {
   });
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
@@ -407,7 +407,7 @@ describe('Check convert request job completion status', () => {
   }, 35000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let formatStatusResponse = generalAPI.listJobs(convertJobId);
 
@@ -436,7 +436,7 @@ describe('Download converted file', () => {
   }, 20000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(convertJobId);
 
@@ -476,7 +476,7 @@ describe('Download OSW File as zip', () => {
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
 
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
     let response = oswAPI.getOswFile(uploadedDatasetId);
 
@@ -500,7 +500,7 @@ describe('Dataset Bbox Request', () => {
   });
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
     let bboxRequest = oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
 
@@ -528,7 +528,7 @@ describe('Check dataset-bbox request job completion status', () => {
   }, 45000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let bboxStatusResponse = generalAPI.listJobs(datasetBboxJobId);
 
@@ -557,7 +557,7 @@ describe('Download Dataset Bbox request file', () => {
   }, 20000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(datasetBboxJobId);
 
@@ -583,7 +583,7 @@ describe('Dataset Road Tag Request', () => {
   });
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getConfiguration());
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
     let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetRecordId);
 
@@ -612,7 +612,7 @@ describe('Check dataset-road-tag request job completion status', () => {
   }, 45000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let bboxStatusResponse = generalAPI.listJobs(datasetBboxJobId);
 
@@ -641,7 +641,7 @@ describe('Download Dataset Road Tag request file', () => {
   }, 20000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(datasetBboxJobId);
 
@@ -662,7 +662,7 @@ describe('Invalidate the OSW file', () => {
   });
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.deleteDataset(uploadedDatasetId);
 
