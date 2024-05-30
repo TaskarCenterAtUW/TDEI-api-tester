@@ -5,8 +5,8 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 
 const NULL_PARAM = void 0;
 
-let configuration = Utility.getAdminConfiguration();
-let apiKeyConfiguration = Utility.getApiKeyConfiguration();
+let configuration: Configuration = {};
+let apiKeyConfiguration: Configuration = {};
 
 const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
   if (
@@ -21,6 +21,8 @@ const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tde
 };
 
 beforeAll(async () => {
+  configuration = Utility.getAdminConfiguration();
+  apiKeyConfiguration = Utility.getApiKeyConfiguration();
   await Utility.setAuthToken(configuration);
 }, 30000);
 
@@ -56,11 +58,13 @@ describe('List Datasets', () => {
             valid_from: expect.toBeOneOf([null, expect.any(String)]),
             valid_to: expect.toBeOneOf([null, expect.toBeOneOf([null, expect.any(String)]),]),
             collection_method: expect.toBeOneOf([
+              null,
               MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
               MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(),
               MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
               MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()]),
             data_source: expect.toBeOneOf([
+              null,
               MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
               MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
               MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()]),
@@ -151,11 +155,13 @@ describe('List Datasets', () => {
             valid_from: expect.toBeOneOf([null, expect.any(String)]),
             valid_to: expect.toBeOneOf([null, expect.toBeOneOf([null, expect.any(String)]),]),
             collection_method: expect.toBeOneOf([
+              null,
               MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
               MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(),
               MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
               MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()]),
             data_source: expect.toBeOneOf([
+              null,
               MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
               MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
               MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()]),

@@ -1,13 +1,15 @@
-import { AuthenticationApi, OSWApi, VersionSpec, GeneralApi } from "tdei-client";
+import { AuthenticationApi, OSWApi, VersionSpec, GeneralApi, Configuration } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
 
+import seedData from "../../seed.data.json";
 
-let adminConfiguration = Utility.getAdminConfiguration();
-let apiKeyConfiguration = Utility.getApiKeyConfiguration();
-let pocConfiguration = Utility.getPocConfiguration();
-let dgConfiguration = Utility.getOSWDataGeneratorConfiguration();
+let apiKeyConfiguration: Configuration = {};
+let pocConfiguration: Configuration = {};
+let dgConfiguration: Configuration = {};
+let adminConfiguration: Configuration = {};
+
 let uploadedJobId: string = '';
 let publishJobId: string = '';
 let confidenceJobId: string = '1';
@@ -16,8 +18,8 @@ let convertJobId: string = '1';
 let datasetBboxJobId: string = '1';
 let validationJobId: string = '1';
 let uploadedDatasetId: string = '1';
-let tdei_project_group_id = global.seedData.tdei_project_group_id;
-let service_id = global.seedData.service_id.find(x => x.data_type == "osw").serviceId;
+let tdei_project_group_id = seedData.tdei_project_group_id;
+let service_id = seedData.service_id.find(x => x.data_type == "osw")!.serviceId;
 
 const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
   if (
@@ -74,6 +76,12 @@ const oswConfidenceRequestInterceptor = (request: InternalAxiosRequestConfig, td
 };
 
 beforeAll(async () => {
+
+  adminConfiguration = Utility.getAdminConfiguration();
+  apiKeyConfiguration = Utility.getApiKeyConfiguration();
+  pocConfiguration = Utility.getPocConfiguration();
+  dgConfiguration = Utility.getOSWDataGeneratorConfiguration();
+
   await Utility.setAuthToken(adminConfiguration);
   await Utility.setAuthToken(pocConfiguration);
   await Utility.setAuthToken(dgConfiguration);

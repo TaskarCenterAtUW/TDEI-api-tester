@@ -1,19 +1,20 @@
-import { AuthenticationApi, GTFSPathwaysApi, GeneralApi, JobDetails, VersionSpec } from "tdei-client";
+import { AuthenticationApi, Configuration, GTFSPathwaysApi, GeneralApi, JobDetails, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
+import seedData from "../../seed.data.json";
 
+let apiKeyConfiguration: Configuration = {};
+let pocConfiguration: Configuration = {};
+let dgConfiguration: Configuration = {};
+let adminConfiguration: Configuration = {};
 
-let adminConfiguration = Utility.getAdminConfiguration();
-let apiKeyConfiguration = Utility.getApiKeyConfiguration();
-let pocConfiguration = Utility.getPocConfiguration();
-let dgConfiguration = Utility.getPathwaysDataGeneratorConfiguration();
 let validationJobId: string = '1';
 let uploadedJobId: string = '1';
 let publishJobId: string = '1';
 let uploadedDatasetId: string = '1';
-let tdei_project_group_id = global.seedData.tdei_project_group_id;
-let service_id = global.seedData.service_id.find(x => x.data_type == "gtfs-pathways").serviceId;
+let tdei_project_group_id = seedData.tdei_project_group_id;
+let service_id = seedData.service_id.find(x => x.data_type == "gtfs-pathways")!.serviceId;
 
 const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
   if (
@@ -46,6 +47,10 @@ const validateRequestInterceptor = (request: InternalAxiosRequestConfig, dataset
 };
 
 beforeAll(async () => {
+  adminConfiguration = Utility.getAdminConfiguration();
+  apiKeyConfiguration = Utility.getApiKeyConfiguration();
+  pocConfiguration = Utility.getPocConfiguration();
+  dgConfiguration = Utility.getPathwaysDataGeneratorConfiguration();
   await Utility.setAuthToken(adminConfiguration);
   await Utility.setAuthToken(pocConfiguration);
   await Utility.setAuthToken(dgConfiguration);
