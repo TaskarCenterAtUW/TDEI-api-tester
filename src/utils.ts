@@ -35,7 +35,6 @@ export class Utility {
     }
 
     static getApiKeyConfiguration() {
-        console.log("this.seedData", this.seedData);
         let configuration = new Configuration({
             basePath: environment.system.baseUrl,
             apiKey: this.seedData.api_key
@@ -214,7 +213,7 @@ export class Utility {
     static getInvalidMetadataBlob(type: string): Blob {
         //no name and version required fields
         let randomMetadata = {
-            "descption": "Bootstrap",
+            "description": "Bootstrap",
             "custom_metadata": {
                 "name": "Lara",
                 "gender": "female"

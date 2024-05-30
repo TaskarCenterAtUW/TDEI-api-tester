@@ -428,7 +428,7 @@ describe('Calculate dataset confidence request', () => {
   it('OSW Data Generator | Authenticated , When request made with sub-region, should respond request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    const confidenceInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConfidenceRequestInterceptor(req, uploadedDatasetId, 'sub0region.geojson'))
+    const confidenceInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConfidenceRequestInterceptor(req, uploadedDatasetId, 'subregion.geojson'))
     let calculateConfidence = await oswAPI.oswConfidenceCalculateForm(uploadedDatasetId, Utility.getOSWSubRegionBlob());
 
     expect(calculateConfidence.status).toBe(202);
@@ -509,7 +509,7 @@ describe('Check confidence request job running status', () => {
     expect(confidenceStatus.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          job_id: expect.toBeOneOf([`${confidenceJobId}`]),
+          job_id: expect.toBeOneOf([`${confidenceJobWithSubRegionId}`]),
           status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
         })
       ])
