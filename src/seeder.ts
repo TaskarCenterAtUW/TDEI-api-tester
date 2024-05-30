@@ -1,5 +1,5 @@
 import { Utility } from './utils'
-import { SeedData } from './models/types'
+import { SeedData, Users } from './models/types'
 import axios, { AxiosInstance } from "axios";
 import { environment } from './environment/environment';
 import { existsSync } from "fs";
@@ -29,20 +29,31 @@ export class Seeder {
             await this.client.login()
             let seedData: SeedData = {} as any;
             const project_group_id = await this.client.createProjectGroup()
-            console.info(`Created Project Group with ID: ${project_group_id}`)
             seedData.tdei_project_group_id = project_group_id
             const serviceId = await this.createService(project_group_id)
             seedData.service_id = serviceId
             seedData.users = await this.createUsers(project_group_id)
-            console.info('Seeding complete');
-            seedData.api_key = "47c6b864-d501-4578-9f9b-3bc6b2fe541e"; //devuser02@gmail.com
+            let userProfile = (await this.getUserProfile((seedData.users as Users).poc.username));
+            seedData.api_key = userProfile.apiKey;
             this.writeFile(seedData);
+            console.info('Seeding complete');
             return seedData;
         }
     }
 
     private async writeFile(data) {
         await writeFile('./seed.data.json', JSON.stringify(data), 'utf8');
+    }
+
+    public async getUserProfile(user_name: string): Promise<any> {
+        try {
+            await this.client.login();
+            const result = await this.client.getUserProfile(user_name, 'Pa$s1word')
+            return result;
+        } catch (error) {
+            console.log(user_name)
+            console.error('getUserProfile', error);
+        }
     }
 
     public async createService(project_group_id: string): Promise<[{ data_type: string; serviceId: string; }]> {
@@ -94,14 +105,14 @@ class APIUtility {
         // console.log(Utility.getRandomProjectGroupUpload())
     }
 
-    async login(): Promise<void> {
+    async login(userName: string = environment.seed.adminUser!, password: string = environment.seed.adminPassword!): Promise<void> {
         try {
             const resp = await axios({
                 method: 'post',
                 url: '/api/v1/authenticate',
                 data: {
-                    username: environment.seed.adminUser,
-                    password: environment.seed.adminPassword
+                    username: userName,
+                    password: password
                 }
             })
             const accessToken = resp?.data?.access_token
@@ -179,6 +190,20 @@ class APIUtility {
             return resp?.data
         } catch (err: any) {
             throw err?.response?.data
+        }
+    }
+
+    async getUserProfile(user_name: string, password: string): Promise<string> {
+        this.login(user_name, password);
+        try {
+            const resp = await axios({
+                method: 'get',
+                url: '/api/v1/user-profile?user_name=' + user_name,
+            })
+            console.log(resp)
+            return resp?.data;
+        } catch (err: any) {
+            throw err?.response?.data?.message;
         }
     }
 }

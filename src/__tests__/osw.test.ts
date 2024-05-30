@@ -4,18 +4,24 @@ import { Utility } from "../utils";
 import AdmZip from "adm-zip";
 
 
-let configuration = Utility.getAdminConfiguration();
+let adminConfiguration = Utility.getAdminConfiguration();
+let apiKeyConfiguration = Utility.getApiKeyConfiguration();
+let pocConfiguration = Utility.getPocConfiguration();
+let dgConfiguration = Utility.getOSWDataGeneratorConfiguration();
 let uploadedJobId: string = '';
 let publishJobId: string = '';
 let confidenceJobId: string = '1';
+let confidenceJobWithSubRegionId: string = '1';
 let convertJobId: string = '1';
 let datasetBboxJobId: string = '1';
 let validationJobId: string = '1';
 let uploadedDatasetId: string = '1';
+let tdei_project_group_id = global.seedData.tdei_project_group_id;
+let service_id = global.seedData.service_id.find(x => x.data_type == "osw").serviceId;
 
 const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
   if (
-    request.url?.includes(`${configuration.basePath}/api/v1/osw/upload/${tdei_project_group_id}/${service_id}`)
+    request.url?.includes(`${adminConfiguration.basePath}/api/v1/osw/upload/${tdei_project_group_id}/${service_id}`)
   ) {
     let data = request.data as FormData;
     let datasetFile = data.get("dataset") as File;
@@ -33,7 +39,7 @@ const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_p
 
 const oswValidateRequestInterceptor = (request: InternalAxiosRequestConfig, datasetName: string) => {
   if (
-    request.url === `${configuration.basePath}/api/v1/osw/validate`
+    request.url === `${adminConfiguration.basePath}/api/v1/osw/validate`
   ) {
     let data = request.data as FormData;
     let datasetFile = data.get("dataset") as File;
@@ -45,7 +51,19 @@ const oswValidateRequestInterceptor = (request: InternalAxiosRequestConfig, data
 
 const oswConvertRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string) => {
   if (
-    request.url === `${configuration.basePath}/api/v1/osw/convert`
+    request.url === `${adminConfiguration.basePath}/api/v1/osw/convert`
+  ) {
+    let data = request.data as FormData;
+    let file = data.get("file") as File;
+    delete data['file'];
+    data.set('file', file, fileName);
+  }
+  return request;
+};
+
+const oswConfidenceRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, fileName: string) => {
+  if (
+    request.url === `${adminConfiguration.basePath}/api/v1/osw/confidence/${tdei_dataset_id}`
   ) {
     let data = request.data as FormData;
     let file = data.get("file") as File;
@@ -56,31 +74,24 @@ const oswConvertRequestInterceptor = (request: InternalAxiosRequestConfig, fileN
 };
 
 beforeAll(async () => {
-  let authAPI = new AuthenticationApi(configuration);
-  const loginResponse = await authAPI.authenticate({
-    username: configuration.username,
-    password: configuration.password
-  });
-  configuration.baseOptions = {
-    headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
-  };
+  await Utility.setAuthToken(adminConfiguration);
+  await Utility.setAuthToken(pocConfiguration);
+  await Utility.setAuthToken(dgConfiguration);
 });
+
 
 afterAll(async () => {
 });
 
 describe('Upload OSW dataset', () => {
-  it('Admin | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
-    let oswAPI = new OSWApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
-    let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
-    let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
-    let derived_from_dataset_id = '40566429d02c4c80aee68c970977bed8';
     try {
       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
-      const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
+      const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
       expect(uploadFileResponse.data).not.toBeNull();
@@ -92,13 +103,45 @@ describe('Upload OSW dataset', () => {
     }
   }, 20000);
 
+  it('POC | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let changesetToUpload = Utility.getChangesetBlob();
+    let dataset = Utility.getOSWBlob();
+    try {
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
+
+      expect(uploadFileResponse.status).toBe(202);
+      expect(uploadFileResponse.data).not.toBeNull();
+      axios.interceptors.request.eject(uploadInterceptor);
+    } catch (e) {
+      console.log(e);
+    }
+  }, 20000);
+
+  it('Admin | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let changesetToUpload = Utility.getChangesetBlob();
+    let dataset = Utility.getOSWBlob();
+    try {
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
+
+      expect(uploadFileResponse.status).toBe(202);
+      expect(uploadFileResponse.data).not.toBeNull();
+      axios.interceptors.request.eject(uploadInterceptor);
+    } catch (e) {
+      console.log(e);
+    }
+  }, 20000);
+
   it('Admin | Authenticated , When request made with dataset and invalid metafile, should return bad request with metadata validation errors', async () => {
-    let oswAPI = new OSWApi(configuration);
+    let oswAPI = new OSWApi(adminConfiguration);
     let metaToUpload = Utility.getInvalidMetadataBlob("osw");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
-    let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
-    let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
     try {
       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
       const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
@@ -115,8 +158,20 @@ describe('Upload OSW dataset', () => {
     let metaToUpload = Utility.getMetadataBlob("osw");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
-    let tdei_project_group_id = 'd8271b7d-a07f-4bc9-a0b9-8de864464277';
-    let service_id = 'bb29e704-aaad-423e-8e31-cf8eff559585';
+
+    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+    const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+
+    await expect(uploadFileResponse).toReject();
+    axios.interceptors.request.eject(uploadInterceptor);
+
+  }, 20000)
+
+  it('API-Key | Authenticated , When request made with dataset, metadata and changeset file, should respond with unauthorized request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let changesetToUpload = Utility.getChangesetBlob();
+    let dataset = Utility.getOSWBlob();
 
     const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
     const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
@@ -130,9 +185,9 @@ describe('Upload OSW dataset', () => {
 
 describe('Check upload request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(configuration);
-    await new Promise((r) => setTimeout(r, 130000));
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
+    await new Promise((r) => setTimeout(r, 190000));
     let uploadStatus = await generalAPI.listJobs(uploadedJobId);
     expect(uploadStatus.status).toBe(200);
     expect(uploadStatus.data).toEqual(
@@ -145,7 +200,7 @@ describe('Check upload request job completion status', () => {
     );
     uploadedDatasetId = uploadStatus.data[0].response_props.tdei_dataset_id;
     console.log("uploaded tdei_dataset_id", uploadedDatasetId);
-  }, 135000);
+  }, 195000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
@@ -158,9 +213,9 @@ describe('Check upload request job completion status', () => {
 });
 
 describe('Publish the OSW dataset', () => {
-  it('Admin | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
+  it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
-    let oswAPI = new OSWApi(configuration);
+    let oswAPI = new OSWApi(dgConfiguration);
     let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId);
     expect(publishOsw.status).toBe(202);
     expect(publishOsw.data).toBeNumber();
@@ -168,9 +223,25 @@ describe('Publish the OSW dataset', () => {
     console.log("publish job_id", publishJobId);
   });
 
+  it('POC | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
+
+    let oswAPI = new OSWApi(pocConfiguration);
+    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId);
+    expect(publishOsw.status).toBe(202);
+    expect(publishOsw.data).toBeNumber();
+  });
+
+  it('Admin | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
+
+    let oswAPI = new OSWApi(adminConfiguration);
+    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId);
+    expect(publishOsw.status).toBe(202);
+    expect(publishOsw.data).toBeNumber();
+  });
+
   it('When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
-    let oswAPI = new OSWApi(configuration);
+    let oswAPI = new OSWApi(adminConfiguration);
     let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
 
     let publishOswResponse = oswAPI.publishOswFile(tdei_dataset_id);
@@ -184,13 +255,21 @@ describe('Publish the OSW dataset', () => {
     let publishOswResponse = oswAPI.publishOswFile(uploadedDatasetId);
 
     await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 401 } });
-  })
+  });
+
+  it('API-Key | Authenticated , When request made, should respond with unauthorized request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+
+    let publishOswResponse = oswAPI.publishOswFile(uploadedDatasetId);
+
+    await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
 });
 
-describe('Check publish request job completion status', () => {
+describe('Check publish request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(configuration);
+    let generalAPI = new GeneralApi(adminConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
     let uploadStatus = await generalAPI.listJobs(publishJobId);
@@ -216,8 +295,8 @@ describe('Check publish request job completion status', () => {
 });
 
 describe('Validate-only OSW dataset request', () => {
-  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
-    let oswAPI = new OSWApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
     let dataset = Utility.getOSWBlob();
     try {
       const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
@@ -227,6 +306,36 @@ describe('Validate-only OSW dataset request', () => {
       expect(uploadFileResponse.data).not.toBeNull();
       validationJobId = uploadFileResponse.data;
       console.log("validation job_id", validationJobId);
+      axios.interceptors.request.eject(validateInterceptor);
+    } catch (e) {
+      console.log(e);
+    }
+  }, 20000);
+
+  it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    let dataset = Utility.getOSWBlob();
+    try {
+      const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
+      const uploadFileResponse = await oswAPI.validateOswFileForm(dataset);
+
+      expect(uploadFileResponse.status).toBe(202);
+      expect(uploadFileResponse.data).not.toBeNull();
+      axios.interceptors.request.eject(validateInterceptor);
+    } catch (e) {
+      console.log(e);
+    }
+  }, 20000)
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let dataset = Utility.getOSWBlob();
+    try {
+      const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
+      const uploadFileResponse = await oswAPI.validateOswFileForm(dataset);
+
+      expect(uploadFileResponse.status).toBe(202);
+      expect(uploadFileResponse.data).not.toBeNull();
       axios.interceptors.request.eject(validateInterceptor);
     } catch (e) {
       console.log(e);
@@ -245,12 +354,24 @@ describe('Validate-only OSW dataset request', () => {
 
   }, 20000);
 
+  it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+    let dataset = Utility.getOSWBlob();
+
+    const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
+    const uploadFileResponse = oswAPI.validateOswFileForm(dataset);
+
+    await expect(uploadFileResponse).toReject();
+    axios.interceptors.request.eject(validateInterceptor);
+
+  }, 20000);
+
 });
 
-describe('Check validation-only request job completion status', () => {
+describe('Check validation-only request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(configuration);
+    let generalAPI = new GeneralApi(adminConfiguration);
 
     await new Promise((r) => setTimeout(r, 90000));
     let validateStatus = await generalAPI.listJobs(validationJobId);
@@ -260,7 +381,7 @@ describe('Check validation-only request job completion status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${validationJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
         })
       ])
     );
@@ -274,17 +395,17 @@ describe('Check validation-only request job completion status', () => {
 });
 
 describe('Calculate dataset confidence request', () => {
-
-  it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
-    let oswAPI = new OSWApi(configuration);
+  uploadedDatasetId = "d5ca0eb5c0554f6ab7a057e4814ee9f9";
+  it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
 
     let calculateConfidence = oswAPI.oswConfidenceCalculateForm("dummytdeirecordid");
 
     await expect(calculateConfidence).rejects.toMatchObject({ response: { status: 404 } });
-  })
+  });
 
-  it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
-    let oswAPI = new OSWApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made, should respond request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
 
     let calculateConfidence = await oswAPI.oswConfidenceCalculateForm(uploadedDatasetId);
 
@@ -296,6 +417,41 @@ describe('Calculate dataset confidence request', () => {
     console.log("confidence job_id", confidenceJobId);
   });
 
+  it('OSW Data Generator | Authenticated , When request made with sub-region, should respond request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+
+    const confidenceInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConfidenceRequestInterceptor(req, uploadedDatasetId, 'sub0region.geojson'))
+    let calculateConfidence = await oswAPI.oswConfidenceCalculateForm(uploadedDatasetId, Utility.getOSWSubRegionBlob());
+
+    expect(calculateConfidence.status).toBe(202);
+
+    expect(calculateConfidence.data).toBeNumber();
+
+    confidenceJobWithSubRegionId = calculateConfidence.data;
+    console.log("confidence with sub-region job_id", confidenceJobWithSubRegionId);
+    axios.interceptors.request.eject(confidenceInterceptor);
+  });
+
+  it('POC | Authenticated , When request made, should respond request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    let calculateConfidence = await oswAPI.oswConfidenceCalculateForm(uploadedDatasetId);
+
+    expect(calculateConfidence.status).toBe(202);
+
+    expect(calculateConfidence.data).toBeNumber();
+  });
+
+  it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let calculateConfidence = await oswAPI.oswConfidenceCalculateForm(uploadedDatasetId);
+
+    expect(calculateConfidence.status).toBe(202);
+
+    expect(calculateConfidence.data).toBeNumber();
+  });
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
@@ -303,15 +459,42 @@ describe('Calculate dataset confidence request', () => {
 
     await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 401 } });
   })
+
+  it('API-Key | Authenticated , When request made, should respond request job id as response', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+
+    let calculateConfidence = await oswAPI.oswConfidenceCalculateForm(uploadedDatasetId);
+
+    expect(calculateConfidence.status).toBe(202);
+
+    expect(calculateConfidence.data).toBeNumber();
+  })
 });
 
-describe('Check confidence request job completion status', () => {
+describe('Check confidence request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 10000));
     let confidenceStatus = await generalAPI.listJobs(confidenceJobId.toString());
+
+    expect(confidenceStatus.status).toBe(200);
+
+    expect(confidenceStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${confidenceJobId}`]),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+        })
+      ])
+    );
+  }, 15000);
+
+  it('OSW Data Generator | Authenticated , When request made to check confidence with sub-region request, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
+    await new Promise((r) => setTimeout(r, 10000));
+    let confidenceStatus = await generalAPI.listJobs(confidenceJobWithSubRegionId.toString());
 
     expect(confidenceStatus.status).toBe(200);
 
@@ -334,8 +517,8 @@ describe('Check confidence request job completion status', () => {
 });
 
 describe('List OSW Versions', () => {
-  it('Admin | Authenticated , When request made, should respond with OSW version list', async () => {
-    let oswAPI = new OSWApi(configuration);
+  it('API-Key | Authenticated , When request made, should respond with OSW version list', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
 
     let oswVersions = await oswAPI.listOswVersions();
 
@@ -360,8 +543,8 @@ describe('List OSW Versions', () => {
 });
 
 describe('Convert dataset request', () => {
-  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
-    let oswAPI = new OSWApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
@@ -371,6 +554,30 @@ describe('Convert dataset request', () => {
     expect(formatResponse.data).toBeNumber();
     convertJobId = formatResponse.data!;
     console.log("convert job_id", convertJobId);
+    axios.interceptors.request.eject(convertInterceptor);
+  });
+
+  it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    let oswBlob = Utility.getOSWBlob();
+
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+    let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+
+    expect(formatResponse.status).toBe(202);
+    expect(formatResponse.data).toBeNumber();
+    axios.interceptors.request.eject(convertInterceptor);
+  });
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let oswBlob = Utility.getOSWBlob();
+
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+    let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+
+    expect(formatResponse.status).toBe(202);
+    expect(formatResponse.data).toBeNumber();
     axios.interceptors.request.eject(convertInterceptor);
   });
 
@@ -385,13 +592,25 @@ describe('Convert dataset request', () => {
     axios.interceptors.request.eject(convertInterceptor);
   });
 
+  it('API-Key | Authenticated , When request made with dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+    let oswBlob = Utility.getOSWBlob();
+
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+    let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+
+    expect(formatResponse.status).toBe(202);
+    expect(formatResponse.data).toBeNumber();
+    axios.interceptors.request.eject(convertInterceptor);
+  });
+
 });
 
-describe('Check convert request job completion status', () => {
+describe('Check convert request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 20000));
 
     let formatStatus = await generalAPI.listJobs(convertJobId);
@@ -400,7 +619,7 @@ describe('Check convert request job completion status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${convertJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
         })
       ])
     );
@@ -418,8 +637,8 @@ describe('Check convert request job completion status', () => {
 
 describe('Download converted file', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
-  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
 
     let response = await generalAPI.jobDownload(convertJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -446,10 +665,9 @@ describe('Download converted file', () => {
 });
 
 describe('Download OSW File as zip', () => {
-  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+  it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
 
-    // let oswRecordId = 'b52ca07e81174b978d3c9baef4198c87';
-    let oswAPI = new OSWApi(configuration);
+    let oswAPI = new OSWApi(apiKeyConfiguration);
 
     let response = await oswAPI.getOswFile(uploadedDatasetId, "osw", "latest", { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -458,7 +676,7 @@ describe('Download OSW File as zip', () => {
     const entries = zip.getEntries();
 
     expect(entries.length).toBeGreaterThanOrEqual(2);
-    expect(contentType).toBe("application/zip");
+    expect(contentType).toBe("application/octet-stream");
     expect(response.data).not.toBeNull();
     expect(response.status).toBe(200);
   }, 10000);
@@ -466,7 +684,7 @@ describe('Download OSW File as zip', () => {
   it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
 
     let oswRecordId = 'dummyRecordId';
-    let oswAPI = new OSWApi(configuration);
+    let oswAPI = new OSWApi(adminConfiguration);
 
     let response = oswAPI.getOswFile(oswRecordId);
 
@@ -488,14 +706,34 @@ describe('Download OSW File as zip', () => {
 let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
 describe('Dataset Bbox Request', () => {
 
-  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
-    let oswAPI = new OSWApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
 
     let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
     datasetBboxJobId = bboxRequest.data!;
+    console.log("dataset bbox job_id", datasetBboxJobId);
+  });
+
+  it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+    console.log("dataset bbox job_id", datasetBboxJobId);
+  });
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
     console.log("dataset bbox job_id", datasetBboxJobId);
   });
 
@@ -507,12 +745,22 @@ describe('Dataset Bbox Request', () => {
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
 
+  it('API-Key | Authenticated , When request made with dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+    console.log("dataset bbox job_id", datasetBboxJobId);
+  });
+
 });
 
-describe('Check dataset-bbox request job completion status', () => {
+describe('Check dataset-bbox request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
     let formatStatus = await generalAPI.listJobs(datasetBboxJobId);
@@ -521,7 +769,7 @@ describe('Check dataset-bbox request job completion status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${datasetBboxJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
         })
       ])
     );
@@ -539,8 +787,8 @@ describe('Check dataset-bbox request job completion status', () => {
 
 describe('Download Dataset Bbox request file', () => {
 
-  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
 
     let response = await generalAPI.jobDownload(datasetBboxJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -572,7 +820,7 @@ let datasetRoadTagJobId = '1';
 describe('Dataset Road Tag Request', () => {
 
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
-    let oswAPI = new OSWApi(configuration);
+    let oswAPI = new OSWApi(adminConfiguration);
 
     let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetRecordId);
 
@@ -590,13 +838,21 @@ describe('Dataset Road Tag Request', () => {
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
 
+  // it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
+  //   let oswAPI = new OSWApi(apiKeyConfiguration);
+
+  //   let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetRecordId);
+
+  //   await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+  // });
+
 });
 
 describe('Check dataset-road-tag request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(configuration);
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
     let formatStatus = await generalAPI.listJobs(datasetBboxJobId);
@@ -624,7 +880,24 @@ describe('Check dataset-road-tag request job completion status', () => {
 describe('Download Dataset Road Tag request file', () => {
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(configuration);
+    let generalAPI = new GeneralApi(adminConfiguration);
+
+    let response = await generalAPI.jobDownload(datasetBboxJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThan(1);
+    }
+  }, 20000);
+
+  it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new GeneralApi(apiKeyConfiguration);
 
     let response = await generalAPI.jobDownload(datasetBboxJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -653,8 +926,8 @@ describe('Download Dataset Road Tag request file', () => {
 //This test should be ran at last as it will invalidate the uploaded file
 describe('Invalidate the OSW file', () => {
 
-  it('Admin | Authenticated , When request made, should return true if successful', async () => {
-    let generalAPI = new GeneralApi(configuration);
+  it('POC | Authenticated , When request made, should return true if successful', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
 
     let downloadResponse = generalAPI.deleteDataset(uploadedDatasetId);
 

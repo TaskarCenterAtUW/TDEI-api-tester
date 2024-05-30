@@ -9,6 +9,10 @@ import { environment } from "./environment/environment";
 import { faker } from '@faker-js/faker'
 import path from "path";
 import * as fs from "fs";
+import metadata_flex from "../assets/payloads/gtfs-flex/metadata.json";
+import metadata_osw from "../assets/payloads/osw/metadata.json";
+// import osw_sub_region from "../assets/payloads/osw/sub-region.geojson";
+import metadata_pathways from "../assets/payloads/gtfs-pathways/metadata.json";
 
 /**
  * Utility class.
@@ -35,8 +39,8 @@ export class Utility {
 
     static getAdminConfiguration(): Configuration {
         return new Configuration({
-            username: environment.system.username,
-            password: environment.system.password,
+            username: environment.seed.adminUser,
+            password: environment.seed.adminPassword,
             basePath: environment.system.baseUrl
         });
     }
@@ -173,32 +177,31 @@ export class Utility {
     // Change the implementation  here
     static getMetadataBlob(type: string): Blob {
         //const blob = new Blob([jsonString], { type: 'application/json' });
-        let randomMetadata = {
-            "name": "Upload testing",
-            "version": "v2.0",
-            "description": "Bootstrap",
-            "custom_metadata": {
-                "name": "Lara",
-                "gender": "female"
-            },
-            "collected_by": "John Doe",
-            "collection_date": "2019-02-10T09:30Z",
-            "collection_method": "manual",
-            "data_source": "3rdParty",
-            "schema_version": "v0.1"
-        }
-        randomMetadata['name'] = faker.random.alphaNumeric(9) + `_${type}`;
+        let randomMetadata = {};
         if (type == 'flex') {
-            randomMetadata['schema_version'] = 'v2.0';
+            randomMetadata = metadata_flex;
+            randomMetadata['dataset_detail']['schema_version'] = 'v2.0';
         } else if (type == 'pathways') {
-            randomMetadata['schema_version'] = 'v1.0';
+            randomMetadata = metadata_pathways;
+            randomMetadata['dataset_detail']['schema_version'] = 'v1.0';
         } else if (type == 'osw') {
-            randomMetadata['schema_version'] = 'v0.2';
+            randomMetadata = metadata_osw;
+            randomMetadata['dataset_detail']['schema_version'] = 'v0.2';
         }
 
+        randomMetadata['dataset_detail']['name'] = faker.random.alphaNumeric(9) + `_${type}`;
         let jsonString = JSON.stringify(randomMetadata);
         const blob = new Blob([jsonString], { type: 'application/json' });
 
+        return blob;
+    }
+
+    static getOSWSubRegionBlob(): Blob {
+        let filePath = path.join(__dirname, '../assets/payloads/osw/sub-region.geojson');
+        console.log(filePath);
+        let filestream = fs.readFileSync(filePath);
+        // let jsonString = JSON.stringify(osw_sub_region);
+        const blob = new Blob([filestream], { type: 'application/json' });
         return blob;
     }
 

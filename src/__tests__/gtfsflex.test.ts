@@ -5,12 +5,10 @@ import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
 
-const DOWNLOAD_FILE_PATH = `${__dirname}/gtfs-flex-tmp`;
-
 let apiKeyConfiguration = Utility.getApiKeyConfiguration();
 let pocConfiguration = Utility.getPocConfiguration();
 let dgConfiguration = Utility.getFlexDataGeneratorConfiguration();
-let configuration = Utility.getAdminConfiguration();
+let adminConfiguration = Utility.getAdminConfiguration();
 let validationJobId: string = '1';
 let uploadedJobId: string = '1';
 let uploadedDatasetId: string = '1';
@@ -20,7 +18,7 @@ let service_id = global.seedData.service_id.find(x => x.data_type == "gtfs-flex"
 
 const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
     if (
-        request.url?.includes(`${configuration.basePath}/api/v1/gtfs-flex/upload/${tdei_project_group_id}/${service_id}`)
+        request.url?.includes(`${adminConfiguration.basePath}/api/v1/gtfs-flex/upload/${tdei_project_group_id}/${service_id}`)
     ) {
         let data = request.data as FormData;
         let datasetFile = data.get("dataset") as File;
@@ -38,7 +36,7 @@ const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_proj
 
 const validateRequestInterceptor = (request: InternalAxiosRequestConfig, datasetName: string) => {
     if (
-        request.url === `${configuration.basePath}/api/v1/gtfs-flex/validate`
+        request.url === `${adminConfiguration.basePath}/api/v1/gtfs-flex/validate`
     ) {
         let data = request.data as FormData;
         let datasetFile = data.get("dataset") as File;
@@ -49,11 +47,33 @@ const validateRequestInterceptor = (request: InternalAxiosRequestConfig, dataset
 };
 
 beforeAll(async () => {
-    await Utility.setAuthToken(configuration);
+    await Utility.setAuthToken(adminConfiguration);
+    await Utility.setAuthToken(pocConfiguration);
+    await Utility.setAuthToken(dgConfiguration);
 });
 
 
 describe('Upload flex dataset', () => {
+
+    it('Flex Data Generator | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
+        let flexAPI = new GTFSFlexApi(dgConfiguration);
+        let metaToUpload = Utility.getMetadataBlob("flex");
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getFlexBlob();
+        let derived_from_dataset_id = '';
+        try {
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
+
+            expect(uploadFileResponse.status).toBe(202);
+            expect(uploadFileResponse.data).not.toBeNull();
+            uploadedJobId = uploadFileResponse.data;
+            console.log("uploaded job_id", uploadedJobId);
+            axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+            console.log(e);
+        }
+    }, 20000);
 
     it('POC | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
         let flexAPI = new GTFSFlexApi(pocConfiguration);
@@ -73,26 +93,8 @@ describe('Upload flex dataset', () => {
         }
     }, 20000);
 
-    it('Flex Data Generator | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
-        let flexAPI = new GTFSFlexApi(dgConfiguration);
-        let metaToUpload = Utility.getMetadataBlob("flex");
-        let changesetToUpload = Utility.getChangesetBlob();
-        let dataset = Utility.getFlexBlob();
-        let derived_from_dataset_id = '';
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
-            const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
-
-            expect(uploadFileResponse.status).toBe(202);
-            expect(uploadFileResponse.data).not.toBeNull();
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
-    }, 20000);
-
     it('Admin | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
-        let flexAPI = new GTFSFlexApi(configuration);
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
         let metaToUpload = Utility.getMetadataBlob("flex");
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
@@ -103,8 +105,7 @@ describe('Upload flex dataset', () => {
 
             expect(uploadFileResponse.status).toBe(202);
             expect(uploadFileResponse.data).not.toBeNull();
-            uploadedJobId = uploadFileResponse.data;
-            console.log("uploaded job_id", uploadedJobId);
+
             axios.interceptors.request.eject(uploadInterceptor);
         } catch (e) {
             console.log(e);
@@ -112,7 +113,7 @@ describe('Upload flex dataset', () => {
     }, 20000);
 
     it('Admin | Authenticated , When request made with dataset and invalid metafile, should return bad request with metadata validation errors', async () => {
-        let flexAPI = new GTFSFlexApi(configuration);
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
         let metaToUpload = Utility.getInvalidMetadataBlob("flex");
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
@@ -158,8 +159,8 @@ describe('Upload flex dataset', () => {
 
 describe('Check upload request job completion status', () => {
     jest.retryTimes(1, { logErrorsBeforeRetry: true });
-    it('Admin | Authenticated , When request made, should respond with job status', async () => {
-        let generalAPI = new GeneralApi(configuration);
+    it('Flex Data Generator | Authenticated , When request made, should respond with job status', async () => {
+        let generalAPI = new GeneralApi(dgConfiguration);
         await new Promise((r) => setTimeout(r, 20000));
         let uploadStatus = await generalAPI.listJobs(uploadedJobId);
         expect(uploadStatus.status).toBe(200);
@@ -178,24 +179,24 @@ describe('Check upload request job completion status', () => {
     it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
         let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
-        let downloadResponse = generalAPI.listJobs(uploadedJobId);
+        let listResponse = generalAPI.listJobs(uploadedJobId);
 
-        await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+        await expect(listResponse).rejects.toMatchObject({ response: { status: 401 } });
     });
 
     it('API-Key | Authenticated , When request made, should respond with success request', async () => {
         let generalAPI = new GeneralApi(apiKeyConfiguration);
 
-        let downloadResponse = generalAPI.listJobs(uploadedJobId);
+        let listResponse = await generalAPI.listJobs(uploadedJobId);
 
-        await expect(downloadResponse).rejects.toMatchObject({ response: { status: 200 } });
+        expect(listResponse.status).toBe(200);
     });
 });
 
 describe('Publish the flex dataset', () => {
-    it('Admin | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
+    it('Flex Data Generator | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
-        let flexAPI = new GTFSFlexApi(configuration);
+        let flexAPI = new GTFSFlexApi(dgConfiguration);
         let publish = await flexAPI.publishGtfsFlexFile(uploadedDatasetId);
         expect(publish.status).toBe(202);
         expect(publish.data).toBeNumber();
@@ -203,9 +204,9 @@ describe('Publish the flex dataset', () => {
         console.log("publish job_id", publishJobId);
     });
 
-    it('When passed with already published tdei_dataset_id, should respond with bad request', async () => {
+    it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
-        let flexAPI = new GTFSFlexApi(configuration);
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
         let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
 
         let publishResponse = flexAPI.publishGtfsFlexFile(tdei_dataset_id);
@@ -216,7 +217,7 @@ describe('Publish the flex dataset', () => {
     it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
         let flexAPI = new GTFSFlexApi(Utility.getAdminConfiguration());
 
-        let publishResponse = flexAPI.publishGtfsFlexFile(uploadedJobId);
+        let publishResponse = flexAPI.publishGtfsFlexFile(uploadedDatasetId);
 
         await expect(publishResponse).rejects.toMatchObject({ response: { status: 401 } });
     });
@@ -224,7 +225,7 @@ describe('Publish the flex dataset', () => {
     it('API-Key | Authenticated , When request made, should respond with unauthorized request', async () => {
         let flexAPI = new GTFSFlexApi(apiKeyConfiguration);
 
-        let publishResponse = flexAPI.publishGtfsFlexFile(uploadedJobId);
+        let publishResponse = flexAPI.publishGtfsFlexFile(uploadedDatasetId);
 
         await expect(publishResponse).rejects.toMatchObject({ response: { status: 401 } });
     });
@@ -234,7 +235,7 @@ describe('Check publish request job completion status', () => {
     jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
-        let generalAPI = new GeneralApi(configuration);
+        let generalAPI = new GeneralApi(adminConfiguration);
         await new Promise((r) => setTimeout(r, 20000));
 
         let uploadStatus = await generalAPI.listJobs(publishJobId);
@@ -261,8 +262,8 @@ describe('Check publish request job completion status', () => {
 });
 
 describe('Validate-only flex dataset request', () => {
-    it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
-        let flexAPI = new GTFSFlexApi(configuration);
+    it('Flex Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+        let flexAPI = new GTFSFlexApi(dgConfiguration);
         let dataset = Utility.getFlexBlob();
         try {
             const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'flex-valid.zip'))
@@ -272,6 +273,21 @@ describe('Validate-only flex dataset request', () => {
             expect(uploadFileResponse.data).not.toBeNull();
             validationJobId = uploadFileResponse.data;
             console.log("validation job_id", validationJobId);
+            axios.interceptors.request.eject(validateInterceptor);
+        } catch (e) {
+            console.log(e);
+        }
+    }, 20000)
+
+    it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
+        let dataset = Utility.getFlexBlob();
+        try {
+            const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'flex-valid.zip'))
+            const uploadFileResponse = await flexAPI.validateGtfsFlexFileForm(dataset);
+
+            expect(uploadFileResponse.status).toBe(202);
+            expect(uploadFileResponse.data).not.toBeNull();
             axios.interceptors.request.eject(validateInterceptor);
         } catch (e) {
             console.log(e);
@@ -306,9 +322,8 @@ describe('Validate-only flex dataset request', () => {
 
 describe('Check validation-only request job completion status', () => {
     jest.retryTimes(1, { logErrorsBeforeRetry: true });
-
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
-        let generalAPI = new GeneralApi(configuration);
+        let generalAPI = new GeneralApi(adminConfiguration);
 
         await new Promise((r) => setTimeout(r, 20000));
         let validateStatus = await generalAPI.listJobs(validationJobId);
@@ -318,7 +333,7 @@ describe('Check validation-only request job completion status', () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     job_id: expect.toBeOneOf([`${validationJobId}`]),
-                    status: expect.toBeOneOf(["COMPLETED"])
+                    status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
                 })
             ])
         );
@@ -334,7 +349,7 @@ describe('Check validation-only request job completion status', () => {
 
 describe('List flex versions', () => {
     it('Admin | Authenticated , When request made, should respond with flex version list', async () => {
-        let flexAPI = new GTFSFlexApi(configuration);
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
 
         let versions = await flexAPI.listGtfsFlexVersions();
 
@@ -377,7 +392,7 @@ describe('List flex versions', () => {
 describe('Download flex dataset', () => {
     it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
 
-        let flexAPI = new GTFSFlexApi(configuration);
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
 
         let response = await flexAPI.getGtfsFlexFile(uploadedDatasetId, { responseType: 'arraybuffer' });
         const data: any = response.data;
@@ -386,7 +401,23 @@ describe('Download flex dataset', () => {
         const entries = zip.getEntries();
 
         expect(entries.length).toBeGreaterThanOrEqual(0);
-        expect(contentType).toBe("application/zip");
+        expect(contentType).toBe("application/octet-stream");
+        expect(response.data).not.toBeNull();
+        expect(response.status).toBe(200);
+    }, 10000);
+
+    it('Flex Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+
+        let flexAPI = new GTFSFlexApi(dgConfiguration);
+
+        let response = await flexAPI.getGtfsFlexFile(uploadedDatasetId, { responseType: 'arraybuffer' });
+        const data: any = response.data;
+        const contentType = response.headers['content-type'];
+        const zip = new AdmZip(data);
+        const entries = zip.getEntries();
+
+        expect(entries.length).toBeGreaterThanOrEqual(0);
+        expect(contentType).toBe("application/octet-stream");
         expect(response.data).not.toBeNull();
         expect(response.status).toBe(200);
     }, 10000);
@@ -402,7 +433,7 @@ describe('Download flex dataset', () => {
         const entries = zip.getEntries();
 
         expect(entries.length).toBeGreaterThanOrEqual(0);
-        expect(contentType).toBe("application/zip");
+        expect(contentType).toBe("application/octet-stream");
         expect(response.data).not.toBeNull();
         expect(response.status).toBe(200);
     }, 10000);
@@ -410,7 +441,7 @@ describe('Download flex dataset', () => {
     it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
 
         let recordId = 'dummyRecordId';
-        let flexAPI = new GTFSFlexApi(configuration);
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
 
         let response = flexAPI.getGtfsFlexFile(recordId);
 

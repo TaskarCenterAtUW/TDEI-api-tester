@@ -4,7 +4,7 @@ interface Credentials {
     password: string
 }
 
-interface Users {
+export interface Users {
     poc: Credentials
     flex_data_generator: Credentials
     pathways_data_generator: Credentials
