@@ -2,7 +2,6 @@ import { Configuration, GeneralApi, GTFSFlexApi, VersionSpec } from "tdei-client
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
-import seedData from "../../seed.data.json";
 
 
 let apiKeyConfiguration: Configuration = {};
@@ -13,8 +12,8 @@ let validationJobId: string = '1';
 let uploadedJobId: string = '1';
 let uploadedDatasetId: string = '1';
 let publishJobId: string = '1';
-let tdei_project_group_id = seedData.tdei_project_group_id;
-let service_id = seedData.service_id.find(x => x.data_type == "gtfs-flex")!.serviceId;
+let tdei_project_group_id = "";
+let service_id = "";
 
 const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
     if (
@@ -47,6 +46,9 @@ const validateRequestInterceptor = (request: InternalAxiosRequestConfig, dataset
 };
 
 beforeAll(async () => {
+    let seedData = Utility.seedData;
+    tdei_project_group_id = seedData.tdei_project_group_id;
+    service_id = seedData.service_id.find(x => x.data_type == "gtfs-flex")!.serviceId;
     apiKeyConfiguration = Utility.getApiKeyConfiguration();
     pocConfiguration = Utility.getPocConfiguration();
     dgConfiguration = Utility.getFlexDataGeneratorConfiguration();

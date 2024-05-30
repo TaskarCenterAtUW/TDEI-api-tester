@@ -3,8 +3,6 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
 
-import seedData from "../../seed.data.json";
-
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
 let dgConfiguration: Configuration = {};
@@ -18,8 +16,8 @@ let convertJobId: string = '1';
 let datasetBboxJobId: string = '1';
 let validationJobId: string = '1';
 let uploadedDatasetId: string = '1';
-let tdei_project_group_id = seedData.tdei_project_group_id;
-let service_id = seedData.service_id.find(x => x.data_type == "osw")!.serviceId;
+let tdei_project_group_id = "";
+let service_id = "";
 
 const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
   if (
@@ -76,7 +74,9 @@ const oswConfidenceRequestInterceptor = (request: InternalAxiosRequestConfig, td
 };
 
 beforeAll(async () => {
-
+  let seedData = Utility.seedData;
+  tdei_project_group_id = seedData.tdei_project_group_id;
+  service_id = seedData.service_id.find(x => x.data_type == "osw")!.serviceId;
   adminConfiguration = Utility.getAdminConfiguration();
   apiKeyConfiguration = Utility.getApiKeyConfiguration();
   pocConfiguration = Utility.getPocConfiguration();

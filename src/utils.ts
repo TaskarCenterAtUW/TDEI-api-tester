@@ -11,14 +11,18 @@ import path from "path";
 import * as fs from "fs";
 import metadata_flex from "../assets/payloads/gtfs-flex/metadata.json";
 import metadata_osw from "../assets/payloads/osw/metadata.json";
-// import osw_sub_region from "../assets/payloads/osw/sub-region.geojson";
 import metadata_pathways from "../assets/payloads/gtfs-pathways/metadata.json";
-import seedData from "../seed.data.json";
 
 /**
  * Utility class.
  */
 export class Utility {
+
+    static get seedData() {
+        const seedData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../seed.data.json'), 'utf-8'));
+        return seedData;
+    }
+
     static async setAuthToken(configuration: Configuration) {
         let authAPI = new AuthenticationApi(configuration);
         const loginResponse = await authAPI.authenticate({
@@ -31,10 +35,10 @@ export class Utility {
     }
 
     static getApiKeyConfiguration() {
-        console.log("seedData", seedData);
+        console.log("this.seedData", this.seedData);
         let configuration = new Configuration({
             basePath: environment.system.baseUrl,
-            apiKey: seedData.api_key
+            apiKey: this.seedData.api_key
         });
         return configuration;
     }
@@ -49,32 +53,32 @@ export class Utility {
 
     static getPocConfiguration(): Configuration {
         return new Configuration({
-            username: seedData.users.poc.username,
-            password: seedData.users.poc.password,
+            username: this.seedData.users.poc.username,
+            password: this.seedData.users.poc.password,
             basePath: environment.system.baseUrl
         });
     }
 
     static getOSWDataGeneratorConfiguration(): Configuration {
         return new Configuration({
-            username: seedData.users.osw_data_generator.username,
-            password: seedData.users.osw_data_generator.password,
+            username: this.seedData.users.osw_data_generator.username,
+            password: this.seedData.users.osw_data_generator.password,
             basePath: environment.system.baseUrl
         });
     }
 
     static getPathwaysDataGeneratorConfiguration(): Configuration {
         return new Configuration({
-            username: seedData.users.pathways_data_generator.username,
-            password: seedData.users.pathways_data_generator.password,
+            username: this.seedData.users.pathways_data_generator.username,
+            password: this.seedData.users.pathways_data_generator.password,
             basePath: environment.system.baseUrl
         });
     }
 
     static getFlexDataGeneratorConfiguration(): Configuration {
         return new Configuration({
-            username: seedData.users.flex_data_generator.username,
-            password: seedData.users.flex_data_generator.password,
+            username: this.seedData.users.flex_data_generator.username,
+            password: this.seedData.users.flex_data_generator.password,
             basePath: environment.system.baseUrl
         });
     }
