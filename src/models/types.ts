@@ -4,7 +4,7 @@ interface Credentials {
     password: string
 }
 
-interface Users {
+export interface Users {
     poc: Credentials
     flex_data_generator: Credentials
     pathways_data_generator: Credentials
@@ -13,8 +13,8 @@ interface Users {
 
 
 export interface SeedData {
-    tdei_project_group_id: string
-    service_id: string
-    station_id: string
-    users: Users | {}
+    tdei_project_group_id: string;
+    service_id: [{ data_type: string; serviceId: string; }];
+    users: Users | {};
+    api_key: string;
 }

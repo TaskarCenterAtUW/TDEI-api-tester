@@ -1,9 +1,6 @@
 import {
+    AuthenticationApi,
     Configuration,
-    DatasetItem,
-    DatasetItemCollectionMethodEnum,
-    DatasetItemDataSourceEnum,
-    DatasetItemStatusEnum,
     FeatureTypeEnum,
     GeoJsonObject,
     GeoJsonObjectTypeEnum
@@ -12,19 +9,78 @@ import { environment } from "./environment/environment";
 import { faker } from '@faker-js/faker'
 import path from "path";
 import * as fs from "fs";
+import metadata_flex from "../assets/payloads/gtfs-flex/metadata.json";
+import metadata_osw from "../assets/payloads/osw/metadata.json";
+import metadata_pathways from "../assets/payloads/gtfs-pathways/metadata.json";
 
 /**
  * Utility class.
  */
 export class Utility {
-    static getConfiguration(): Configuration {
+
+    static get seedData() {
+        const seedData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../seed.data.json'), 'utf-8'));
+        return seedData;
+    }
+
+    static async setAuthToken(configuration: Configuration) {
+        let authAPI = new AuthenticationApi(configuration);
+        const loginResponse = await authAPI.authenticate({
+            username: configuration.username,
+            password: configuration.password
+        });
+        configuration.baseOptions = {
+            headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
+        };
+    }
+
+    static getApiKeyConfiguration() {
+        let configuration = new Configuration({
+            basePath: environment.system.baseUrl,
+            apiKey: this.seedData.api_key
+        });
+        return configuration;
+    }
+
+    static getAdminConfiguration(): Configuration {
         return new Configuration({
-            username: environment.system.username,
-            password: environment.system.password,
+            username: environment.seed.adminUser,
+            password: environment.seed.adminPassword,
             basePath: environment.system.baseUrl
         });
     }
 
+    static getPocConfiguration(): Configuration {
+        return new Configuration({
+            username: this.seedData.users.poc.username,
+            password: this.seedData.users.poc.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
+    static getOSWDataGeneratorConfiguration(): Configuration {
+        return new Configuration({
+            username: this.seedData.users.osw_data_generator.username,
+            password: this.seedData.users.osw_data_generator.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
+    static getPathwaysDataGeneratorConfiguration(): Configuration {
+        return new Configuration({
+            username: this.seedData.users.pathways_data_generator.username,
+            password: this.seedData.users.pathways_data_generator.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
+    static getFlexDataGeneratorConfiguration(): Configuration {
+        return new Configuration({
+            username: this.seedData.users.flex_data_generator.username,
+            password: this.seedData.users.flex_data_generator.password,
+            basePath: environment.system.baseUrl
+        });
+    }
     static addAuthZHeader(accessToken) {
         return { Authorization: `Bearer ${accessToken}` };
     }
@@ -67,51 +123,6 @@ export class Utility {
         return parseFloat((min + Math.random() * diff).toFixed(6));
     }
 
-
-    static getRandomGtfsFlexUpload(): DatasetItem {
-
-        return {
-            status: DatasetItemStatusEnum.Publish,
-            name: "gtfs-flex",
-            version: "v2.0",
-            tdei_project_group_id: "0c29017c-f0b9-433e-ae13-556982f2520b",
-            tdei_service_id: "9066ad72-d044-4199-9f6c-b71f75ece7e8",
-            collected_by: "test user",
-            collection_date: "2023-03-03T02:22:45.374Z",
-            collection_method: DatasetItemCollectionMethodEnum.Manual,
-            data_source: DatasetItemDataSourceEnum.InHouse,
-            valid_from: "2023-03-02T04:22:42.493Z",
-            valid_to: "2023-03-02T04:22:42.493Z",
-            dataset_area: this.getRandomPolygon(),
-            schema_version: "v2.0",
-            uploaded_timestamp: "2023-03-02T04:22:42.493Z",
-            confidence_level: 100,
-            download_url: "https://www.google.com"
-        };
-    }
-
-    static getRandomPathwaysUpload(): DatasetItem {
-
-        return {
-            status: DatasetItemStatusEnum.Publish,
-            name: "gtfs-pathways",
-            version: "v1.0",
-            tdei_project_group_id: "66c85a5a-2335-4b97-a0a3-0bb93cba1ae5",
-            tdei_service_id: "472877cb-edb3-40d2-b0b4-d124b90e5cd1",
-            collected_by: "testuser",
-            collection_date: "2023-03-02T04:22:42.493Z",
-            collection_method: DatasetItemCollectionMethodEnum.Manual,
-            valid_from: "2023-03-02T04:22:42.493Z",
-            valid_to: "2023-03-02T04:22:42.493Z",
-            data_source: DatasetItemDataSourceEnum.InHouse,
-            dataset_area: this.getRandomPolygon(),
-            schema_version: "v1.0",
-            uploaded_timestamp: "2023-03-02T04:22:42.493Z",
-            confidence_level: 100,
-            download_url: "https://www.google.com"
-        };
-    }
-
     static getRandomProjectGroupUpload() {
         return {
             project_group_name: faker.company.name(),
@@ -140,9 +151,10 @@ export class Utility {
         }
     }
 
-    static getServiceUpload(project_group_id: string) {
+    static getServiceUpload(project_group_id: string, service_type: string) {
         return {
             tdei_project_group_id: project_group_id,
+            service_type: service_type,
             service_name: `${faker.company.name()} Service`,
             dataset_area: this.getRandomPolygon()
         }
@@ -170,39 +182,38 @@ export class Utility {
     // Change the implementation  here
     static getMetadataBlob(type: string): Blob {
         //const blob = new Blob([jsonString], { type: 'application/json' });
-        let randomMetadata = {
-            "name": "Upload testing",
-            "version": "v2.0",
-            "description": "Bootstrap",
-            "custom_metadata": {
-                "name": "Lara",
-                "gender": "female"
-            },
-            "collected_by": "John Doe",
-            "collection_date": "2019-02-10T09:30Z",
-            "collection_method": "manual",
-            "data_source": "3rdParty",
-            "schema_version": "v0.1"
-        }
-        randomMetadata['name'] = faker.random.alphaNumeric(9) + `_${type}`;
+        let randomMetadata = {};
         if (type == 'flex') {
-            randomMetadata['schema_version'] = 'v2.0';
+            randomMetadata = metadata_flex;
+            randomMetadata['dataset_detail']['schema_version'] = 'v2.0';
         } else if (type == 'pathways') {
-            randomMetadata['schema_version'] = 'v1.0';
+            randomMetadata = metadata_pathways;
+            randomMetadata['dataset_detail']['schema_version'] = 'v1.0';
         } else if (type == 'osw') {
-            randomMetadata['schema_version'] = 'v0.2';
+            randomMetadata = metadata_osw;
+            randomMetadata['dataset_detail']['schema_version'] = 'v0.2';
         }
 
+        randomMetadata['dataset_detail']['name'] = faker.random.alphaNumeric(9) + `_${type}`;
         let jsonString = JSON.stringify(randomMetadata);
         const blob = new Blob([jsonString], { type: 'application/json' });
 
         return blob;
     }
 
+    static getOSWSubRegionBlob(): Blob {
+        let filePath = path.join(__dirname, '../assets/payloads/osw/sub-region.geojson');
+        console.log(filePath);
+        let filestream = fs.readFileSync(filePath);
+        // let jsonString = JSON.stringify(osw_sub_region);
+        const blob = new Blob([filestream], { type: 'application/json' });
+        return blob;
+    }
+
     static getInvalidMetadataBlob(type: string): Blob {
         //no name and version required fields
         let randomMetadata = {
-            "descption": "Bootstrap",
+            "description": "Bootstrap",
             "custom_metadata": {
                 "name": "Lara",
                 "gender": "female"

@@ -109,3 +109,4 @@ test-report.html
 wallaby.js
 
 jest-html-reporters-attach
+seed.data.json

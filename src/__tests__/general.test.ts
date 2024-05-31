@@ -1,23 +1,130 @@
-import { AuthenticationApi, DatasetItem, DatasetItemCollectionMethodEnum, DatasetItemDataSourceEnum, DatasetItemStatusEnum, GeneralApi, VersionSpec } from "tdei-client";
+import { AuthenticationApi, Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, GeneralApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum } from "tdei-client";
 import { Utility } from "../utils";
+import axios, { InternalAxiosRequestConfig } from "axios";
 
 
 const NULL_PARAM = void 0;
 
-let configuration = Utility.getConfiguration();
+let configuration: Configuration = {};
+let apiKeyConfiguration: Configuration = {};
+
+const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
+  if (
+    request.url === `${configuration.basePath}/api/v1/metadata/${tdei_dataset_id}`
+  ) {
+    let data = request.data as FormData;
+    let metaFile = data.get("file") as File;
+    delete data['file'];
+    data.set('file', metaFile, datasetName);
+  }
+  return request;
+};
 
 beforeAll(async () => {
-  let authAPI = new AuthenticationApi(configuration);
-  const loginResponse = await authAPI.authenticate({
-    username: configuration.username,
-    password: configuration.password
-  });
-  configuration.baseOptions = {
-    headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
-  };
+  configuration = Utility.getAdminConfiguration();
+  apiKeyConfiguration = Utility.getApiKeyConfiguration();
+  await Utility.setAuthToken(configuration);
 }, 30000);
 
 describe('List Datasets', () => {
+
+  it('API-Key | Authenticated , When request made with no filters, should return list of dataset', async () => {
+    let oswAPI = new GeneralApi(apiKeyConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles();
+
+    expect(datasetFiles.status).toBe(200);
+
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+
+    datasetFiles.data.forEach(file => {
+      expect(file).toMatchObject(<DatasetItem>{
+        status: expect.toBeOneOf([DatasetItemStatusEnum.PreRelease.toString(), DatasetItemStatusEnum.Publish.toString()]),
+        metadata: {
+          data_provenance: {
+            full_dataset_name: expect.any(String),
+            other_published_locations: expect.toBeOneOf([null, expect.any(String)]),
+            dataset_update_frequency_months: expect.toBeOneOf([null, expect.any(Number)]),
+            schema_validation_run: expect.toBeOneOf([null, expect.any(Boolean)]),
+            schema_validation_run_description: expect.toBeOneOf([null, expect.any(String)]),
+            allow_crowd_contributions: expect.toBeOneOf([null, expect.any(Boolean)]),
+            location_inaccuracy_factors: expect.toBeOneOf([null, expect.any(String)])
+          },
+          dataset_detail: {
+            version: expect.toBeOneOf([null, expect.any(String)]),
+            custom_metadata: expect.toBeOneOf([null, expect.anything()]),
+            collected_by: expect.toBeOneOf([null, expect.any(String)]),
+            collection_date: expect.toBeOneOf([null, expect.any(String)]),
+            valid_from: expect.toBeOneOf([null, expect.any(String)]),
+            valid_to: expect.toBeOneOf([null, expect.toBeOneOf([null, expect.any(String)]),]),
+            collection_method: expect.toBeOneOf([
+              null,
+              MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
+              MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(),
+              MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
+              MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()]),
+            data_source: expect.toBeOneOf([
+              null,
+              MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
+              MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
+              MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()]),
+            dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
+            schema_version: expect.toBeOneOf([null, expect.any(String)]),
+          },
+          dataset_summary: {
+            collection_name: expect.toBeOneOf([null, expect.any(String)]),
+            department_name: expect.toBeOneOf([null, expect.any(String)]),
+            city: expect.toBeOneOf([null, expect.any(String)]),
+            region: expect.toBeOneOf([null, expect.any(String)]),
+            county: expect.toBeOneOf([null, expect.any(String)]),
+            key_limitations_of_the_dataset: expect.toBeOneOf([null, expect.any(String)]),
+            challenges: expect.toBeOneOf([null, expect.any(String)])
+          },
+          maintenance: {
+            official_maintainer: expect.toBeOneOf([null, expect.any(Array)]),
+            last_updated: expect.toBeOneOf([null, expect.any(String)]),
+            update_frequency: expect.toBeOneOf([null, expect.any(String)]),
+            authorization_chain: expect.toBeOneOf([null, expect.any(String)]),
+            maintenance_funded: expect.toBeOneOf([null, expect.any(Boolean)]),
+            funding_details: expect.toBeOneOf([null, expect.any(String)])
+          },
+          methodology: {
+            point_data_collection_device: expect.toBeOneOf([null, expect.any(String)]),
+            node_locations_and_attributes_editing_software: expect.toBeOneOf([null, expect.any(String)]),
+            data_collected_by_people: expect.toBeOneOf([null, expect.any(Boolean)]),
+            data_collectors: expect.toBeOneOf([null, expect.any(String)]),
+            data_captured_automatically: expect.toBeOneOf([null, expect.any(Boolean)]),
+            automated_collection: expect.toBeOneOf([null, expect.any(String)]),
+            data_collectors_organization: expect.toBeOneOf([null, expect.any(String)]),
+            data_collector_compensation: expect.toBeOneOf([null, expect.any(String)]),
+            preprocessing_location: expect.toBeOneOf([null, expect.any(String)]),
+            preprocessing_by: expect.toBeOneOf([null, expect.any(String)]),
+            preprocessing_steps: expect.toBeOneOf([null, expect.any(String)]),
+            data_collection_preprocessing_documentation: expect.toBeOneOf([null, expect.any(Boolean)]),
+            documentation_uri: expect.toBeOneOf([null, expect.any(String)]),
+            validation_process_exists: expect.toBeOneOf([null, expect.any(Boolean)]),
+            validation_process_description: expect.toBeOneOf([null, expect.any(String)]),
+            validation_conducted_by: expect.toBeOneOf([null, expect.any(String)]),
+            excluded_data: expect.toBeOneOf([null, expect.any(String)]),
+            excluded_data_reason: expect.toBeOneOf([null, expect.any(String)])
+          }
+        },
+        derived_from_dataset_id: expect.toBeOneOf([null, expect.any(String)]),
+        uploaded_timestamp: expect.any(String),
+        project_group: expect.objectContaining(<DatasetItemProjectGroup>{
+          tdei_project_group_id: expect.any(String),
+          name: expect.any(String)
+        }),
+        service: expect.objectContaining(<DatasetItemService>{
+          tdei_service_id: expect.any(String),
+          name: expect.any(String)
+        }),
+        tdei_dataset_id: expect.any(String),
+        download_url: expect.any(String)
+      });
+    });
+  });
+
   it('Admin | Authenticated , When request made with no filters, should return list of dataset', async () => {
     let oswAPI = new GeneralApi(configuration);
 
@@ -30,30 +137,86 @@ describe('List Datasets', () => {
     datasetFiles.data.forEach(file => {
       expect(file).toMatchObject(<DatasetItem>{
         status: expect.toBeOneOf([DatasetItemStatusEnum.PreRelease.toString(), DatasetItemStatusEnum.Publish.toString()]),
-        name: expect.any(String),
-        description: expect.toBeOneOf([null, expect.any(String)]),
-        version: expect.any(String),
+        metadata: {
+          data_provenance: {
+            full_dataset_name: expect.any(String),
+            other_published_locations: expect.toBeOneOf([null, expect.any(String)]),
+            dataset_update_frequency_months: expect.toBeOneOf([null, expect.any(Number)]),
+            schema_validation_run: expect.toBeOneOf([null, expect.any(Boolean)]),
+            schema_validation_run_description: expect.toBeOneOf([null, expect.any(String)]),
+            allow_crowd_contributions: expect.toBeOneOf([null, expect.any(Boolean)]),
+            location_inaccuracy_factors: expect.toBeOneOf([null, expect.any(String)])
+          },
+          dataset_detail: {
+            version: expect.toBeOneOf([null, expect.any(String)]),
+            custom_metadata: expect.toBeOneOf([null, expect.anything()]),
+            collected_by: expect.toBeOneOf([null, expect.any(String)]),
+            collection_date: expect.toBeOneOf([null, expect.any(String)]),
+            valid_from: expect.toBeOneOf([null, expect.any(String)]),
+            valid_to: expect.toBeOneOf([null, expect.toBeOneOf([null, expect.any(String)]),]),
+            collection_method: expect.toBeOneOf([
+              null,
+              MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
+              MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(),
+              MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
+              MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()]),
+            data_source: expect.toBeOneOf([
+              null,
+              MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
+              MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
+              MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()]),
+            dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
+            schema_version: expect.toBeOneOf([null, expect.any(String)]),
+          },
+          dataset_summary: {
+            collection_name: expect.toBeOneOf([null, expect.any(String)]),
+            department_name: expect.toBeOneOf([null, expect.any(String)]),
+            city: expect.toBeOneOf([null, expect.any(String)]),
+            region: expect.toBeOneOf([null, expect.any(String)]),
+            county: expect.toBeOneOf([null, expect.any(String)]),
+            key_limitations_of_the_dataset: expect.toBeOneOf([null, expect.any(String)]),
+            challenges: expect.toBeOneOf([null, expect.any(String)])
+          },
+          maintenance: {
+            official_maintainer: expect.toBeOneOf([null, expect.any(Array)]),
+            last_updated: expect.toBeOneOf([null, expect.any(String)]),
+            update_frequency: expect.toBeOneOf([null, expect.any(String)]),
+            authorization_chain: expect.toBeOneOf([null, expect.any(String)]),
+            maintenance_funded: expect.toBeOneOf([null, expect.any(Boolean)]),
+            funding_details: expect.toBeOneOf([null, expect.any(String)])
+          },
+          methodology: {
+            point_data_collection_device: expect.toBeOneOf([null, expect.any(String)]),
+            node_locations_and_attributes_editing_software: expect.toBeOneOf([null, expect.any(String)]),
+            data_collected_by_people: expect.toBeOneOf([null, expect.any(Boolean)]),
+            data_collectors: expect.toBeOneOf([null, expect.any(String)]),
+            data_captured_automatically: expect.toBeOneOf([null, expect.any(Boolean)]),
+            automated_collection: expect.toBeOneOf([null, expect.any(String)]),
+            data_collectors_organization: expect.toBeOneOf([null, expect.any(String)]),
+            data_collector_compensation: expect.toBeOneOf([null, expect.any(String)]),
+            preprocessing_location: expect.toBeOneOf([null, expect.any(String)]),
+            preprocessing_by: expect.toBeOneOf([null, expect.any(String)]),
+            preprocessing_steps: expect.toBeOneOf([null, expect.any(String)]),
+            data_collection_preprocessing_documentation: expect.toBeOneOf([null, expect.any(Boolean)]),
+            documentation_uri: expect.toBeOneOf([null, expect.any(String)]),
+            validation_process_exists: expect.toBeOneOf([null, expect.any(Boolean)]),
+            validation_process_description: expect.toBeOneOf([null, expect.any(String)]),
+            validation_conducted_by: expect.toBeOneOf([null, expect.any(String)]),
+            excluded_data: expect.toBeOneOf([null, expect.any(String)]),
+            excluded_data_reason: expect.toBeOneOf([null, expect.any(String)])
+          }
+        },
         derived_from_dataset_id: expect.toBeOneOf([null, expect.any(String)]),
-        custom_metadata: expect.toBeOneOf([null, expect.anything()]),
         uploaded_timestamp: expect.any(String),
-        tdei_project_group_id: expect.any(String),
-        collected_by: expect.any(String),
-        collection_date: expect.any(String),
-        collection_method: expect.toBeOneOf([
-          DatasetItemCollectionMethodEnum.Generated.toString(),
-          DatasetItemCollectionMethodEnum.Other.toString(),
-          DatasetItemCollectionMethodEnum.Transform.toString(),
-          DatasetItemCollectionMethodEnum.Manual.toString()]),
-        valid_from: expect.any(String),
-        valid_to: expect.toBeOneOf([null, expect.any(String)]),
-        confidence_level: expect.any(Number),
-        data_source: expect.toBeOneOf([
-          DatasetItemDataSourceEnum.InHouse.toString(),
-          DatasetItemDataSourceEnum.TDEITools.toString(),
-          DatasetItemDataSourceEnum._3rdParty.toString()]),
-        dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
+        project_group: expect.objectContaining(<DatasetItemProjectGroup>{
+          tdei_project_group_id: expect.any(String),
+          name: expect.any(String)
+        }),
+        service: expect.objectContaining(<DatasetItemService>{
+          tdei_service_id: expect.any(String),
+          name: expect.any(String)
+        }),
         tdei_dataset_id: expect.any(String),
-        schema_version: expect.any(String),
         download_url: expect.any(String)
       });
     });
@@ -119,7 +282,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(file.tdei_project_group_id).toBe(project_group_id)
+      expect(file.project_group.tdei_project_group_id).toBe(project_group_id)
     })
 
   });
@@ -185,7 +348,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(file.schema_version).toContain(schema_version)
+      expect(file.metadata.dataset_detail!.schema_version).toContain(schema_version)
     });
   });
 
@@ -217,7 +380,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(file.name).toContain(name)
+      expect(file.metadata.dataset_detail!.name).toContain(name)
     });
   });
 
@@ -249,7 +412,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(file.collection_method).toBe(collection_method)
+      expect(file.metadata.dataset_detail!.collection_method).toBe(collection_method)
     });
   });
   it('Admin | Authenticated , When request made with collected_by, should return datasets matching collected_by', async () => {
@@ -280,7 +443,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(file.collected_by).toBe(collected_by)
+      expect(file.metadata.dataset_detail!.collected_by).toBe(collected_by)
     });
   });
 
@@ -312,7 +475,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(file.data_source).toBe(data_source)
+      expect(file.metadata.dataset_detail!.data_source).toBe(data_source)
     })
   });
 
@@ -351,7 +514,7 @@ describe('List Datasets', () => {
   it('Admin | Authenticated , When request made with valid_to, should return datasets valid from input datetime', async () => {
     let oswAPI = new GeneralApi(configuration);
     //set date one date before today
-    let valid_to = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString();
+    let valid_to = (new Date(new Date().setMonth(new Date().getMonth() - 1))).toISOString();
 
     const datasetFiles = await oswAPI.listDatasetFiles(
       NULL_PARAM,//data_type ?: string, 
@@ -377,7 +540,7 @@ describe('List Datasets', () => {
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
-      expect(new Date(file.valid_from)).toBeAfter(new Date(valid_to))
+      expect(new Date(file.metadata.dataset_detail!.valid_to!)).toBeAfter(new Date(valid_to))
     })
   });
 
@@ -413,7 +576,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let oswAPI = new GeneralApi(Utility.getConfiguration());
+    let oswAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     const datasetFiles = oswAPI.listDatasetFiles();
 
@@ -440,11 +603,30 @@ describe("List API versions", () => {
         specification: expect.any(String)
       });
     })
+  }, 30000);
+
+  it('API-Key | Authenticated , When request made, expect to return api version list', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(apiKeyConfiguration);
+    // Action
+    const versions = await generalAPI.listApiVersions();
+
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data.versions).not.toBeNull();
+
+    versions.data.versions?.forEach(version => {
+      expect(version).toMatchObject(<VersionSpec>{
+        version: expect.any(String),
+        documentation: expect.any(String),
+        specification: expect.any(String)
+      });
+    })
   }, 30000)
 
   it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
 
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     const version = generalAPI.listApiVersions();
 
@@ -458,6 +640,23 @@ describe('List Project Groups', () => {
 
   it('Admin | Authenticated , When request made, expect to return list of project groups', async () => {
     let generalAPI = new GeneralApi(configuration);
+
+    const projectGroupList = await generalAPI.listProjectGroups();
+
+    expect(projectGroupList.status).toBe(200);
+    expect(Array.isArray(projectGroupList.data)).toBe(true);
+
+    projectGroupList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_project_group_id: expect.any(String),
+        project_group_name: expect.any(String),
+        polygon: expect.any(Object || null)
+      })
+    })
+  }, 30000);
+
+  it('API-Key | Authenticated , When request made, expect to return list of project groups', async () => {
+    let generalAPI = new GeneralApi(apiKeyConfiguration);
 
     const projectGroupList = await generalAPI.listProjectGroups();
 
@@ -485,7 +684,7 @@ describe('List Project Groups', () => {
   //   expect(projectGroupList.data).toEqual(expect.arrayContaining([expect.objectContaining({ tdei_project_group_id: 'c552d5d1-0719-4647-b86d-6ae9b25327b7' })]));
   // }, 30000)
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getConfiguration());
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     const projectGroupList = generalAPI.listProjectGroups();
 
@@ -493,4 +692,32 @@ describe('List Project Groups', () => {
 
   }, 30000)
 });
+
+describe("Edit Metadata API", () => {
+
+  it('POC | Authenticated , When request made, expect to return sucess', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(configuration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
+
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+
+    const version = generalAPI.listApiVersions();
+
+    await expect(version).rejects.toMatchObject({ response: { status: 401 } });
+
+
+  }, 30000);
+});
+
 
