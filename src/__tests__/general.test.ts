@@ -1,16 +1,22 @@
-import { AuthenticationApi, Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, GeneralApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum } from "tdei-client";
+import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, GeneralApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 
 
 const NULL_PARAM = void 0;
 
-let configuration: Configuration = {};
+let adminConfiguration: Configuration = {};
 let apiKeyConfiguration: Configuration = {};
+let pocConfiguration: Configuration = {};
+let flexDgConfiguration: Configuration = {};
+let pathwaysDgConfiguration: Configuration = {};
+let oswDgConfiguration: Configuration = {};
+let tdei_project_group_id: string = "";
+let tdei_service_id: string = "";
 
-const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
+const cloneDatasetRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, tdei_project_group_id: string, tdei_service_id: string, datasetName: string) => {
   if (
-    request.url === `${configuration.basePath}/api/v1/metadata/${tdei_dataset_id}`
+    request.url === `${adminConfiguration.basePath}/api/v1/dataset/clone/${tdei_dataset_id}/${tdei_project_group_id}/${tdei_service_id}`
   ) {
     let data = request.data as FormData;
     let metaFile = data.get("file") as File;
@@ -21,9 +27,22 @@ const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tde
 };
 
 beforeAll(async () => {
-  configuration = Utility.getAdminConfiguration();
+  adminConfiguration = Utility.getAdminConfiguration();
   apiKeyConfiguration = Utility.getApiKeyConfiguration();
-  await Utility.setAuthToken(configuration);
+  pocConfiguration = Utility.getPocConfiguration();
+  flexDgConfiguration = Utility.getFlexDataGeneratorConfiguration();
+  pathwaysDgConfiguration = Utility.getPathwaysDataGeneratorConfiguration();
+  oswDgConfiguration = Utility.getOSWDataGeneratorConfiguration();
+
+  await Utility.setAuthToken(adminConfiguration);
+  await Utility.setAuthToken(pocConfiguration);
+  await Utility.setAuthToken(flexDgConfiguration);
+  await Utility.setAuthToken(pathwaysDgConfiguration);
+  await Utility.setAuthToken(oswDgConfiguration);
+
+  let seedData = Utility.seedData;
+  tdei_project_group_id = seedData.tdei_project_group_id;
+  tdei_service_id = seedData.service_id.find(x => x.data_type == "osw")!.serviceId;
 }, 30000);
 
 describe('List Datasets', () => {
@@ -126,7 +145,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with no filters, should return list of dataset', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
 
     const datasetFiles = await oswAPI.listDatasetFiles();
 
@@ -223,29 +242,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with page size, should return datasets less than or equal to page size', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let page_size = 5;
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      NULL_PARAM, //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      NULL_PARAM,// tdei_project_group_id ?: string,
-      NULL_PARAM,// valid_from ?: string, 
-      NULL_PARAM, // valid_to ?: string, 
-      NULL_PARAM,// tdei_dataset_id ?: string, 
-      NULL_PARAM,// bbox ?: Array<number>, 
-      NULL_PARAM,// page_no ?: number, 
-      page_size,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      NULL_PARAM,// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -255,29 +309,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with project group Id, should return datasets of the specified project group', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     //TODO: read from seeder or config
     let project_group_id = '5e339544-3b12-40a5-8acd-78c66d1fa981';
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      project_group_id,// tdei_project_group_id ?: string,
-      // NULL_PARAM,// valid_from ?: string, 
-      // NULL_PARAM, // valid_to ?: string, 
-      // NULL_PARAM,// tdei_dataset_id ?: string, 
-      // NULL_PARAM,// bbox ?: Array<number>, 
-      // NULL_PARAM,// page_no ?: number, 
-      // page_size,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      project_group_id,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,// page_size,
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -288,29 +377,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should return dataset of the specified tdei_dataset_id', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let recordId = "40566429d02c4c80aee68c970977bed8";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      NULL_PARAM,// tdei_project_group_id ?: string,
-      NULL_PARAM,// valid_from ?: string, 
-      NULL_PARAM, // valid_to ?: string, 
-      recordId,// tdei_dataset_id ?: string, 
-      // NULL_PARAM,// bbox ?: Array<number>, 
-      // NULL_PARAM,// page_no ?: number, 
-      // page_size,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      recordId,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -321,29 +445,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with schema_version, should return datasets matching schema_version', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let schema_version = "v0.1";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      schema_version,// schema_version ?: string, 
-      // NULL_PARAM,// tdei_project_group_id ?: string,
-      // NULL_PARAM,// valid_from ?: string, 
-      // NULL_PARAM, // valid_to ?: string, 
-      // NULL_PARAM,// tdei_dataset_id ?: string, 
-      // NULL_PARAM,// bbox ?: Array<number>, 
-      // NULL_PARAM,// page_no ?: number, 
-      // NULL_PARAM,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      schema_version,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -353,29 +512,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with name, should return dataset matching name', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let name = "manual";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      name, // name ?: string,
-      // NULL_PARAM, // version ?: string, 
-      // NULL_PARAM, //data_source ?: string, 
-      // NULL_PARAM, // collection_method ?: string, 
-      // NULL_PARAM, //collected_by ?: string, 
-      // NULL_PARAM, // derived_from_dataset_id ?: string, 
-      // NULL_PARAM,// collection_date ?: string, 
-      // NULL_PARAM,// confidence_level ?: number, 
-      // NULL_PARAM,// schema_version ?: string, 
-      // NULL_PARAM,// tdei_project_group_id ?: string,
-      // NULL_PARAM,// valid_from ?: string, 
-      // NULL_PARAM, // valid_to ?: string, 
-      // NULL_PARAM,// tdei_dataset_id ?: string, 
-      // NULL_PARAM,// bbox ?: Array<number>, 
-      // NULL_PARAM,// page_no ?: number, 
-      // NULL_PARAM,// page_size?: number | undefined, 
-      // // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      name,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -385,29 +579,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with collection_method, should return datasets matching collection_method', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let collection_method = "manual";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      collection_method, // collection_method ?: string, 
-      // NULL_PARAM, //collected_by ?: string, 
-      // NULL_PARAM, // derived_from_dataset_id ?: string, 
-      // NULL_PARAM,// collection_date ?: string, 
-      // NULL_PARAM,// confidence_level ?: number, 
-      // NULL_PARAM,// schema_version ?: string, 
-      // NULL_PARAM,// tdei_project_group_id ?: string,
-      // NULL_PARAM,// valid_from ?: string, 
-      // NULL_PARAM, // valid_to ?: string, 
-      // NULL_PARAM,// tdei_dataset_id ?: string, 
-      // NULL_PARAM,// bbox ?: Array<number>, 
-      // NULL_PARAM,// page_no ?: number, 
-      // NULL_PARAM,// page_size?: number | undefined, 
-      // // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      collection_method,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -416,29 +645,64 @@ describe('List Datasets', () => {
     });
   });
   it('Admin | Authenticated , When request made with collected_by, should return datasets matching collected_by', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let collected_by = "John Doe";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      NULL_PARAM, //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      collected_by, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      NULL_PARAM,// tdei_project_group_id ?: string,
-      NULL_PARAM,// valid_from ?: string, 
-      NULL_PARAM, // valid_to ?: string, 
-      NULL_PARAM,// tdei_dataset_id ?: string, 
-      NULL_PARAM,// bbox ?: Array<number>, 
-      NULL_PARAM,// page_no ?: number, 
-      NULL_PARAM,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      collected_by,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -448,29 +712,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with data_source, should return datasets matching data_source', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let data_source = "3rdParty";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      NULL_PARAM, //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      data_source, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      NULL_PARAM,// tdei_project_group_id ?: string,
-      NULL_PARAM,// valid_from ?: string, 
-      NULL_PARAM, // valid_to ?: string, 
-      NULL_PARAM,// tdei_dataset_id ?: string, 
-      NULL_PARAM,// bbox ?: Array<number>, 
-      NULL_PARAM,// page_no ?: number, 
-      NULL_PARAM,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      data_source,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -480,29 +779,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with derived_from_dataset_id, should return datasets matching derived_from_dataset_id', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let derived_from_dataset_id = "a042a1b3aa874701929cb33a98f28e9d";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      derived_from_dataset_id, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      NULL_PARAM,// tdei_project_group_id ?: string,
-      NULL_PARAM,// valid_from ?: string, 
-      NULL_PARAM, // valid_to ?: string, 
-      NULL_PARAM,// tdei_dataset_id ?: string, 
-      NULL_PARAM,// bbox ?: Array<number>, 
-      NULL_PARAM,// page_no ?: number, 
-      NULL_PARAM,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      derived_from_dataset_id,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -512,30 +846,65 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with valid_to, should return datasets valid from input datetime', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     //set date one date before today
     let valid_to = (new Date(new Date().setMonth(new Date().getMonth() - 1))).toISOString();
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      NULL_PARAM,// tdei_project_group_id ?: string,
-      NULL_PARAM,// valid_from ?: string, 
-      valid_to, // valid_to ?: string, 
-      // NULL_PARAM,// tdei_dataset_id ?: string, 
-      // NULL_PARAM,// bbox ?: Array<number>, 
-      // NULL_PARAM,// page_no ?: number, 
-      // NULL_PARAM,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      valid_to,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -545,29 +914,64 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should return empty dataset', async () => {
-    let oswAPI = new GeneralApi(configuration);
+    let oswAPI = new GeneralApi(adminConfiguration);
     let recordId = 'dummyRecordId';
 
     const datasetFiles = await oswAPI.listDatasetFiles(
-      NULL_PARAM,//data_type ?: string, 
-      "All", //status ?: string,
-      NULL_PARAM, // name ?: string,
-      NULL_PARAM, // version ?: string, 
-      NULL_PARAM, //data_source ?: string, 
-      NULL_PARAM, // collection_method ?: string, 
-      NULL_PARAM, //collected_by ?: string, 
-      NULL_PARAM, // derived_from_dataset_id ?: string, 
-      NULL_PARAM,// collection_date ?: string, 
-      NULL_PARAM,// confidence_level ?: number, 
-      NULL_PARAM,// schema_version ?: string, 
-      NULL_PARAM,// tdei_project_group_id ?: string,
-      NULL_PARAM,// valid_from ?: string, 
-      NULL_PARAM, // valid_to ?: string, 
-      recordId,// tdei_dataset_id ?: string, 
-      // NULL_PARAM,// bbox ?: Array<number>, 
-      // NULL_PARAM,// page_no ?: number, 
-      // NULL_PARAM,// page_size?: number | undefined, 
-      // options?: AxiosRequestConfig<...> | undefined
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      recordId,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
@@ -588,7 +992,7 @@ describe("List API versions", () => {
 
   it('Admin | Authenticated , When request made, expect to return api version list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(configuration);
+    let generalAPI = new GeneralApi(adminConfiguration);
     // Action
     const versions = await generalAPI.listApiVersions();
 
@@ -639,7 +1043,7 @@ describe("List API versions", () => {
 describe('List Project Groups', () => {
 
   it('Admin | Authenticated , When request made, expect to return list of project groups', async () => {
-    let generalAPI = new GeneralApi(configuration);
+    let generalAPI = new GeneralApi(adminConfiguration);
 
     const projectGroupList = await generalAPI.listProjectGroups();
 
@@ -693,30 +1097,230 @@ describe('List Project Groups', () => {
   }, 30000)
 });
 
-describe("Edit Metadata API", () => {
-
-  it('POC | Authenticated , When request made, expect to return sucess', async () => {
+describe('Clone Dataset', () => {
+  //Clone flex dataset
+  it('POC | Authenticated , When request made to clone flex dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(configuration);
+    let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";
+    let tdei_dataset_id = "ecf96dce3d36477b8ba53c6833ca4545"; //Published flex dataset
+
     // Action
-    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
-    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    const cloneDatasetInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
     // Assert
     expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(cloneDatasetInterceptor);
+  }, 30000);
+
+  it('Admin | Authenticated , When request made to clone flex dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "ecf96dce3d36477b8ba53c6833ca4545";//Published flex dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Flex Data Generator | Authenticated , When request made to clone flex dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(flexDgConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "ecf96dce3d36477b8ba53c6833ca4545";//Published flex dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  //Clone Pathways dataset
+  it('POC | Authenticated , When request made to clone pathways dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("pathways");
+    let tdei_dataset_id = "1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | Authenticated , When request made to clone pathways dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("pathways");
+    let tdei_dataset_id = "1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Pathways Data Generator | Authenticated , When request made to clone pathways dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pathwaysDgConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("pathways");
+    let tdei_dataset_id = "1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  //Clone osw dataset
+  it('POC | Authenticated , When request made to clone OSW dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = "d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset`
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | Authenticated , When request made to clone OSW dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = "d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('OSW Data Generator | Authenticated , When request made to clone OSW dataset, expect to return cloned dataset id', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(oswDgConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = "d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    const versions = await generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    expect(versions.data).toBeString();
+    expect(versions.data).not.toBe('');
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made to clone Pre-Release flex dataset which user not belong to project group, expect to return unauthorized error', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id)).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made to clone flex dataset with invalid service id, expect to return input error', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id)).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made to clone flex dataset with invalid project group id, expect to return input error', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id)).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made to clone flex dataset with service id not associated with project group id, expect to return input error', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "0b165272-afff-46b9-8eb4-14f81bfb92b7";//Pre-Release other project group dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id)).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made to clone flex dataset with invalid metadata, expect to return input error', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getInvalidMetadataBlob("flex");
+    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id)).rejects.toMatchObject({ response: { status: 400 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
   it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
-
+    // Arrange
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";
 
-    const version = generalAPI.listApiVersions();
-
-    await expect(version).rejects.toMatchObject({ response: { status: 401 } });
-
-
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id)).rejects.toMatchObject({ response: { status: 401 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 });
 

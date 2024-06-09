@@ -1,4 +1,4 @@
-import { AuthenticationApi, Configuration, GTFSPathwaysApi, GeneralApi, JobDetails, VersionSpec } from "tdei-client";
+import { Configuration, GTFSPathwaysApi, GeneralApi, VersionSpec } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
@@ -14,6 +14,18 @@ let publishJobId: string = '1';
 let uploadedDatasetId: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
+
+const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
+  if (
+    request.url === `${adminConfiguration.basePath}/api/v1/metadata/${tdei_dataset_id}`
+  ) {
+    let data = request.data as FormData;
+    let metaFile = data.get("file") as File;
+    delete data['file'];
+    data.set('file', metaFile, datasetName);
+  }
+  return request;
+};
 
 const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
   if (
@@ -184,6 +196,19 @@ describe('Check upload request job completion status', () => {
     console.log("uploaded tdei_dataset_id", uploadedDatasetId);
   }, 25000);
 
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
@@ -199,6 +224,61 @@ describe('Check upload request job completion status', () => {
 
     expect(listResponse.status).toBe(200);
   });
+});
+
+describe("Edit Metadata API", () => {
+
+  it('Flex Data Generator | Authenticated , When request made, expect to return sucess', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(dgConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("pathways");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made, expect to return sucess', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("pathways");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | Authenticated , When request made, expect to return sucess', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("pathways");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
+
+    // Arrange
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let metaToUpload = Utility.getMetadataBlob("pathways");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id)).rejects.toMatchObject({ response: { status: 401 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
 });
 
 describe('Publish the flex dataset', () => {
@@ -242,8 +322,8 @@ describe('Publish the flex dataset', () => {
 describe('Check publish request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
+  it('Pathways Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 20000));
 
     let uploadStatus = await generalAPI.listJobs(publishJobId);
@@ -257,6 +337,19 @@ describe('Check publish request job completion status', () => {
         })
       ])
     );
+  }, 25000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(publishJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(publishJobId);
+    expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
@@ -329,8 +422,8 @@ describe('Validate-only pathways dataset request', () => {
 describe('Check validation-only request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
+  it('Pathways Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
 
     await new Promise((r) => setTimeout(r, 20000));
     let validateStatus = await generalAPI.listJobs(validationJobId);
@@ -344,6 +437,19 @@ describe('Check validation-only request job completion status', () => {
         })
       ])
     );
+  }, 25000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(validationJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(validationJobId);
+    expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
