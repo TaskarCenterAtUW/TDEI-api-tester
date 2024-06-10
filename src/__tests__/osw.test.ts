@@ -1,4 +1,4 @@
-import { AuthenticationApi, OSWApi, VersionSpec, GeneralApi, Configuration } from "tdei-client";
+import { OSWApi, VersionSpec, GeneralApi, Configuration } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
@@ -18,6 +18,18 @@ let validationJobId: string = '1';
 let uploadedDatasetId: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
+
+const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
+  if (
+    request.url === `${adminConfiguration.basePath}/api/v1/metadata/${tdei_dataset_id}`
+  ) {
+    let data = request.data as FormData;
+    let metaFile = data.get("file") as File;
+    delete data['file'];
+    data.set('file', metaFile, datasetName);
+  }
+  return request;
+};
 
 const oswUploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
   if (
@@ -82,9 +94,7 @@ beforeAll(async () => {
   pocConfiguration = Utility.getPocConfiguration();
   dgConfiguration = Utility.getOSWDataGeneratorConfiguration();
 
-  await Utility.setAuthToken(adminConfiguration);
-  await Utility.setAuthToken(pocConfiguration);
-  await Utility.setAuthToken(dgConfiguration);
+  await authenticate();
 });
 
 
@@ -210,6 +220,19 @@ describe('Check upload request job completion status', () => {
     console.log("uploaded tdei_dataset_id", uploadedDatasetId);
   }, 195000);
 
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
@@ -218,6 +241,61 @@ describe('Check upload request job completion status', () => {
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
 
+});
+
+describe("Edit Metadata API", () => {
+
+  it('Flex Data Generator | Authenticated , When request made, expect to return sucess', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(dgConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made, expect to return sucess', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | Authenticated , When request made, expect to return sucess', async () => {
+    // Arrange
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
+
+    // Arrange
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id)).rejects.toMatchObject({ response: { status: 401 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
 });
 
 describe('Publish the OSW dataset', () => {
@@ -276,8 +354,8 @@ describe('Publish the OSW dataset', () => {
 
 describe('Check publish request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
+  it('OSW Data Generaror | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
     let uploadStatus = await generalAPI.listJobs(publishJobId);
@@ -292,6 +370,19 @@ describe('Check publish request job running status', () => {
       ])
     );
   }, 45000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(publishJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(publishJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
@@ -378,7 +469,7 @@ describe('Validate-only OSW dataset request', () => {
 
 describe('Check validation-only request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new GeneralApi(adminConfiguration);
 
     await new Promise((r) => setTimeout(r, 90000));
@@ -394,6 +485,19 @@ describe('Check validation-only request job running status', () => {
       ])
     );
   }, 95000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(validationJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(validationJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
@@ -516,6 +620,19 @@ describe('Check confidence request job running status', () => {
     );
   }, 15000);
 
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(confidenceJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(confidenceJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
     let confidenceStatusResponse = generalAPI.listJobs(confidenceJobId);
@@ -632,6 +749,19 @@ describe('Check convert request job running status', () => {
       ])
     );
   }, 35000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(convertJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(convertJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
@@ -783,6 +913,19 @@ describe('Check dataset-bbox request job running status', () => {
     );
   }, 45000);
 
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(datasetBboxJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(datasetBboxJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
@@ -827,21 +970,21 @@ let datasetTagTargetRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
 let datasetRoadTagJobId = '1';
 describe('Dataset Road Tag Request', () => {
 
-  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
-    let oswAPI = new OSWApi(adminConfiguration);
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetRecordId);
+    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
     datasetRoadTagJobId = bboxRequest.data!;
-    console.log("dataset road tag job_id", datasetBboxJobId);
+    console.log("dataset road tag job_id", datasetRoadTagJobId);
   });
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetRecordId);
+    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -863,22 +1006,35 @@ describe('Check dataset-road-tag request job completion status', () => {
     let generalAPI = new GeneralApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
-    let formatStatus = await generalAPI.listJobs(datasetBboxJobId);
+    let formatStatus = await generalAPI.listJobs(datasetRoadTagJobId);
 
     expect(formatStatus.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          job_id: expect.toBeOneOf([`${datasetBboxJobId}`]),
+          job_id: expect.toBeOneOf([`${datasetRoadTagJobId}`]),
           status: expect.toBeOneOf(["COMPLETED"])
         })
       ])
     );
   }, 45000);
 
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(datasetRoadTagJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(datasetRoadTagJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
-    let bboxStatusResponse = generalAPI.listJobs(datasetBboxJobId);
+    let bboxStatusResponse = generalAPI.listJobs(datasetRoadTagJobId);
 
     await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -950,3 +1106,10 @@ describe('Invalidate the OSW file', () => {
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
 });
+
+async function authenticate() {
+  await Utility.setAuthToken(adminConfiguration);
+  await Utility.setAuthToken(pocConfiguration);
+  await Utility.setAuthToken(dgConfiguration);
+}
+
