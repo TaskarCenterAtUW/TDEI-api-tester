@@ -13,7 +13,7 @@ export class Seeder {
     constructor() {
         this.client = new APIUtility()
         this.roles = ['poc', 'flex_data_generator', 'pathways_data_generator', 'osw_data_generator']
-        this.data_types = ['osw', 'gtfs-flex', 'gtfs-pathways']
+        this.data_types = ['osw', 'flex', 'pathways']
     }
 
     public async seed(freshSeed = false): Promise<{} | SeedData> {

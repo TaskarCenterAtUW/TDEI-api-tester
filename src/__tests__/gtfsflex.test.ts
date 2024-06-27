@@ -60,7 +60,7 @@ const validateRequestInterceptor = (request: InternalAxiosRequestConfig, dataset
 beforeAll(async () => {
     let seedData = Utility.seedData;
     tdei_project_group_id = seedData.tdei_project_group_id;
-    service_id = seedData.service_id.find(x => x.data_type == "gtfs-flex")!.serviceId;
+    service_id = seedData.service_id.find(x => x.data_type == "flex")!.serviceId;
     apiKeyConfiguration = Utility.getApiKeyConfiguration();
     pocConfiguration = Utility.getPocConfiguration();
     dgConfiguration = Utility.getFlexDataGeneratorConfiguration();

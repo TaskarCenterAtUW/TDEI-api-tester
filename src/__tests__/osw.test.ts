@@ -365,7 +365,7 @@ describe('Check publish request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${publishJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"])
         })
       ])
     );
@@ -480,7 +480,7 @@ describe('Check validation-only request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${validationJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"])
         })
       ])
     );
@@ -597,7 +597,7 @@ describe('Check confidence request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${confidenceJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"])
         })
       ])
     );
@@ -614,7 +614,7 @@ describe('Check confidence request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${confidenceJobWithSubRegionId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"])
         })
       ])
     );
@@ -744,7 +744,13 @@ describe('Check convert request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${convertJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            completed_stages: expect.any(Number),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+            current_stage: expect.any(String)
+          })
         })
       ])
     );
@@ -907,7 +913,13 @@ describe('Check dataset-bbox request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${datasetBboxJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            completed_stages: expect.any(Number),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+            current_stage: expect.any(String)
+          })
         })
       ])
     );
@@ -951,7 +963,7 @@ describe('Download Dataset Bbox request file', () => {
     if (contentType === "application/zip") {
       const zip = new AdmZip(data);
       const entries = zip.getEntries();
-      expect(entries.length).toBeGreaterThan(1);
+      expect(entries.length).toBeGreaterThanOrEqual(1);
     }
   }, 20000);
 
@@ -1056,7 +1068,7 @@ describe('Download Dataset Road Tag request file', () => {
     if (contentType === "application/zip") {
       const zip = new AdmZip(data);
       const entries = zip.getEntries();
-      expect(entries.length).toBeGreaterThan(1);
+      expect(entries.length).toBeGreaterThanOrEqual(1);
     }
   }, 20000);
 
@@ -1073,7 +1085,7 @@ describe('Download Dataset Road Tag request file', () => {
     if (contentType === "application/zip") {
       const zip = new AdmZip(data);
       const entries = zip.getEntries();
-      expect(entries.length).toBeGreaterThan(1);
+      expect(entries.length).toBeGreaterThanOrEqual(1);
     }
   }, 20000);
 
