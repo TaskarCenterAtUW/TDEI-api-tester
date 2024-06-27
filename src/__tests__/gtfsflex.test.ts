@@ -187,7 +187,13 @@ describe('Check upload request job completion status', () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     job_id: expect.toBeOneOf([`${uploadedJobId}`]),
-                    status: expect.toBeOneOf(["COMPLETED"])
+                    status: expect.toBeOneOf(["COMPLETED"]),
+                    progress: expect.objectContaining({
+                        total_stages: expect.any(Number),
+                        completed_stages: expect.any(Number),
+                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+                        current_stage: expect.any(String)
+                      })
                 })
             ])
         );
@@ -332,7 +338,13 @@ describe('Check publish request job completion status', () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     job_id: expect.toBeOneOf([`${publishJobId}`]),
-                    status: expect.toBeOneOf(["COMPLETED"])
+                    status: expect.toBeOneOf(["COMPLETED"]),
+                    progress: expect.objectContaining({
+                        total_stages: expect.any(Number),
+                        completed_stages: expect.any(Number),
+                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+                        current_stage: expect.any(String)
+                      })
                 })
             ])
         );
@@ -433,7 +445,13 @@ describe('Check validation-only request job completion status', () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     job_id: expect.toBeOneOf([`${validationJobId}`]),
-                    status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"])
+                    status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"]),
+                    progress: expect.objectContaining({
+                        total_stages: expect.any(Number),
+                        completed_stages: expect.any(Number),
+                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+                        current_stage: expect.any(String)
+                      })
                 })
             ])
         );
