@@ -655,6 +655,7 @@ describe('Check confidence request job running status', () => {
 });
 
 describe('Calculate dataset quality metric request', () =>{
+  uploadedDatasetId = "2ed566ac-ebe8-465e-8e10-9e1bda2de97b";
   it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let qmRequest = { algorithms:[QualityMetricRequestAlgorithmsEnum.Fixed],persist:{}};
