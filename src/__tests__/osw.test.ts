@@ -1,4 +1,4 @@
-import { OSWApi, VersionSpec, GeneralApi, Configuration } from "tdei-client";
+import { OSWApi, VersionSpec, GeneralApi, Configuration, QualityMetricRequestAlgorithmsEnum } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
@@ -640,6 +640,33 @@ describe('Check confidence request job running status', () => {
     await expect(confidenceStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
 });
+
+describe('Calculate dataset quality metric request', () =>{
+  uploadedDatasetId = "2ed566ac-ebe8-465e-8e10-9e1bda2de97b";
+  it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+    let qmRequest = { algorithms:[QualityMetricRequestAlgorithmsEnum.Fixed],persist:{}};
+
+    let calculateQualityMetric = oswAPI.oswQualityCalculate("dummyset",qmRequest );
+
+    await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('OSW Data Generator | Authenticated , When request made, should respond request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+    let qmRequest = { algorithms:[QualityMetricRequestAlgorithmsEnum.Fixed],persist:{}};
+
+    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId,qmRequest);
+
+    expect(calculateQualityMetric.status).toBe(202);
+
+    expect(calculateQualityMetric.data).toBeNumber();
+
+    let qualityMetricJobId = calculateQualityMetric.data;
+    console.log("quality metric job_id", qualityMetricJobId);
+  });
+
+})
 
 describe('List OSW Versions', () => {
   it('API-Key | Authenticated , When request made, should respond with OSW version list', async () => {
