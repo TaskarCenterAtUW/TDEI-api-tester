@@ -3,7 +3,10 @@ import {
     Configuration,
     FeatureTypeEnum,
     GeoJsonObject,
-    GeoJsonObjectTypeEnum
+    GeoJsonObjectTypeEnum,
+    OswSpatialjoinBody,
+    OswSpatialjoinBodySourceDimensionEnum,
+    OswSpatialjoinBodyTargetDimensionEnum
 } from "tdei-client";
 import { environment } from "./environment/environment";
 import { faker } from '@faker-js/faker'
@@ -238,6 +241,26 @@ export class Utility {
         const blob = new Blob([filestream], { type: type });
         return blob
 
+    }
+
+    static getSpatialJoinInput() {
+        let model: OswSpatialjoinBody = {
+            target_dataset_id: "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+            target_dimension: OswSpatialjoinBodyTargetDimensionEnum.Edge,
+            source_dataset_id: "0d661b69495d47fb838862edf699fe09",
+            source_dimension: OswSpatialjoinBodySourceDimensionEnum.Point,
+            join_condition: "ST_Contains(geometry_target, geometry_source)",
+            transform_target: "ST_Buffer(geometry_target, 5)",
+            transform_source: "",
+            filter_target: "highway='footway' AND footway='sidewalk'",
+            filter_source: "highway='street_lamp'",
+            aggregate: ["ARRAY_AGG(highway) as my_highway"],
+            attributes: [
+                "barrier as new_barrier",
+                "power"
+            ]
+        }
+        return model;
     }
 }
 

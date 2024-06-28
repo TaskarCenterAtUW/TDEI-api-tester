@@ -366,7 +366,7 @@ describe('Check publish request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${publishJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"])
         })
       ])
     );
@@ -481,7 +481,7 @@ describe('Check validation-only request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${validationJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"])
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"])
         })
       ])
     );
@@ -508,7 +508,7 @@ describe('Check validation-only request job running status', () => {
 });
 
 describe('Calculate dataset confidence request', () => {
-  uploadedDatasetId = "d5ca0eb5c0554f6ab7a057e4814ee9f9";
+  // uploadedDatasetId = "d5ca0eb5c0554f6ab7a057e4814ee9f9";
   it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
@@ -867,11 +867,11 @@ describe('Check convert request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${convertJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
           progress: expect.objectContaining({
             total_stages: expect.any(Number),
             completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
             current_stage: expect.any(String)
           })
         })
@@ -1036,11 +1036,11 @@ describe('Check dataset-bbox request job running status', () => {
       expect.arrayContaining([
         expect.objectContaining({
           job_id: expect.toBeOneOf([`${datasetBboxJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
           progress: expect.objectContaining({
             total_stages: expect.any(Number),
             completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
             current_stage: expect.any(String)
           })
         })
@@ -1101,7 +1101,7 @@ describe('Download Dataset Bbox request file', () => {
 });
 
 let datasetTagSourceRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
-let datasetTagTargetRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
+// let datasetTagTargetRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
 let datasetRoadTagJobId = '1';
 describe('Dataset Road Tag Request', () => {
 
@@ -1216,6 +1216,159 @@ describe('Download Dataset Road Tag request file', () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(datasetBboxJobId);
+
+    await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+let spacialJoinJobId = '';
+describe('Spatial join Request', () => {
+
+  it('OSW Data Generator | Authenticated , When request made with invalid join input, should return bad response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+    let input = Utility.getSpatialJoinInput();
+    input.join_condition = "";
+    input.target_dimension = "invalid" as any;
+
+    await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('OSW Data Generator | Authenticated , When request made with invalid dataset id input, should return not found response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+    let input = Utility.getSpatialJoinInput();
+    input.target_dataset_id = "invalid";
+
+    await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('OSW Data Generator | Authenticated , When request made with valid join input, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+
+    let spatialRequest = await oswAPI.oswSpatialJoin(Utility.getSpatialJoinInput());
+
+    expect(spatialRequest.status).toBe(202);
+    expect(spatialRequest.data).toBeNumber();
+    spacialJoinJobId = spatialRequest.data!;
+    console.log("Spatial join job_id", spacialJoinJobId);
+  });
+
+  it('Admin | Authenticated , When request made with valid join input, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let spatialRequest = await oswAPI.oswSpatialJoin(Utility.getSpatialJoinInput());
+
+    expect(spatialRequest.status).toBe(202);
+    expect(spatialRequest.data).toBeNumber();
+  });
+
+  it('POC | Authenticated , When request made with valid join input, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    let spatialRequest = await oswAPI.oswSpatialJoin(Utility.getSpatialJoinInput());
+
+    expect(spatialRequest.status).toBe(202);
+    expect(spatialRequest.data).toBeNumber();
+  });
+
+  it('Admin | un-authenticated , When request made with valid join input, should return with unauthenticated request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+
+    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+describe('Check spatial join request job completion status', () => {
+  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
+    await new Promise((r) => setTimeout(r, 20000));
+
+    let formatStatus = await generalAPI.listJobs(spacialJoinJobId);
+
+    expect(formatStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${spacialJoinJobId}`]),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            completed_stages: expect.any(Number),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+            current_stage: expect.any(String)
+          })
+        })
+      ])
+    );
+  }, 45000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(spacialJoinJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs(spacialJoinJobId);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+
+    let bboxStatusResponse = generalAPI.listJobs(spacialJoinJobId);
+
+    await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+describe('Download Spatial join request file', () => {
+
+  it('Admin | Authenticated , When request made with job_id, should stream the zip file', async () => {
+    let generalAPI = new GeneralApi(adminConfiguration);
+
+    let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(1);
+    }
+  }, 20000);
+
+  it('API-Key | Authenticated , When request made with job_id, should stream the zip file', async () => {
+    let generalAPI = new GeneralApi(apiKeyConfiguration);
+
+    let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(1);
+    }
+  }, 20000);
+
+  it('Admin | un-authenticated , When request made with job_id, should respond with unauthenticated request', async () => {
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+
+    let downloadResponse = generalAPI.jobDownload(spacialJoinJobId);
 
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
