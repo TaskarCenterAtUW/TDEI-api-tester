@@ -37,7 +37,7 @@ jobs:
 
       - name: Run unit test cases
         run: |
-          TIMESTAMP=$(date +"%Y/%m/%d/%H/%M/%S")
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
           echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
           LOG_DIR="unit-test-report-$TIMESTAMP"
           LOG_FILE="$LOG_DIR.log"
