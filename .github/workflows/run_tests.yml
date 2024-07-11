@@ -50,7 +50,7 @@ jobs:
           LOG_DIR="unit-test-report-${{ env.TIMESTAMP }}"
           LOG_FILE="$LOG_DIR.log"
           mkdir -p $(dirname $LOG_FILE)
-          npm test > $LOG_FILE 2>&1
+          npm run test > $LOG_FILE 2>&1
           echo "Log file created: $LOG_FILE"
 
       - name: Install Python and Azure Dependencies
