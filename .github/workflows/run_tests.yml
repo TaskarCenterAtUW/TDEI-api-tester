@@ -56,8 +56,11 @@ jobs:
           echo "Log directory: $LOG_DIR"
           echo "Log file: $LOG_FILE"
           echo "Running npm test and capturing output..."
-          npm run test > "$LOG_FILE" 2>&1
-          echo "Log file created: $LOG_FILE"
+          npm run test | tee "$LOG_FILE"
+          TEST_EXIT_CODE=${PIPESTATUS[0]}
+          echo "Test run complete. Log file created: $LOG_FILE"
+          cat "$LOG_FILE"
+          exit $TEST_EXIT_CODE
 
       - name: Install Python and Azure Dependencies
         if: always()
