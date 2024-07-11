@@ -38,19 +38,25 @@ jobs:
       - name: Debug - Print Date
         run: date
 
-      - name: Debug - Set and Print TIMESTAMP
+      - name: Create Test Log Directory
         run: |
+          echo "Creating test log directory"
           TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-          echo "TIMESTAMP=$TIMESTAMP"
           echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
+          LOG_DIR="unit-test-report-${TIMESTAMP}"
+          mkdir -p "$LOG_DIR"
+          echo "Test log directory created: $LOG_DIR"
+          ls -la "$LOG_DIR"
 
       - name: Run unit test cases
         run: |
           echo "Starting test run"
           LOG_DIR="unit-test-report-${{ env.TIMESTAMP }}"
-          LOG_FILE="$LOG_DIR.log"
-          mkdir -p $(dirname $LOG_FILE)
-          npm run test > $LOG_FILE 2>&1
+          LOG_FILE="${LOG_DIR}/test-${{ env.TIMESTAMP }}.log"
+          echo "Log directory: $LOG_DIR"
+          echo "Log file: $LOG_FILE"
+          echo "Running npm test and capturing output..."
+          npm run test > "$LOG_FILE" 2>&1
           echo "Log file created: $LOG_FILE"
 
       - name: Install Python and Azure Dependencies
