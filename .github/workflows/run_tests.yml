@@ -9,6 +9,8 @@ on:
     branches: [main, dev]
   repository_dispatch:
     types: [run_api_tests]
+  schedule:
+    - cron: "0 0 * * 0"
 
 ###############
 # Set the Job #
@@ -34,7 +36,39 @@ jobs:
           echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: Run unit test cases
-        run: npm run test
+        run: |
+          TIMESTAMP=$(date +"%Y/%m/%d/%H/%M/%S")
+          LOG_FILE="unit-test-report-${TIMESTAMP}.log"
+          npm run test | tee $LOG_FILE
+          echo "Unit Test Report: $LOG_FILE"
+
+      - name: Install Python and Azure Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3-pip -y
+          pip3 install azure-storage-blob
+
+      - name: Upload Unit Test Report to Azure Blob Storage
+        env:
+          AZURE_STORAGE_ACCOUNT_NAME: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
+          AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+          AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
+        run: |
+          echo "
+          from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+          import os
+
+          connect_str = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
+          blob_service_client = BlobServiceClient(account_url=f'https://{os.getenv('AZURE_STORAGE_ACCOUNT_NAME')}.blob.core.windows.net', credential=connect_str)
+          container_client = blob_service_client.get_container_client(os.getenv('AZURE_STORAGE_CONTAINER_NAME'))
+
+          local_file_name = './unit-test-report-$TIMESTAMP.log'
+          blob_client = container_client.get_blob_client(os.path.basename(local_file_name))
+
+          with open(local_file_name, 'rb') as data:
+              blob_client.upload_blob(data, overwrite=True)
+          " > upload_to_blob.py
+          python3 upload_to_blob.py
 
       - name: Scrape HTML and Generate report HTML
         run: node scrape.js
