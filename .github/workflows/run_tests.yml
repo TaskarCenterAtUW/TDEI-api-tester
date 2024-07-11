@@ -35,14 +35,22 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Run unit test cases
+      - name: Debug - Print Date
+        run: date
+
+      - name: Debug - Set and Print TIMESTAMP
         run: |
           TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+          echo "TIMESTAMP=$TIMESTAMP"
           echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
-          LOG_DIR="unit-test-report-$TIMESTAMP"
+
+      - name: Run unit test cases
+        run: |
+          echo "Starting test run"
+          LOG_DIR="unit-test-report-${{ env.TIMESTAMP }}"
           LOG_FILE="$LOG_DIR.log"
           mkdir -p $(dirname $LOG_FILE)
-          npm run test > $LOG_FILE 2>&1
+          npm test > $LOG_FILE 2>&1
           echo "Log file created: $LOG_FILE"
 
       - name: Install Python and Azure Dependencies
