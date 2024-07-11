@@ -38,9 +38,12 @@ jobs:
       - name: Run unit test cases
         run: |
           TIMESTAMP=$(date +"%Y/%m/%d/%H/%M/%S")
-          LOG_FILE="unit-test-report-${TIMESTAMP}.log"
+          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
+          LOG_DIR="unit-test-report-$TIMESTAMP"
+          LOG_FILE="$LOG_DIR.log"
+          mkdir -p $(dirname $LOG_FILE)
           npm run test > $LOG_FILE 2>&1
-          echo "Unit Test Report: $LOG_FILE"
+          echo "Log file created: $LOG_FILE"
 
       - name: Install Python and Azure Dependencies
         if: always()
@@ -61,14 +64,17 @@ jobs:
           import os
 
           connect_str = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
-          blob_service_client = BlobServiceClient(account_url=f'https://{os.getenv("AZURE_STORAGE_ACCOUNT_NAME")}.blob.core.windows.net', credential=connect_str)
+          account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
+          blob_service_client = BlobServiceClient(account_url=f'https://{account_name}.blob.core.windows.net', credential=connect_str)
           container_client = blob_service_client.get_container_client(os.getenv('AZURE_STORAGE_CONTAINER_NAME'))
 
-          local_file_name = './unit-test-report-$TIMESTAMP.log'
-          blob_client = container_client.get_blob_client(os.path.basename(local_file_name))
-
-          with open(local_file_name, 'rb') as data:
-              blob_client.upload_blob(data, overwrite=True)
+          log_dir = './unit-test-report-' + os.getenv('TIMESTAMP')
+          if os.path.exists(log_dir):
+            for file_name in os.listdir(log_dir):
+              local_file_name = os.path.join(log_dir, file_name)
+              blob_client = container_client.get_blob_client(file_name)
+              with open(local_file_name, 'rb') as data:
+                  blob_client.upload_blob(data, overwrite=True)
           " > upload_to_blob.py
           python3 upload_to_blob.py
 
@@ -76,7 +82,7 @@ jobs:
         run: node scrape.js
 
       - name: send email notification
-        if: always()
+        # if: always()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
