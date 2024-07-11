@@ -39,7 +39,7 @@ jobs:
         run: |
           TIMESTAMP=$(date +"%Y/%m/%d/%H/%M/%S")
           LOG_FILE="unit-test-report-${TIMESTAMP}.log"
-          npm run test > $LOG_FILE
+          npm run test > $LOG_FILE 2>&1
           echo "Unit Test Report: $LOG_FILE"
 
       - name: Install Python and Azure Dependencies
@@ -61,7 +61,7 @@ jobs:
           import os
 
           connect_str = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
-          blob_service_client = BlobServiceClient(account_url=f'https://{os.getenv('AZURE_STORAGE_ACCOUNT_NAME')}.blob.core.windows.net', credential=connect_str)
+          blob_service_client = BlobServiceClient(account_url=f'https://{os.getenv("AZURE_STORAGE_ACCOUNT_NAME")}.blob.core.windows.net', credential=connect_str)
           container_client = blob_service_client.get_container_client(os.getenv('AZURE_STORAGE_CONTAINER_NAME'))
 
           local_file_name = './unit-test-report-$TIMESTAMP.log'
