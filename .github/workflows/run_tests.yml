@@ -35,9 +35,6 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Debug - Print Date
-        run: date
-
       - name: Create Test Log Directory
         run: |
           echo "Creating test log directory"
