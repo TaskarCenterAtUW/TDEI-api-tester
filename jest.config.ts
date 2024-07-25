@@ -3,6 +3,7 @@ import type { Config } from 'jest';
 export default async (): Promise<Config> => {
     return {
         globalSetup: "./global.setup.ts",
+        maxWorkers: 2,
         verbose: false,
         preset: 'ts-jest',
         testEnvironment: 'node',
