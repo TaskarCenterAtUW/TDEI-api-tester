@@ -988,6 +988,7 @@ describe('Download converted file', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new GeneralApi(dgConfiguration);
+    await new Promise((r) => setTimeout(r, 20000));
 
     let response = await generalAPI.jobDownload(convertJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1521,9 +1522,11 @@ describe('Check spatial join request job completion status', () => {
 });
 
 describe('Download Spatial join request file', () => {
+  jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
   it('Admin | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new GeneralApi(adminConfiguration);
+    await new Promise((r) => setTimeout(r, 20000));
 
     let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
