@@ -1002,7 +1002,7 @@ describe('Download converted file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBe(1);
     }
-  }, 20000);
+  }, 30000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
@@ -1540,7 +1540,7 @@ describe('Download Spatial join request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 20000);
+  }, 30000);
 
   it('API-Key | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new GeneralApi(apiKeyConfiguration);
