@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --runInBand",
     "build": "rimraf ./build && tsc",
     "start": "npm run build && node build/index.js",
     "e2e-tests": "jest --testRegex src/**/*.e2e.test.ts",
