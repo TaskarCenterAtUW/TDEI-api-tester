@@ -3,7 +3,10 @@ import {
     Configuration,
     FeatureTypeEnum,
     GeoJsonObject,
-    GeoJsonObjectTypeEnum
+    GeoJsonObjectTypeEnum,
+    OswSpatialjoinBody,
+    OswSpatialjoinBodySourceDimensionEnum,
+    OswSpatialjoinBodyTargetDimensionEnum
 } from "tdei-client";
 import { environment } from "./environment/environment";
 import { faker } from '@faker-js/faker'
@@ -210,6 +213,102 @@ export class Utility {
         return blob;
     }
 
+    static getOSWInvalidSubRegionBlob(): Blob {
+        let randomMetadata = [
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {},
+                        "geometry": {
+                            "type": "Polygon"
+                        }
+                    }
+                ]
+            }];
+        let jsonString = JSON.stringify(randomMetadata);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        return blob;
+    }
+
+    static getOSWTagMetricBlob(): Blob {
+        let filePath = path.join(__dirname, '../assets/payloads/osw/tag-quality.json');
+        console.log(filePath);
+        let filestream = fs.readFileSync(filePath);
+        const blob = new Blob([filestream], { type: 'application/json' });
+        return blob;
+    }
+
+    static getOSWTagMetricEmptyBlob(): Blob {
+        let randomMetadata = [{}];
+        let jsonString = JSON.stringify(randomMetadata);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        return blob;
+    }
+
+    static getOSWTagMetricSQLInjEntityBlob(): Blob {
+        let randomMetadata = [
+            {
+                "entity_type": "Footway; Delete * from table;--",
+                "tags": [
+                    "surface",
+                    "width",
+                    "incline",
+                    "length",
+                    "description",
+                    "name",
+                    "foot"
+                ]
+            }];
+        let jsonString = JSON.stringify(randomMetadata);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        return blob;
+    }
+
+    static getOSWTagMetricInvalidEntityBlob(): Blob {
+        let randomMetadata = [
+            {
+                "entity_type": "Footway_invalid",
+                "tags": [
+                    "surface",
+                    "width",
+                    "incline",
+                    "length",
+                    "description",
+                    "name",
+                    "foot"
+                ]
+            }];
+        let jsonString = JSON.stringify(randomMetadata);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        return blob;
+    }
+
+    static getOSWTagMetricInvalidTagBlob(): Blob {
+        let randomMetadata = [
+            {
+                "entity_type": "Footway",
+                "tags": [
+                    "surface_old",
+                    "width",
+                    "incline",
+                    "length",
+                    "description",
+                    "name",
+                    "foot"
+                ]
+            }];
+        let jsonString = JSON.stringify(randomMetadata);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        return blob;
+    }
+
     static getInvalidMetadataBlob(type: string): Blob {
         //no name and version required fields
         let randomMetadata = {
@@ -238,6 +337,20 @@ export class Utility {
         const blob = new Blob([filestream], { type: type });
         return blob
 
+    }
+
+    static getSpatialJoinInput() {
+        let model: OswSpatialjoinBody = {
+            target_dataset_id: "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+            target_dimension: OswSpatialjoinBodyTargetDimensionEnum.Edge,
+            source_dataset_id: "0d661b69495d47fb838862edf699fe09",
+            source_dimension: OswSpatialjoinBodySourceDimensionEnum.Point,
+            join_condition: "ST_Contains(ST_Buffer(geometry_target, 5), geometry_source)",
+            join_filter_target: "highway='footway' AND footway='sidewalk'",
+            join_filter_source: "highway='street_lamp'",
+            aggregate: ["ARRAY_AGG(highway) as my_highway"]
+        }
+        return model;
     }
 }
 

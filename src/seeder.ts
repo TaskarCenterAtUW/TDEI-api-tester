@@ -35,7 +35,7 @@ export class Seeder {
             seedData.users = await this.createUsers(project_group_id)
             let userProfile = (await this.getUserProfile((seedData.users as Users).poc.username));
             seedData.api_key = userProfile.apiKey;
-            this.writeFile(seedData);
+            await this.writeFile(seedData);
             console.info('Seeding complete');
             return seedData;
         }

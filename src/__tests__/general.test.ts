@@ -1,4 +1,4 @@
-import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, GeneralApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum } from "tdei-client";
+import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, GeneralApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum, JobDetails, JobProgress } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 
@@ -782,6 +782,207 @@ describe('List Datasets', () => {
     })
   });
 
+  it('Admin | Authenticated , When request made with data_type OSW, should return datasets matching data_type', async () => {
+    let oswAPI = new GeneralApi(adminConfiguration);
+    let data_type = "osw";
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      data_type,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    datasetFiles.data.forEach((file: any) => {
+      expect(file.data_type).toBe(data_type)
+    })
+  });
+
+  it('Admin | Authenticated , When request made with data_type Flex, should return datasets matching data_type', async () => {
+    let oswAPI = new GeneralApi(adminConfiguration);
+    let data_type = "flex";
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      data_type,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    datasetFiles.data.forEach((file: any) => {
+      expect(file.data_type).toBe(data_type)
+    })
+  });
+
+  it('Admin | Authenticated , When request made with data_type Pathways, should return datasets matching data_type', async () => {
+    let oswAPI = new GeneralApi(adminConfiguration);
+    let data_type = "pathways";
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      data_type,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// page_no,
+      NULL_PARAM,//page_size
+      // options ?: AxiosRequestConfig
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    datasetFiles.data.forEach((file: any) => {
+      expect(file.data_type).toBe(data_type)
+    })
+  });
+
   it('Admin | Authenticated , When request made with derived_from_dataset_id, should return datasets matching derived_from_dataset_id', async () => {
     let oswAPI = new GeneralApi(adminConfiguration);
     let derived_from_dataset_id = "a042a1b3aa874701929cb33a98f28e9d";
@@ -1327,5 +1528,4 @@ describe('Clone Dataset', () => {
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 });
-
 

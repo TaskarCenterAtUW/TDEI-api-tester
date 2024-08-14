@@ -3,6 +3,7 @@ import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
 
+const NULL_PARAM = void 0;
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -147,6 +148,41 @@ describe('Upload flex dataset', () => {
             console.log(e);
         }
     }, 20000)
+
+    it('Admin | Authenticated , When request made with invalid service id, should return bad request with metadata validation errors', async () => {
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
+        let metaToUpload = Utility.getMetadataBlob("flex");
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getFlexBlob();
+        try {
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, "invalid_service_id", 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, "invalid_service_id")
+
+            expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+
+            axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+            console.log(e);
+        }
+    }, 20000)
+
+    it('Admin | Authenticated , When request made with invalid project id, should return bad request with metadata validation errors', async () => {
+        let flexAPI = new GTFSFlexApi(adminConfiguration);
+        let metaToUpload = Utility.getMetadataBlob("flex");
+        let changesetToUpload = Utility.getChangesetBlob();
+        let dataset = Utility.getFlexBlob();
+        try {
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, "invalid_tdei_project_group_id", service_id)
+
+            expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+
+            axios.interceptors.request.eject(uploadInterceptor);
+        } catch (e) {
+            console.log(e);
+        }
+    }, 20000)
+
     it('Admin | un-authenticated , When request made with dataset, metadata and changeset file, should respond with unauthenticated request', async () => {
         let flexAPI = new GTFSFlexApi(Utility.getAdminConfiguration());
         let metaToUpload = Utility.getMetadataBlob("flex");
@@ -181,7 +217,7 @@ describe('Check upload request job completion status', () => {
     it('Flex Data Generator | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new GeneralApi(dgConfiguration);
         await new Promise((r) => setTimeout(r, 20000));
-        let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+        let uploadStatus = await generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
         expect(uploadStatus.status).toBe(200);
         expect(uploadStatus.data).toEqual(
             expect.arrayContaining([
@@ -191,9 +227,9 @@ describe('Check upload request job completion status', () => {
                     progress: expect.objectContaining({
                         total_stages: expect.any(Number),
                         completed_stages: expect.any(Number),
-                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
                         current_stage: expect.any(String)
-                      })
+                    })
                 })
             ])
         );
@@ -203,21 +239,21 @@ describe('Check upload request job completion status', () => {
 
     it('POC | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new GeneralApi(pocConfiguration);
-        let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+        let uploadStatus = await generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
         expect(uploadStatus.status).toBe(200);
     }, 25000);
 
 
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new GeneralApi(adminConfiguration);
-        let uploadStatus = await generalAPI.listJobs(uploadedJobId);
+        let uploadStatus = await generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM);
         expect(uploadStatus.status).toBe(200);
     }, 25000);
 
     it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
         let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
-        let listResponse = generalAPI.listJobs(uploadedJobId);
+        let listResponse = generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM);
 
         await expect(listResponse).rejects.toMatchObject({ response: { status: 401 } });
     });
@@ -225,7 +261,7 @@ describe('Check upload request job completion status', () => {
     it('API-Key | Authenticated , When request made, should respond with success request', async () => {
         let generalAPI = new GeneralApi(apiKeyConfiguration);
 
-        let listResponse = await generalAPI.listJobs(uploadedJobId);
+        let listResponse = await generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
 
         expect(listResponse.status).toBe(200);
     });
@@ -331,7 +367,7 @@ describe('Check publish request job completion status', () => {
         let generalAPI = new GeneralApi(adminConfiguration);
         await new Promise((r) => setTimeout(r, 20000));
 
-        let uploadStatus = await generalAPI.listJobs(publishJobId);
+        let uploadStatus = await generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
 
         expect(uploadStatus.status).toBe(200);
         expect(uploadStatus.data).toEqual(
@@ -342,9 +378,9 @@ describe('Check publish request job completion status', () => {
                     progress: expect.objectContaining({
                         total_stages: expect.any(Number),
                         completed_stages: expect.any(Number),
-                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
                         current_stage: expect.any(String)
-                      })
+                    })
                 })
             ])
         );
@@ -352,21 +388,21 @@ describe('Check publish request job completion status', () => {
 
     it('POC | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new GeneralApi(pocConfiguration);
-        let uploadStatus = await generalAPI.listJobs(publishJobId);
+        let uploadStatus = await generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
         expect(uploadStatus.status).toBe(200);
     }, 25000);
 
 
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new GeneralApi(adminConfiguration);
-        let uploadStatus = await generalAPI.listJobs(publishJobId);
+        let uploadStatus = await generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM);
         expect(uploadStatus.status).toBe(200);
     }, 25000);
 
     it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
         let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
 
-        let downloadResponse = generalAPI.listJobs(publishJobId);
+        let downloadResponse = generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM);
 
         await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
     });
@@ -438,7 +474,7 @@ describe('Check validation-only request job completion status', () => {
         let generalAPI = new GeneralApi(adminConfiguration);
 
         await new Promise((r) => setTimeout(r, 20000));
-        let validateStatus = await generalAPI.listJobs(validationJobId);
+        let validateStatus = await generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM);
 
         expect(validateStatus.status).toBe(200);
         expect(validateStatus.data).toEqual(
@@ -449,9 +485,9 @@ describe('Check validation-only request job completion status', () => {
                     progress: expect.objectContaining({
                         total_stages: expect.any(Number),
                         completed_stages: expect.any(Number),
-                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS","RUNNING"]),
+                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
                         current_stage: expect.any(String)
-                      })
+                    })
                 })
             ])
         );
@@ -459,20 +495,20 @@ describe('Check validation-only request job completion status', () => {
 
     it('POC | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new GeneralApi(pocConfiguration);
-        let uploadStatus = await generalAPI.listJobs(validationJobId);
+        let uploadStatus = await generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
         expect(uploadStatus.status).toBe(200);
     }, 25000);
 
 
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new GeneralApi(adminConfiguration);
-        let uploadStatus = await generalAPI.listJobs(validationJobId);
+        let uploadStatus = await generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM);
         expect(uploadStatus.status).toBe(200);
     }, 25000);
 
     it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
         let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
-        let validateStatusResponse = generalAPI.listJobs(validationJobId);
+        let validateStatusResponse = generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM);
         await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
     })
 
