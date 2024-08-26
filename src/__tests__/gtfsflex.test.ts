@@ -336,7 +336,7 @@ describe('Publish the flex dataset', () => {
     it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
         let flexAPI = new GTFSFlexApi(adminConfiguration);
-        let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
+        let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0";
 
         let publishResponse = flexAPI.publishGtfsFlexFile(tdei_dataset_id);
 

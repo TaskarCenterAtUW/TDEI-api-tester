@@ -6,11 +6,9 @@ export const environment = {
     seed: {
         baseUrl: process.env.SEED_BASE_URL,
         adminUser: process.env.SEED_ADMIN_USER,
-        adminPassword: process.env.SEED_ADMIN_PASSWORD,
+        adminPassword: "f@m$V#Q26M97",
     },
     system: {
-        baseUrl: process.env.SYSTEM_BASE_URL,
-        username: process.env.SYSTEM_USERNAME,
-        password: process.env.SYSTEM_PASSWORD
+        baseUrl: process.env.SYSTEM_BASE_URL
     }
 }

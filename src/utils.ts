@@ -341,9 +341,9 @@ export class Utility {
 
     static getSpatialJoinInput() {
         let model: OswSpatialjoinBody = {
-            target_dataset_id: "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+            target_dataset_id: "bc15f7ce-1589-4472-9455-b1ed70ac1098",
             target_dimension: OswSpatialjoinBodyTargetDimensionEnum.Edge,
-            source_dataset_id: "0d661b69495d47fb838862edf699fe09",
+            source_dataset_id: "7dd9fdb7-5996-4c19-8dd0-d56f0f259d32",
             source_dimension: OswSpatialjoinBodySourceDimensionEnum.Point,
             join_condition: "ST_Contains(ST_Buffer(geometry_target, 5), geometry_source)",
             join_filter_target: "highway='footway' AND footway='sidewalk'",

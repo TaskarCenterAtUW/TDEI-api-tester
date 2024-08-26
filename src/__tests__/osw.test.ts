@@ -326,6 +326,7 @@ describe("Edit Metadata API", () => {
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = uploadedDatasetId;
+    
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
     const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
@@ -391,7 +392,7 @@ describe('Publish the OSW dataset', () => {
   it('When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
-    let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
+    let tdei_dataset_id = "bc15f7ce-1589-4472-9455-b1ed70ac1098";
 
     let publishOswResponse = oswAPI.publishOswFile(tdei_dataset_id);
 
@@ -725,7 +726,6 @@ describe('Check confidence request job running status', () => {
 });
 
 describe('Calculate dataset quality metric request', () => {
-  let uploadedDatasetId_local = "2ed566ac-ebe8-465e-8e10-9e1bda2de97b";
   it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
@@ -736,6 +736,7 @@ describe('Calculate dataset quality metric request', () => {
   });
 
   it('OSW Data Generator | Authenticated , When request made, should respond request job id as response', async () => {
+    let uploadedDatasetId_local = uploadedDatasetId;
     let oswAPI = new OSWApi(dgConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
@@ -748,6 +749,7 @@ describe('Calculate dataset quality metric request', () => {
     console.log("quality metric job_id", qualityMetricJobId);
   });
   it('POC | Authenticated , When request made, should respond request job id as response', async () => {
+    let uploadedDatasetId_local = uploadedDatasetId;
     let oswAPI = new OSWApi(pocConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
@@ -760,6 +762,7 @@ describe('Calculate dataset quality metric request', () => {
   });
 
   it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
+    let uploadedDatasetId_local = uploadedDatasetId;
     let oswAPI = new OSWApi(adminConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
@@ -772,6 +775,7 @@ describe('Calculate dataset quality metric request', () => {
   });
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let uploadedDatasetId_local = uploadedDatasetId;
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
@@ -781,6 +785,7 @@ describe('Calculate dataset quality metric request', () => {
   })
 
   it('API-Key | Authenticated , When request made, should respond request job id as response', async () => {
+    let uploadedDatasetId_local = uploadedDatasetId;
     let oswAPI = new OSWApi(apiKeyConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
@@ -1053,7 +1058,7 @@ describe('Download OSW File as zip', () => {
   });
 });
 
-let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
+let bboxRecordId = 'bc15f7ce-1589-4472-9455-b1ed70ac1098';
 describe('Dataset Bbox Request', () => {
 
   it('OSW Data Generator | Authenticated ,[OSM] When request made with valid dataset, should return request job id as response', async () => {
@@ -1242,8 +1247,8 @@ describe('Download Dataset Bbox request file', () => {
 
 });
 
-let datasetTagSourceRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
-let datasetTagTargetPublishedRecordId = '762f3533-b18f-470f-8051-1a7988bf80c7';
+let datasetTagSourceRecordId = 'd4dc9901f4794f2da414dcb96412b7c1';
+let datasetTagTargetPublishedRecordId = '7dd9fdb7-5996-4c19-8dd0-d56f0f259d32';
 let datasetRoadTagJobId = '1';
 describe('Dataset Road Tag Request', () => {
 
@@ -1349,7 +1354,7 @@ describe('Download Dataset Road Tag request file', () => {
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new GeneralApi(adminConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1366,7 +1371,7 @@ describe('Download Dataset Road Tag request file', () => {
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new GeneralApi(apiKeyConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1421,7 +1426,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw source dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.source_dataset_id = "459115ad-537d-4708-9ef6-52e4a15ca91f"; //flex dataset id
+    input.source_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0"; //flex dataset id
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1429,7 +1434,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw target dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.target_dataset_id = "c2e63402-bd4c-4bd6-8335-10eca656bf7b"; //pathways dataset id
+    input.target_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd"; //pathways dataset id
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });

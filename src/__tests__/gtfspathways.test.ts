@@ -337,7 +337,7 @@ describe('Publish the flex dataset', () => {
   it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
-    let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
+    let tdei_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd";
 
     let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(tdei_dataset_id);
 

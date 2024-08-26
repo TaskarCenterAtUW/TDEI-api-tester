@@ -382,7 +382,7 @@ describe('List Datasets', () => {
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should return dataset of the specified tdei_dataset_id', async () => {
     let oswAPI = new GeneralApi(adminConfiguration);
-    let recordId = "40566429d02c4c80aee68c970977bed8";
+    let recordId = "bc15f7ce-1589-4472-9455-b1ed70ac1098";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
       NULL_PARAM,// data_type,
@@ -1308,7 +1308,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "ecf96dce3d36477b8ba53c6833ca4545"; //Published flex dataset
+    let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0"; //Published flex dataset
 
     // Action
     const cloneDatasetInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1324,7 +1324,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "ecf96dce3d36477b8ba53c6833ca4545";//Published flex dataset
+    let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0";//Published flex dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1340,7 +1340,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(flexDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "ecf96dce3d36477b8ba53c6833ca4545";//Published flex dataset
+    let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0";//Published flex dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1357,7 +1357,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
-    let tdei_dataset_id = "1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
+    let tdei_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd";//Published Pathways dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_pathways, 'metadata.json'))
@@ -1373,7 +1373,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
-    let tdei_dataset_id = "1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
+    let tdei_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd";//Published Pathways dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_pathways, 'metadata.json'))
@@ -1389,7 +1389,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pathwaysDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
-    let tdei_dataset_id = "1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
+    let tdei_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd";//Published Pathways dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_pathways, 'metadata.json'))
@@ -1403,10 +1403,10 @@ describe('Clone Dataset', () => {
 
   //Clone osw dataset
   it('POC | Authenticated , When request made to clone OSW dataset, expect to return cloned dataset id', async () => {
-    // Arrange
+    // Arrange`
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
-    let tdei_dataset_id = "d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset`
+    let tdei_dataset_id = "bc15f7ce-1589-4472-9455-b1ed70ac1098";//Published OSW dataset`
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
@@ -1422,7 +1422,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
-    let tdei_dataset_id = "d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset
+    let tdei_dataset_id = "bc15f7ce-1589-4472-9455-b1ed70ac1098";//Published OSW dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
@@ -1438,7 +1438,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(oswDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
-    let tdei_dataset_id = "d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset
+    let tdei_dataset_id = "bc15f7ce-1589-4472-9455-b1ed70ac1098";//Published OSW dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
@@ -1454,7 +1454,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1467,7 +1467,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1480,7 +1480,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1493,7 +1493,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "0b165272-afff-46b9-8eb4-14f81bfb92b7";//Pre-Release other project group dataset
+    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release other project group dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1506,7 +1506,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getInvalidMetadataBlob("flex");
-    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
