@@ -11,7 +11,8 @@ let adminConfiguration: Configuration = {};
 let flexDgConfiguration: Configuration = {};
 let pathwaysDgConfiguration: Configuration = {};
 let uploadedJobId: string = '';
-let uploadedJobId_PreRelease: string = '';
+let uploadedJobId_PreRelease_poc: string = '';
+let uploadedJobId_PreRelease_admin = '';
 let publishJobId: string = '';
 let confidenceJobId: string = '1';
 let confidenceJobWithSubRegionId: string = '1';
@@ -20,7 +21,8 @@ let datasetBboxJobIdOSM: string = '1';
 let datasetBboxJobIdOSW: string = '1';
 let validationJobId: string = '1';
 let uploadedDatasetId: string = '1';
-let uploadedDatasetId_PreRelease: string = '1';
+let uploadedDatasetId_PreRelease_poc: string = '1';
+let uploadedDatasetId_PreRelease_admin: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
 let qualityMetricJobId = '1';
@@ -157,8 +159,9 @@ describe('Upload OSW dataset', () => {
 
       expect(uploadFileResponse.status).toBe(202);
       expect(uploadFileResponse.data).not.toBeNull();
-      uploadedJobId_PreRelease = uploadFileResponse.data;
-      console.log("uploaded tdei_dataset_id - pre-release", uploadedJobId_PreRelease);
+      uploadedJobId_PreRelease_poc = uploadFileResponse.data;
+      console.log("uploaded tdei_dataset_id - pre-release", uploadedJobId_PreRelease_poc);
+      await addMsg({ message: { "OSW POC - uploaded Job Id ": uploadedJobId_PreRelease_poc } });
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
       console.log(e);
@@ -175,6 +178,8 @@ describe('Upload OSW dataset', () => {
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
+      uploadedJobId_PreRelease_admin = uploadFileResponse.data;
+      await addMsg({ message: { "OSW Admin - uploaded Job Id ": uploadFileResponse.data } });
       expect(uploadFileResponse.data).not.toBeNull();
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
@@ -284,16 +289,33 @@ describe('Check upload request job completion status', () => {
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease_poc, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
     expect(uploadStatus.status).toBe(200);
-    uploadedDatasetId_PreRelease = uploadStatus.data[0].response_props.tdei_dataset_id;
+    uploadedDatasetId_PreRelease_poc = uploadStatus.data[0].response_props.tdei_dataset_id;
+    expect(uploadStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${uploadedJobId_PreRelease_poc}`]),
+          status: expect.toBeOneOf(["COMPLETED"])
+        })
+      ])
+    );
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM);
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease_admin, true, NULL_PARAM, NULL_PARAM);
     expect(uploadStatus.status).toBe(200);
+    uploadedDatasetId_PreRelease_admin = uploadStatus.data[0].response_props.tdei_dataset_id;
+    expect(uploadStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${uploadedJobId_PreRelease_admin}`]),
+          status: expect.toBeOneOf(["COMPLETED"])
+        })
+      ])
+    );
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
@@ -326,7 +348,7 @@ describe("Edit Metadata API", () => {
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = uploadedDatasetId;
-    
+
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
     const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
@@ -370,21 +392,25 @@ describe('Publish the OSW dataset', () => {
     expect(publishOsw.status).toBe(202);
     expect(publishOsw.data).toBeNumber();
     publishJobId = publishOsw.data;
+    await addMsg({ message: { "OSW Data Generator - publish Job Id ": publishJobId } });
     console.log("publish job_id", publishJobId);
   });
 
-  it('POC | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
+  //We need this pre release dataset to testing dataset tag api
+  // it('POC | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
-    let oswAPI = new OSWApi(pocConfiguration);
-    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId);
-    expect(publishOsw.status).toBe(202);
-    expect(publishOsw.data).toBeNumber();
-  });
+  //   let oswAPI = new OSWApi(pocConfiguration);
+  //   let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId_PreRelease_poc);
+  //   await addMsg({ message: { "OSW POC - publish Job Id ": publishOsw.data } });
+  //   expect(publishOsw.status).toBe(202);
+  //   expect(publishOsw.data).toBeNumber();
+  // });
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
-    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId);
+    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId_PreRelease_admin);
+    await addMsg({ message: { "OSW Admin - publish Job Id ": publishOsw.data } });
     expect(publishOsw.status).toBe(202);
     expect(publishOsw.data).toBeNumber();
   });
@@ -1255,7 +1281,7 @@ describe('Dataset Road Tag Request', () => {
   it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1266,7 +1292,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1275,7 +1301,7 @@ describe('Dataset Road Tag Request', () => {
   it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1292,7 +1318,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease_poc);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1300,7 +1326,7 @@ describe('Dataset Road Tag Request', () => {
   it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease_poc);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
