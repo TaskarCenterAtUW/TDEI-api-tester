@@ -3,6 +3,7 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
 import { Seeder } from "../seeder";
+const { addMsg } = require("jest-html-reporters/helper");
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -133,13 +134,14 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
       expect(uploadFileResponse.data).not.toBeNull();
       uploadedJobId = uploadFileResponse.data;
       console.log("uploaded tdei_dataset_id", uploadedJobId);
+      await addMsg({ message: { "OSW Data Generator - uploaded Job Id ": uploadedJobId } });
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
       console.log(e);
@@ -152,13 +154,14 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
       expect(uploadFileResponse.data).not.toBeNull();
       uploadedJobId_PreRelease = uploadFileResponse.data;
       console.log("uploaded tdei_dataset_id - pre-release", uploadedJobId_PreRelease);
+      await addMsg({ message: { "OSW POC - uploaded Job Id ": uploadedJobId_PreRelease } });
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
       console.log(e);
@@ -171,10 +174,11 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
+      await addMsg({ message: { "OSW Admin - uploaded Job Id ": uploadFileResponse.data } });
       expect(uploadFileResponse.data).not.toBeNull();
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
@@ -188,7 +192,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -205,7 +209,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, 'invalid_service_id')
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -222,7 +226,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, 'invalid_tdei_project_group_id', service_id)
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -239,7 +243,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
 
-    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
     await expect(uploadFileResponse).toReject();
@@ -253,7 +257,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
 
-    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
     await expect(uploadFileResponse).toReject();

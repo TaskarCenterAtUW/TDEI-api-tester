@@ -14,12 +14,15 @@ export default async (): Promise<Config> => {
             ["jest-html-reporters", {
                 "filename": "test-report.html",
                 "urlForTestFiles": "https://github.com/TaskarCenterAtUW/TDEI-api-tester/tree/dev",
-                "enableMergeData": true
+                "enableMergeData": true,
+                "inlineSource": true,
+                "pageTitle": `TDEI API Test Report - ${new Date().toLocaleString()}`,
+                "logoImgPath": "assets/tdei_logo.png",
+                "customInfos": [{
+                    "title": "Project",
+                    "value": "TDEI API Tester"
+                }]
             }]
-            // ["./node_modules/jest-html-reporter", {
-            //     "pageTitle": "Test Report",
-            //     "includeFailureMsg": true
-            // }]
         ],
         transform: {
             '^.+\\.(ts|tsx)?$': 'ts-jest'

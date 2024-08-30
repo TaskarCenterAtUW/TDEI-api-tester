@@ -180,7 +180,7 @@ export class Utility {
 
     // Change the implementation
     static getChangesetBlob(): Blob {
-        return this.getFileBlob('osw', 'changeset.txt', 'text/plain');
+        return this.getFileBlob('osw', 'changeset.zip');
     }
     // Change the implementation  here
     static getMetadataBlob(type: string): Blob {
