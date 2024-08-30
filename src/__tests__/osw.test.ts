@@ -3,6 +3,7 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
 import { Seeder } from "../seeder";
+import { addMsg } from "jest-html-reporters";
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
