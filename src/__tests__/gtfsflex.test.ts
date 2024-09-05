@@ -82,7 +82,7 @@ describe('Upload flex dataset', () => {
         let dataset = Utility.getFlexBlob();
         let derived_from_dataset_id = '';
         try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
             const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
             expect(uploadFileResponse.status).toBe(202);
@@ -102,7 +102,7 @@ describe('Upload flex dataset', () => {
         let dataset = Utility.getFlexBlob();
         let derived_from_dataset_id = '';
         try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
             const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
             expect(uploadFileResponse.status).toBe(202);
@@ -120,7 +120,7 @@ describe('Upload flex dataset', () => {
         let dataset = Utility.getFlexBlob();
         let derived_from_dataset_id = '';
         try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
             const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
             expect(uploadFileResponse.status).toBe(202);
@@ -138,7 +138,7 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
         try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
             const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
             expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -155,7 +155,7 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
         try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, "invalid_service_id", 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, "invalid_service_id", 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
             const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, "invalid_service_id")
 
             expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -172,7 +172,7 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
         try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
             const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, "invalid_tdei_project_group_id", service_id)
 
             expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -189,7 +189,7 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
 
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
         const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
         await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
@@ -203,7 +203,7 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
 
-        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.txt', 'metadata.json'))
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
         const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
         await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
@@ -336,7 +336,7 @@ describe('Publish the flex dataset', () => {
     it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
         let flexAPI = new GTFSFlexApi(adminConfiguration);
-        let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0";
+        let tdei_dataset_id = "80f97d3b-4d33-4a84-b4f0-fbade7f7de5b";
 
         let publishResponse = flexAPI.publishGtfsFlexFile(tdei_dataset_id);
 

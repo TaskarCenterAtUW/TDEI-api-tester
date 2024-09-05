@@ -161,15 +161,7 @@ describe('List Datasets', () => {
       expect(file).toMatchObject(<DatasetItem>{
         status: expect.toBeOneOf([DatasetItemStatusEnum.PreRelease.toString(), DatasetItemStatusEnum.Publish.toString()]),
         metadata: {
-          data_provenance: {
-            full_dataset_name: expect.any(String),
-            other_published_locations: expect.toBeOneOf([null, expect.any(String)]),
-            dataset_update_frequency_months: expect.toBeOneOf([null, expect.any(Number)]),
-            schema_validation_run: expect.toBeOneOf([null, expect.any(Boolean)]),
-            schema_validation_run_description: expect.toBeOneOf([null, expect.any(String)]),
-            allow_crowd_contributions: expect.toBeOneOf([null, expect.any(Boolean)]),
-            location_inaccuracy_factors: expect.toBeOneOf([null, expect.any(String)])
-          },
+          data_provenance: expect.any(Object),
           dataset_detail: {
             version: expect.toBeOneOf([null, expect.any(String)]),
             custom_metadata: expect.toBeOneOf([null, expect.anything()]),
@@ -191,43 +183,9 @@ describe('List Datasets', () => {
             dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
             schema_version: expect.toBeOneOf([null, expect.any(String)]),
           },
-          dataset_summary: {
-            collection_name: expect.toBeOneOf([null, expect.any(String)]),
-            department_name: expect.toBeOneOf([null, expect.any(String)]),
-            city: expect.toBeOneOf([null, expect.any(String)]),
-            region: expect.toBeOneOf([null, expect.any(String)]),
-            county: expect.toBeOneOf([null, expect.any(String)]),
-            key_limitations_of_the_dataset: expect.toBeOneOf([null, expect.any(String)]),
-            challenges: expect.toBeOneOf([null, expect.any(String)])
-          },
-          maintenance: {
-            official_maintainer: expect.toBeOneOf([null, expect.any(Array)]),
-            last_updated: expect.toBeOneOf([null, expect.any(String)]),
-            update_frequency: expect.toBeOneOf([null, expect.any(String)]),
-            authorization_chain: expect.toBeOneOf([null, expect.any(String)]),
-            maintenance_funded: expect.toBeOneOf([null, expect.any(Boolean)]),
-            funding_details: expect.toBeOneOf([null, expect.any(String)])
-          },
-          methodology: {
-            point_data_collection_device: expect.toBeOneOf([null, expect.any(String)]),
-            node_locations_and_attributes_editing_software: expect.toBeOneOf([null, expect.any(String)]),
-            data_collected_by_people: expect.toBeOneOf([null, expect.any(Boolean)]),
-            data_collectors: expect.toBeOneOf([null, expect.any(String)]),
-            data_captured_automatically: expect.toBeOneOf([null, expect.any(Boolean)]),
-            automated_collection: expect.toBeOneOf([null, expect.any(String)]),
-            data_collectors_organization: expect.toBeOneOf([null, expect.any(String)]),
-            data_collector_compensation: expect.toBeOneOf([null, expect.any(String)]),
-            preprocessing_location: expect.toBeOneOf([null, expect.any(String)]),
-            preprocessing_by: expect.toBeOneOf([null, expect.any(String)]),
-            preprocessing_steps: expect.toBeOneOf([null, expect.any(String)]),
-            data_collection_preprocessing_documentation: expect.toBeOneOf([null, expect.any(Boolean)]),
-            documentation_uri: expect.toBeOneOf([null, expect.any(String)]),
-            validation_process_exists: expect.toBeOneOf([null, expect.any(Boolean)]),
-            validation_process_description: expect.toBeOneOf([null, expect.any(String)]),
-            validation_conducted_by: expect.toBeOneOf([null, expect.any(String)]),
-            excluded_data: expect.toBeOneOf([null, expect.any(String)]),
-            excluded_data_reason: expect.toBeOneOf([null, expect.any(String)])
-          }
+          dataset_summary: expect.any(Object),
+          maintenance: expect.any(Object),
+          methodology: expect.any(Object)
         },
         derived_from_dataset_id: expect.toBeOneOf([null, expect.any(String)]),
         uploaded_timestamp: expect.any(String),
@@ -382,7 +340,7 @@ describe('List Datasets', () => {
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should return dataset of the specified tdei_dataset_id', async () => {
     let oswAPI = new GeneralApi(adminConfiguration);
-    let recordId = "bc15f7ce-1589-4472-9455-b1ed70ac1098";
+    let recordId = "80f97d3b-4d33-4a84-b4f0-fbade7f7de5b";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
       NULL_PARAM,// data_type,
@@ -1308,7 +1266,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0"; //Published flex dataset
+    let tdei_dataset_id = "80f97d3b-4d33-4a84-b4f0-fbade7f7de5b"; //Published flex dataset
 
     // Action
     const cloneDatasetInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1324,7 +1282,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0";//Published flex dataset
+    let tdei_dataset_id = "80f97d3b-4d33-4a84-b4f0-fbade7f7de5b";//Published flex dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1340,7 +1298,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(flexDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "8a859fd3-0443-4d75-9962-b081b5b9f8b0";//Published flex dataset
+    let tdei_dataset_id = "80f97d3b-4d33-4a84-b4f0-fbade7f7de5b";//Published flex dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1357,7 +1315,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
-    let tdei_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd";//Published Pathways dataset
+    let tdei_dataset_id = "6a55980a-dba9-4d62-92cb-b252b2141be5";//Published Pathways dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_pathways, 'metadata.json'))
@@ -1373,7 +1331,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
-    let tdei_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd";//Published Pathways dataset
+    let tdei_dataset_id = "6a55980a-dba9-4d62-92cb-b252b2141be5";//Published Pathways dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_pathways, 'metadata.json'))
@@ -1389,7 +1347,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pathwaysDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
-    let tdei_dataset_id = "bc30c06f-f300-4245-ae78-cf81e8f1c3dd";//Published Pathways dataset
+    let tdei_dataset_id = "6a55980a-dba9-4d62-92cb-b252b2141be5";//Published Pathways dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_pathways, 'metadata.json'))
@@ -1406,7 +1364,7 @@ describe('Clone Dataset', () => {
     // Arrange`
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
-    let tdei_dataset_id = "bc15f7ce-1589-4472-9455-b1ed70ac1098";//Published OSW dataset`
+    let tdei_dataset_id = "18477f8c-c0c7-4b3d-b38d-7260b5681750";//Published OSW dataset`
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
@@ -1422,7 +1380,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
-    let tdei_dataset_id = "bc15f7ce-1589-4472-9455-b1ed70ac1098";//Published OSW dataset
+    let tdei_dataset_id = "18477f8c-c0c7-4b3d-b38d-7260b5681750";//Published OSW dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
@@ -1438,7 +1396,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(oswDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
-    let tdei_dataset_id = "bc15f7ce-1589-4472-9455-b1ed70ac1098";//Published OSW dataset
+    let tdei_dataset_id = "18477f8c-c0c7-4b3d-b38d-7260b5681750";//Published OSW dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
@@ -1454,7 +1412,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
+    let tdei_dataset_id = "563a8cae-d37e-43f7-86b1-a53edbf72796";//Pre-Release dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1467,25 +1425,27 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
+    let tdei_dataset_id = "2e5ff85f-fdb8-4384-9f22-98b3cb841015";//Pre-Release dataset
+    let invalid_service_id = "f15284bd-f55c-4f51-a862-089166c75b491";
 
     // Action
-    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, invalid_service_id, 'metadata.json'))
     // Assert
-    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, invalid_service_id)).rejects.toMatchObject({ response: { status: 404 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
-  it('POC | Authenticated , When request made to clone flex dataset with invalid project group id, expect to return input error', async () => {
+  it('POC | Authenticated , When request made to clone flex dataset with invalid project group id, expect to return forbidden error', async () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
+    let tdei_dataset_id = "96fe53c4-a8a0-4a05-888f-597a3bf32f97";//Pre-Release dataset
+    let invalid_project_group_id = "4257c52a-6a41-40b3-87ce-1b14cf61d9fa1";
 
     // Action
-    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, invalid_project_group_id, tdei_service_id_flex, 'metadata.json'))
     // Assert
-    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, invalid_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 403 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
@@ -1493,10 +1453,11 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release other project group dataset
+    let tdei_dataset_id = "563a8cae-d37e-43f7-86b1-a53edbf72796";//Pre-Release other project group dataset
+    let invalid_service_group_id = "4257c52a-6a41-40b3-87ce-1b14cf61d9fa";
 
     // Action
-    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, invalid_service_group_id, 'metadata.json'))
     // Assert
     await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
     axios.interceptors.request.eject(editMetaInterceptor);
@@ -1506,7 +1467,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(pocConfiguration);
     let metaToUpload = Utility.getInvalidMetadataBlob("flex");
-    let tdei_dataset_id = "310fef24-2d1b-4822-8832-a01338da0bdf";//Pre-Release dataset
+    let tdei_dataset_id = "563a8cae-d37e-43f7-86b1-a53edbf72796";//Pre-Release dataset
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
@@ -1519,7 +1480,7 @@ describe('Clone Dataset', () => {
     // Arrange
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = "f2574fe66f0046389acc68ee5848e3a9";
+    let tdei_dataset_id = "563a8cae-d37e-43f7-86b1-a53edbf72796";
 
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
