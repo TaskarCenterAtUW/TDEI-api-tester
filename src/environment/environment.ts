@@ -10,5 +10,6 @@ export const environment = {
     },
     system: {
         baseUrl: process.env.SYSTEM_BASE_URL
-    }
+    },
+    environment: process.env.ENVIRONMENT ?? "dev",
 }

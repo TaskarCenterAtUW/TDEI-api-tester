@@ -15,6 +15,7 @@ let uploadedDatasetId: string = '1';
 let publishJobId: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
+let apiInput: any = {};
 
 const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
     if (
@@ -69,6 +70,7 @@ beforeAll(async () => {
     await Utility.setAuthToken(adminConfiguration);
     await Utility.setAuthToken(pocConfiguration);
     await Utility.setAuthToken(dgConfiguration);
+    apiInput = Utility.getApiInput();
 
 });
 
@@ -336,7 +338,7 @@ describe('Publish the flex dataset', () => {
     it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
         let flexAPI = new GTFSFlexApi(adminConfiguration);
-        let tdei_dataset_id = "edec2aa02e1148acb2aab5844fee09a6";
+        let tdei_dataset_id = apiInput.flex.published_dataset;  //"edec2aa02e1148acb2aab5844fee09a6";
 
         let publishResponse = flexAPI.publishGtfsFlexFile(tdei_dataset_id);
 

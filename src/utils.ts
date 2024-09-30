@@ -15,7 +15,7 @@ import * as fs from "fs";
 import metadata_flex from "../assets/payloads/gtfs-flex/metadata.json";
 import metadata_osw from "../assets/payloads/osw/metadata.json";
 import metadata_pathways from "../assets/payloads/gtfs-pathways/metadata.json";
-
+import apiInput from "../api.input.json";
 /**
  * Utility class.
  */
@@ -35,6 +35,10 @@ export class Utility {
         configuration.baseOptions = {
             headers: { ...Utility.addAuthZHeader(loginResponse.data.access_token) }
         };
+    }
+
+    static getApiInput() {
+        return apiInput[`${environment.environment}`];
     }
 
     static getApiKeyConfiguration() {
@@ -341,9 +345,9 @@ export class Utility {
 
     static getSpatialJoinInput() {
         let model: OswSpatialjoinBody = {
-            target_dataset_id: "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+            target_dataset_id: Utility.getApiInput().osw.spatial_target_dataset,
             target_dimension: OswSpatialjoinBodyTargetDimensionEnum.Edge,
-            source_dataset_id: "0d661b69495d47fb838862edf699fe09",
+            source_dataset_id: Utility.getApiInput().osw.spatial_source_dataset,
             source_dimension: OswSpatialjoinBodySourceDimensionEnum.Point,
             join_condition: "ST_Contains(ST_Buffer(geometry_target, 5), geometry_source)",
             join_filter_target: "highway='footway' AND footway='sidewalk'",

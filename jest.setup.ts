@@ -16,3 +16,14 @@ expect.extend({
         }
     },
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Optionally, you can fail the test if there's an unhandled rejection
+    throw reason;
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception thrown', error);
+    process.exit(1);
+});
