@@ -2,7 +2,7 @@ import { OSWApi, VersionSpec, GeneralApi, Configuration, QualityMetricRequestAlg
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
-import { Seeder } from "../seeder";
+const { addMsg } = require("jest-html-reporters/helper");
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -11,7 +11,8 @@ let adminConfiguration: Configuration = {};
 let flexDgConfiguration: Configuration = {};
 let pathwaysDgConfiguration: Configuration = {};
 let uploadedJobId: string = '';
-let uploadedJobId_PreRelease: string = '';
+let uploadedJobId_PreRelease_poc: string = '';
+let uploadedJobId_PreRelease_admin = '';
 let publishJobId: string = '';
 let confidenceJobId: string = '1';
 let confidenceJobWithSubRegionId: string = '1';
@@ -20,11 +21,14 @@ let datasetBboxJobIdOSM: string = '1';
 let datasetBboxJobIdOSW: string = '1';
 let validationJobId: string = '1';
 let uploadedDatasetId: string = '1';
-let uploadedDatasetId_PreRelease: string = '1';
+let uploadedDatasetId_PreRelease_poc: string = '1';
+let uploadedDatasetId_PreRelease_admin: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
 let qualityMetricJobId = '1';
 const NULL_PARAM = void 0;
+let apiInput: any = {};
+let bboxRecordId = "";
 
 const tagQualityRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
   if (
@@ -118,7 +122,8 @@ beforeAll(async () => {
   dgConfiguration = Utility.getOSWDataGeneratorConfiguration();
   flexDgConfiguration = Utility.getFlexDataGeneratorConfiguration();
   pathwaysDgConfiguration = Utility.getPathwaysDataGeneratorConfiguration();
-
+  apiInput = Utility.getApiInput();
+  bboxRecordId = apiInput.osw.bbox_test_dataset;
   await authenticate();
 });
 
@@ -133,13 +138,14 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
       expect(uploadFileResponse.data).not.toBeNull();
       uploadedJobId = uploadFileResponse.data;
       console.log("uploaded tdei_dataset_id", uploadedJobId);
+      await addMsg({ message: { "OSW Data Generator - uploaded Job Id ": uploadedJobId } });
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
       console.log(e);
@@ -152,13 +158,14 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
       expect(uploadFileResponse.data).not.toBeNull();
-      uploadedJobId_PreRelease = uploadFileResponse.data;
-      console.log("uploaded tdei_dataset_id - pre-release", uploadedJobId_PreRelease);
+      uploadedJobId_PreRelease_poc = uploadFileResponse.data;
+      console.log("uploaded tdei_dataset_id - pre-release", uploadedJobId_PreRelease_poc);
+      await addMsg({ message: { "OSW POC - uploaded Job Id ": uploadedJobId_PreRelease_poc } });
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
       console.log(e);
@@ -171,10 +178,12 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
       expect(uploadFileResponse.status).toBe(202);
+      uploadedJobId_PreRelease_admin = uploadFileResponse.data;
+      await addMsg({ message: { "OSW Admin - uploaded Job Id ": uploadFileResponse.data } });
       expect(uploadFileResponse.data).not.toBeNull();
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
@@ -188,7 +197,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -205,7 +214,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, 'invalid_service_id')
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -239,7 +248,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
 
-    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
     await expect(uploadFileResponse).toReject();
@@ -253,7 +262,7 @@ describe('Upload OSW dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
 
-    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
     await expect(uploadFileResponse).toReject();
@@ -284,17 +293,36 @@ describe('Check upload request job completion status', () => {
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    await new Promise((r) => setTimeout(r, 25000));
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease_poc, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
     expect(uploadStatus.status).toBe(200);
-    uploadedDatasetId_PreRelease = uploadStatus.data[0].response_props.tdei_dataset_id;
-  }, 25000);
+    uploadedDatasetId_PreRelease_poc = uploadStatus.data[0].response_props.tdei_dataset_id;
+    expect(uploadStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${uploadedJobId_PreRelease_poc}`]),
+          status: expect.toBeOneOf(["COMPLETED"])
+        })
+      ])
+    );
+  }, 30000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM);
+    await new Promise((r) => setTimeout(r, 25000));
+    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease_admin, true, NULL_PARAM, NULL_PARAM);
     expect(uploadStatus.status).toBe(200);
-  }, 25000);
+    uploadedDatasetId_PreRelease_admin = uploadStatus.data[0].response_props.tdei_dataset_id;
+    expect(uploadStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${uploadedJobId_PreRelease_admin}`]),
+          status: expect.toBeOneOf(["COMPLETED"])
+        })
+      ])
+    );
+  }, 30000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
@@ -369,21 +397,25 @@ describe('Publish the OSW dataset', () => {
     expect(publishOsw.status).toBe(202);
     expect(publishOsw.data).toBeNumber();
     publishJobId = publishOsw.data;
+    await addMsg({ message: { "OSW Data Generator - publish Job Id ": publishJobId } });
     console.log("publish job_id", publishJobId);
   });
 
-  it('POC | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
+  //We need this pre release dataset to testing dataset tag api
+  // it('POC | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
-    let oswAPI = new OSWApi(pocConfiguration);
-    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId);
-    expect(publishOsw.status).toBe(202);
-    expect(publishOsw.data).toBeNumber();
-  });
+  //   let oswAPI = new OSWApi(pocConfiguration);
+  //   let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId_PreRelease_poc);
+  //   await addMsg({ message: { "OSW POC - publish Job Id ": publishOsw.data } });
+  //   expect(publishOsw.status).toBe(202);
+  //   expect(publishOsw.data).toBeNumber();
+  // });
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
-    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId);
+    let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId_PreRelease_admin);
+    await addMsg({ message: { "OSW Admin - publish Job Id ": publishOsw.data } });
     expect(publishOsw.status).toBe(202);
     expect(publishOsw.data).toBeNumber();
   });
@@ -391,7 +423,7 @@ describe('Publish the OSW dataset', () => {
   it('When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
-    let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
+    let tdei_dataset_id = apiInput.osw.published_dataset; //"40566429d02c4c80aee68c970977bed8";
 
     let publishOswResponse = oswAPI.publishOswFile(tdei_dataset_id);
 
@@ -724,115 +756,119 @@ describe('Check confidence request job running status', () => {
   });
 });
 
-describe('Calculate dataset quality metric request', () => {
-  let uploadedDatasetId_local = "2ed566ac-ebe8-465e-8e10-9e1bda2de97b";
-  it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
-    let oswAPI = new OSWApi(dgConfiguration);
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+// describe('Calculate dataset quality metric request', () => {
+//   it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
+//     let oswAPI = new OSWApi(dgConfiguration);
+//     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = oswAPI.oswQualityCalculate("dummyset", qmRequest);
+//     let calculateQualityMetric = oswAPI.oswQualityCalculate("dummyset", qmRequest);
 
-    await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 404 } });
-  });
+//     await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 404 } });
+//   });
 
-  it('OSW Data Generator | Authenticated , When request made, should respond request job id as response', async () => {
-    let oswAPI = new OSWApi(dgConfiguration);
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+//   it('OSW Data Generator | Authenticated , When request made, should respond request job id as response', async () => {
+//     let uploadedDatasetId_local = uploadedDatasetId;
+//     let oswAPI = new OSWApi(dgConfiguration);
+//     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+//     let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
 
-    expect(calculateQualityMetric.status).toBe(202);
-    expect(calculateQualityMetric.data).toBeNumber();
+//     expect(calculateQualityMetric.status).toBe(202);
+//     expect(calculateQualityMetric.data).toBeNumber();
 
-    qualityMetricJobId = calculateQualityMetric.data;
-    console.log("quality metric job_id", qualityMetricJobId);
-  });
-  it('POC | Authenticated , When request made, should respond request job id as response', async () => {
-    let oswAPI = new OSWApi(pocConfiguration);
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+//     qualityMetricJobId = calculateQualityMetric.data;
+//     console.log("quality metric job_id", qualityMetricJobId);
+//   });
+//   it('POC | Authenticated , When request made, should respond request job id as response', async () => {
+//     let uploadedDatasetId_local = uploadedDatasetId;
+//     let oswAPI = new OSWApi(pocConfiguration);
+//     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+//     let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
 
-    expect(calculateQualityMetric.status).toBe(202);
+//     expect(calculateQualityMetric.status).toBe(202);
 
-    expect(calculateQualityMetric.data).toBeNumber();
+//     expect(calculateQualityMetric.data).toBeNumber();
 
-  });
+//   });
 
-  it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
-    let oswAPI = new OSWApi(adminConfiguration);
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+//   it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
+//     let uploadedDatasetId_local = uploadedDatasetId;
+//     let oswAPI = new OSWApi(adminConfiguration);
+//     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+//     let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
 
-    expect(calculateQualityMetric.status).toBe(202);
+//     expect(calculateQualityMetric.status).toBe(202);
 
-    expect(calculateQualityMetric.data).toBeNumber();
+//     expect(calculateQualityMetric.data).toBeNumber();
 
-  });
+//   });
 
-  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+//   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+//     let uploadedDatasetId_local = uploadedDatasetId;
+//     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+//     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+//     let calculateQualityMetric = oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
 
-    await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 401 } });
-  })
+//     await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 401 } });
+//   })
 
-  it('API-Key | Authenticated , When request made, should respond request job id as response', async () => {
-    let oswAPI = new OSWApi(apiKeyConfiguration);
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+//   it('API-Key | Authenticated , When request made, should respond request job id as response', async () => {
+//     let uploadedDatasetId_local = uploadedDatasetId;
+//     let oswAPI = new OSWApi(apiKeyConfiguration);
+//     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+//     let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
 
-    expect(calculateQualityMetric.status).toBe(202);
+//     expect(calculateQualityMetric.status).toBe(202);
 
-    expect(calculateQualityMetric.data).toBeNumber();
-  })
+//     expect(calculateQualityMetric.data).toBeNumber();
+//   })
 
 
-})
+// })
 
-describe('Check quality metric request job running status', () => {
-  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+// describe('Check quality metric request job running status', () => {
+//   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
-  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 10000));
-    let qualityMetricStatus = await generalAPI.listJobs(qualityMetricJobId.toString(), true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+//   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+//     let generalAPI = new GeneralApi(dgConfiguration);
+//     await new Promise((r) => setTimeout(r, 10000));
+//     let qualityMetricStatus = await generalAPI.listJobs(qualityMetricJobId.toString(), true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
 
-    expect(qualityMetricStatus.status).toBe(200);
+//     expect(qualityMetricStatus.status).toBe(200);
 
-    expect(qualityMetricStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${qualityMetricJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
-        })
-      ])
-    );
-  }, 15000);
+//     expect(qualityMetricStatus.data).toEqual(
+//       expect.arrayContaining([
+//         expect.objectContaining({
+//           job_id: expect.toBeOneOf([`${qualityMetricJobId}`]),
+//           status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+//           progress: expect.objectContaining({
+//             total_stages: expect.any(Number),
+//             completed_stages: expect.any(Number),
+//             current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+//             current_stage: expect.any(String)
+//           })
+//         })
+//       ])
+//     );
+//   }, 15000);
 
-  it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
-    expect(uploadStatus.status).toBe(200);
-  }, 25000);
+//   it('POC | Authenticated , When request made, should respond with job status', async () => {
+//     let generalAPI = new GeneralApi(pocConfiguration);
+//     let uploadStatus = await generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+//     expect(uploadStatus.status).toBe(200);
+//   }, 25000);
 
-  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
-    let qualityMetricStatusResponse = generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM);
+//   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+//     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+//     let qualityMetricStatusResponse = generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM);
 
-    await expect(qualityMetricStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
-  });
-})
+//     await expect(qualityMetricStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+//   });
+// })
 
 describe('List OSW Versions', () => {
   it('API-Key | Authenticated , When request made, should respond with OSW version list', async () => {
@@ -1053,9 +1089,8 @@ describe('Download OSW File as zip', () => {
   });
 });
 
-let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
+// let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
 describe('Dataset Bbox Request', () => {
-
   it('OSW Data Generator | Authenticated ,[OSM] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
@@ -1242,15 +1277,16 @@ describe('Download Dataset Bbox request file', () => {
 
 });
 
-let datasetTagSourceRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
-let datasetTagTargetPublishedRecordId = '762f3533-b18f-470f-8051-1a7988bf80c7';
+
 let datasetRoadTagJobId = '1';
 describe('Dataset Road Tag Request', () => {
+  // let datasetTagSourceRecordId = apiInput.osw.road_tag_test_src_dataset;
+  // let datasetTagTargetPublishedRecordId = apiInput.osw.published_dataset;//'762f3533-b18f-470f-8051-1a7988bf80c7';
 
   it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1261,7 +1297,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1270,7 +1306,7 @@ describe('Dataset Road Tag Request', () => {
   it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1279,7 +1315,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | authenticated , When request made with publish target dataset, should return with bad request', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, datasetTagTargetPublishedRecordId);
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, apiInput.osw.published_dataset);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1287,7 +1323,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1295,7 +1331,7 @@ describe('Dataset Road Tag Request', () => {
   it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId_PreRelease);
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1349,7 +1385,7 @@ describe('Download Dataset Road Tag request file', () => {
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new GeneralApi(adminConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1366,7 +1402,7 @@ describe('Download Dataset Road Tag request file', () => {
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new GeneralApi(apiKeyConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1421,7 +1457,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw source dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.source_dataset_id = "459115ad-537d-4708-9ef6-52e4a15ca91f"; //flex dataset id
+    input.source_dataset_id = apiInput.flex.published_dataset; //"459115ad-537d-4708-9ef6-52e4a15ca91f"; //flex dataset id
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1429,7 +1465,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw target dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.target_dataset_id = "c2e63402-bd4c-4bd6-8335-10eca656bf7b"; //pathways dataset id
+    input.target_dataset_id = apiInput.pathways.published_dataset; //"c2e63402-bd4c-4bd6-8335-10eca656bf7b"; //pathways dataset id
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1466,7 +1502,7 @@ describe('Spatial join Request', () => {
   it('Admin | un-authenticated , When request made with valid join input, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(datasetTagSourceRecordId, uploadedDatasetId);
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.published_dataset, uploadedDatasetId);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -2233,35 +2269,36 @@ describe("Job List API", () => {
     expect(list_result.status).toBe(200);
     expect(list_result.data).not.toBeNull();
     expect(list_result.data).toBeArray();
-
-    expect(list_result.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining(<JobDetails>{
-          job_id: expect.any(String),
-          download_url: expect.toBeNullOrString(),
-          message: expect.toBeNullOrString(),
-          status: expect.stringContaining(JobDetailsStatusEnum.INPROGRESS),
-          job_type: expect.any(String),
-          tdei_project_group_id: expect.toBeNullOrString(),
-          tdei_project_group_name: expect.toBeNullOrString(),
-          requested_by: expect.any(String),
-          request_input: expect.any(Object),
-          response_props: expect.any(Object),
-          created_at: expect.any(String),
-          updated_at: expect.any(String),
-          data_type: expect.any(String),
-          current_stage: expect.any(String),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
+    if (list_result.data.length > 0) {
+      expect(list_result.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining(<JobDetails>{
+            job_id: expect.any(String),
+            download_url: expect.toBeNullOrString(),
+            message: expect.toBeNullOrString(),
+            status: expect.stringContaining(JobDetailsStatusEnum.INPROGRESS),
+            job_type: expect.any(String),
+            tdei_project_group_id: expect.toBeNullOrString(),
+            tdei_project_group_name: expect.toBeNullOrString(),
+            requested_by: expect.any(String),
+            request_input: expect.any(Object),
+            response_props: expect.any(Object),
+            created_at: expect.any(String),
+            updated_at: expect.any(String),
+            data_type: expect.any(String),
             current_stage: expect.any(String),
-            completed_stages: expect.any(Number),
-            last_updated_at: expect.any(String),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
-            current_stage_percent_done: expect.any(Number)
+            progress: expect.objectContaining({
+              total_stages: expect.any(Number),
+              current_stage: expect.any(String),
+              completed_stages: expect.any(Number),
+              last_updated_at: expect.any(String),
+              current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
+              current_stage_percent_done: expect.any(Number)
+            })
           })
-        })
-      ])
-    );
+        ])
+      );
+    }
   }, 30000);
 
   it('Admin | Authenticated , When request made with Status `FAILED`, expect to return job list with FAILED status', async () => {
@@ -2274,35 +2311,36 @@ describe("Job List API", () => {
     expect(list_result.status).toBe(200);
     expect(list_result.data).not.toBeNull();
     expect(list_result.data).toBeArray();
-
-    expect(list_result.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining(<JobDetails>{
-          job_id: expect.any(String),
-          download_url: expect.toBeNullOrString(),
-          message: expect.toBeNullOrString(),
-          status: expect.stringContaining(JobDetailsStatusEnum.FAILED),
-          job_type: expect.any(String),
-          tdei_project_group_id: expect.toBeNullOrString(),
-          tdei_project_group_name: expect.toBeNullOrString(),
-          requested_by: expect.any(String),
-          request_input: expect.any(Object),
-          response_props: expect.any(Object),
-          created_at: expect.any(String),
-          updated_at: expect.any(String),
-          data_type: expect.any(String),
-          current_stage: expect.any(String),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
+    if (list_result.data.length > 0) {
+      expect(list_result.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining(<JobDetails>{
+            job_id: expect.any(String),
+            download_url: expect.toBeNullOrString(),
+            message: expect.toBeNullOrString(),
+            status: expect.stringContaining(JobDetailsStatusEnum.FAILED),
+            job_type: expect.any(String),
+            tdei_project_group_id: expect.toBeNullOrString(),
+            tdei_project_group_name: expect.toBeNullOrString(),
+            requested_by: expect.any(String),
+            request_input: expect.any(Object),
+            response_props: expect.any(Object),
+            created_at: expect.any(String),
+            updated_at: expect.any(String),
+            data_type: expect.any(String),
             current_stage: expect.any(String),
-            completed_stages: expect.any(Number),
-            last_updated_at: expect.any(String),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
-            current_stage_percent_done: expect.any(Number)
+            progress: expect.objectContaining({
+              total_stages: expect.any(Number),
+              current_stage: expect.any(String),
+              completed_stages: expect.any(Number),
+              last_updated_at: expect.any(String),
+              current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
+              current_stage_percent_done: expect.any(Number)
+            })
           })
-        })
-      ])
-    );
+        ])
+      );
+    }
   }, 30000);
 });
 

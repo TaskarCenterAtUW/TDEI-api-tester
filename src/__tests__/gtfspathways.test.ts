@@ -15,6 +15,7 @@ let publishJobId: string = '1';
 let uploadedDatasetId: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
+let apiInput: any = {};
 
 const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
   if (
@@ -69,6 +70,7 @@ beforeAll(async () => {
   await Utility.setAuthToken(adminConfiguration);
   await Utility.setAuthToken(pocConfiguration);
   await Utility.setAuthToken(dgConfiguration);
+  apiInput = Utility.getApiInput();
 });
 
 
@@ -81,7 +83,7 @@ describe('Upload pathways dataset', () => {
     let dataset = Utility.getPathwaysBlob();
     let derived_from_dataset_id = '';
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
       expect(uploadFileResponse.status).toBe(202);
@@ -101,7 +103,7 @@ describe('Upload pathways dataset', () => {
     let dataset = Utility.getPathwaysBlob();
     let derived_from_dataset_id = '';
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
       expect(uploadFileResponse.status).toBe(202);
@@ -119,7 +121,7 @@ describe('Upload pathways dataset', () => {
     let dataset = Utility.getPathwaysBlob();
     let derived_from_dataset_id = '';
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
       expect(uploadFileResponse.status).toBe(202);
@@ -136,7 +138,7 @@ describe('Upload pathways dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getPathwaysBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -153,7 +155,7 @@ describe('Upload pathways dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getPathwaysBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, "invalid_service_id", 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, "invalid_service_id", 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, "invalid_service_id")
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -170,7 +172,7 @@ describe('Upload pathways dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getPathwaysBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, "invalid_tdei_project_group_id", service_id)
 
       expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
@@ -187,7 +189,7 @@ describe('Upload pathways dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getPathwaysBlob();
 
-    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
     await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
@@ -201,7 +203,7 @@ describe('Upload pathways dataset', () => {
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getPathwaysBlob();
 
-    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.txt', 'metadata.json'))
+    const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
     await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
@@ -337,7 +339,7 @@ describe('Publish the flex dataset', () => {
   it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
-    let tdei_dataset_id = "40566429d02c4c80aee68c970977bed8";
+    let tdei_dataset_id = apiInput.pathways.published_dataset; "4b6ba5f218d04bde846f538713a8f2c0";
 
     let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(tdei_dataset_id);
 
