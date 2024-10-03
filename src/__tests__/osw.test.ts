@@ -757,22 +757,22 @@ describe('Check confidence request job running status', () => {
   });
 });
 
-// describe('Calculate dataset quality metric request', () => {
-//   it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
-//     let oswAPI = new OSWApi(dgConfiguration);
+describe('Calculate dataset quality metric request', () => {
+  it('OSW Data Generator | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
 //     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
     let calculateQualityMetric = oswAPI.oswQualityCalculateForm("dummyset");
 
-//     await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 404 } });
-//   });
+    await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 404 } });
+  });
 
   it('OSW Data Generator | Authenticated , When request made, should respond request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
-    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
+    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId);
 
-//     expect(calculateQualityMetric.status).toBe(202);
-//     expect(calculateQualityMetric.data).toBeNumber();
+    expect(calculateQualityMetric.status).toBe(202);
+    expect(calculateQualityMetric.data).toBeNumber();
 
     qualityMetricJobId = calculateQualityMetric.data;
     console.log("quality metric job_id", qualityMetricJobId);
@@ -780,7 +780,7 @@ describe('Check confidence request job running status', () => {
 
   it('OSW Data Generator | Authenticated , When request made with intersection file, should respond job id as response', async () => {
      let oswAPI = new OSWApi(dgConfiguration);
-     let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local, Utility.getOSWSubRegionBlob());
+     let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId, Utility.getOSWSubRegionBlob());
 
       expect(calculateQualityMetric.status).toBe(202);
       expect(calculateQualityMetric.data).toBeNumber();
@@ -793,25 +793,25 @@ describe('Check confidence request job running status', () => {
     let oswAPI = new OSWApi(pocConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
+    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId);
 
-//     expect(calculateQualityMetric.status).toBe(202);
+    expect(calculateQualityMetric.status).toBe(202);
 
-//     expect(calculateQualityMetric.data).toBeNumber();
+    expect(calculateQualityMetric.data).toBeNumber();
 
-//   });
+  });
 
   it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
     // let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
+    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId);
 
-//     expect(calculateQualityMetric.status).toBe(202);
+    expect(calculateQualityMetric.status).toBe(202);
 
-//     expect(calculateQualityMetric.data).toBeNumber();
+    expect(calculateQualityMetric.data).toBeNumber();
 
-//   });
+  });
 
   
 
@@ -819,25 +819,25 @@ describe('Check confidence request job running status', () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
     // let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
+    let calculateQualityMetric = oswAPI.oswQualityCalculateForm(uploadedDatasetId);
 
-//     await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 401 } });
-//   })
+    await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 401 } });
+  })
 
-//   it('API-Key | Authenticated , When request made, should respond request job id as response', async () => {
-//     let uploadedDatasetId_local = uploadedDatasetId;
-//     let oswAPI = new OSWApi(apiKeyConfiguration);
-//     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+  it('API-Key | Authenticated , When request made, should respond request job id as response', async () => {
+    let uploadedDatasetId_local = uploadedDatasetId;
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
     let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
 
-//     expect(calculateQualityMetric.status).toBe(202);
+    expect(calculateQualityMetric.status).toBe(202);
 
-//     expect(calculateQualityMetric.data).toBeNumber();
-//   })
+    expect(calculateQualityMetric.data).toBeNumber();
+  })
 
 
-// })
+})
 
 describe('Check quality metric request with intersection file job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
@@ -882,42 +882,42 @@ describe('Check quality metric request with intersection file job running status
 describe('Check quality metric request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
-//   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-//     let generalAPI = new GeneralApi(dgConfiguration);
-//     await new Promise((r) => setTimeout(r, 10000));
-//     let qualityMetricStatus = await generalAPI.listJobs(qualityMetricJobId.toString(), true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
+    await new Promise((r) => setTimeout(r, 10000));
+    let qualityMetricStatus = await generalAPI.listJobs(qualityMetricJobId.toString(), true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
 
-//     expect(qualityMetricStatus.status).toBe(200);
+    expect(qualityMetricStatus.status).toBe(200);
 
-//     expect(qualityMetricStatus.data).toEqual(
-//       expect.arrayContaining([
-//         expect.objectContaining({
-//           job_id: expect.toBeOneOf([`${qualityMetricJobId}`]),
-//           status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-//           progress: expect.objectContaining({
-//             total_stages: expect.any(Number),
-//             completed_stages: expect.any(Number),
-//             current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-//             current_stage: expect.any(String)
-//           })
-//         })
-//       ])
-//     );
-//   }, 15000);
+    expect(qualityMetricStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${qualityMetricJobId}`]),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            completed_stages: expect.any(Number),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+            current_stage: expect.any(String)
+          })
+        })
+      ])
+    );
+  }, 15000);
 
-//   it('POC | Authenticated , When request made, should respond with job status', async () => {
-//     let generalAPI = new GeneralApi(pocConfiguration);
-//     let uploadStatus = await generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
-//     expect(uploadStatus.status).toBe(200);
-//   }, 25000);
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
 
-//   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-//     let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
-//     let qualityMetricStatusResponse = generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM);
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let qualityMetricStatusResponse = generalAPI.listJobs(qualityMetricJobId, true, NULL_PARAM, NULL_PARAM);
 
-//     await expect(qualityMetricStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
-//   });
-// })
+    await expect(qualityMetricStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+})
 
 describe('List OSW Versions', () => {
   it('API-Key | Authenticated , When request made, should respond with OSW version list', async () => {
