@@ -24,6 +24,7 @@ let uploadedDatasetId_PreRelease: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
 let qualityMetricJobId = '1';
+let qualityMetricJobIdWithIntersection = '1';
 const NULL_PARAM = void 0;
 
 const tagQualityRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
@@ -730,16 +731,14 @@ describe('Calculate dataset quality metric request', () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = oswAPI.oswQualityCalculate("dummyset", qmRequest);
+    let calculateQualityMetric = oswAPI.oswQualityCalculateForm("dummyset");
 
     await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 404 } });
   });
 
   it('OSW Data Generator | Authenticated , When request made, should respond request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
-
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
 
     expect(calculateQualityMetric.status).toBe(202);
     expect(calculateQualityMetric.data).toBeNumber();
@@ -747,11 +746,23 @@ describe('Calculate dataset quality metric request', () => {
     qualityMetricJobId = calculateQualityMetric.data;
     console.log("quality metric job_id", qualityMetricJobId);
   });
+
+  it('OSW Data Generator | Authenticated , When request made with intersection file, should respond job id as response', async () => {
+     let oswAPI = new OSWApi(dgConfiguration);
+     let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local, Utility.getOSWSubRegionBlob());
+
+      expect(calculateQualityMetric.status).toBe(202);
+      expect(calculateQualityMetric.data).toBeNumber();
+      qualityMetricJobIdWithIntersection = calculateQualityMetric.data;
+      console.log("quality metric job_id with intersection", qualityMetricJobIdWithIntersection);
+
+  });
+
   it('POC | Authenticated , When request made, should respond request job id as response', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
 
     expect(calculateQualityMetric.status).toBe(202);
 
@@ -761,9 +772,9 @@ describe('Calculate dataset quality metric request', () => {
 
   it('Admin | Authenticated , When request made, should respond request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+    // let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
 
     expect(calculateQualityMetric.status).toBe(202);
 
@@ -771,11 +782,13 @@ describe('Calculate dataset quality metric request', () => {
 
   });
 
+  
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
-    let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
+    // let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+    let calculateQualityMetric = oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
 
     await expect(calculateQualityMetric).rejects.toMatchObject({ response: { status: 401 } });
   })
@@ -784,7 +797,7 @@ describe('Calculate dataset quality metric request', () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
     let qmRequest = { algorithms: [QualityMetricRequestAlgorithmsEnum.Fixed], persist: {} };
 
-    let calculateQualityMetric = await oswAPI.oswQualityCalculate(uploadedDatasetId_local, qmRequest);
+    let calculateQualityMetric = await oswAPI.oswQualityCalculateForm(uploadedDatasetId_local);
 
     expect(calculateQualityMetric.status).toBe(202);
 
@@ -792,6 +805,46 @@ describe('Calculate dataset quality metric request', () => {
   })
 
 
+})
+
+describe('Check quality metric request with intersection file job running status', () => {
+  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(dgConfiguration);
+    await new Promise((r) => setTimeout(r, 10000));
+    let qualityMetricStatus = await generalAPI.listJobs(qualityMetricJobIdWithIntersection.toString(), true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+
+    expect(qualityMetricStatus.status).toBe(200);
+
+    expect(qualityMetricStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${qualityMetricJobIdWithIntersection}`]),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            completed_stages: expect.any(Number),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+            current_stage: expect.any(String)
+          })
+        })
+      ])
+    );
+  }, 15000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new GeneralApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(qualityMetricJobIdWithIntersection, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let qualityMetricStatusResponse = generalAPI.listJobs(qualityMetricJobIdWithIntersection, true, NULL_PARAM, NULL_PARAM);
+
+    await expect(qualityMetricStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
 })
 
 describe('Check quality metric request job running status', () => {
