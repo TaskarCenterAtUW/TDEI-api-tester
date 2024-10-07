@@ -32,7 +32,7 @@ export class Seeder {
             seedData.tdei_project_group_id = project_group_id
             const serviceId = await this.createService(project_group_id)
             seedData.service_id = serviceId
-            seedData.users = await this.createUsers(project_group_id)
+            seedData.users = await this.assignUserRoles(project_group_id)
             let userProfile = (await this.getUserProfile((seedData.users as Users).poc.username));
             seedData.api_key = userProfile.apiKey;
             await this.writeFile(seedData);
@@ -70,6 +70,31 @@ export class Seeder {
 
     public async removeHeader() {
         axios.defaults.headers.common.Authorization = null;
+    }
+
+    private async assignUserRoles(project_group_id: string): Promise<object> {
+        console.log('Assigning user roles...')
+        const users = {
+            "poc": "adella.legros3@gmail.com",
+            "flex_data_generator": "reilly_connelly@yahoo.com",
+            "pathways_data_generator": "emiliano.terry@hotmail.com",
+            "osw_data_generator": "rhianna.runolfsson@yahoo.com"
+        };
+        const usersDictionary = {}
+        try {
+            for await (const role of this.roles) {
+                await this.client.addPermission(project_group_id, users[role], role)
+                console.info(`Added ${role} permission to username: ${users[role]}`)
+                usersDictionary[role] = {
+                    username: users[role],
+                    password: 'Pa$s1word'
+                }
+            }
+            return usersDictionary
+        } catch (error) {
+            console.error('assignUserRoles', error);
+            throw error;
+        }
     }
 
     private async createUsers(project_group_id): Promise<object> {
@@ -161,6 +186,7 @@ class APIUtility {
             })
             return resp?.data?.data
         } catch (err: any) {
+            console.error(err)
             throw err?.response?.data?.message
         }
     }
