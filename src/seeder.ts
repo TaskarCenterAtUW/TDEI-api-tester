@@ -4,6 +4,7 @@ import axios, { AxiosInstance } from "axios";
 import { environment } from './environment/environment';
 import { existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
+import apiInput from "../api.input.json";
 
 export class Seeder {
     private client: APIUtility;
@@ -74,12 +75,7 @@ export class Seeder {
 
     private async assignUserRoles(project_group_id: string): Promise<object> {
         console.log('Assigning user roles...')
-        const users = {
-            "poc": "adella.legros3@gmail.com",
-            "flex_data_generator": "reilly_connelly@yahoo.com",
-            "pathways_data_generator": "emiliano.terry@hotmail.com",
-            "osw_data_generator": "rhianna.runolfsson@yahoo.com"
-        };
+        const users =  apiInput.dev.users; // Have to change based on the environment though.
         const usersDictionary = {}
         try {
             for await (const role of this.roles) {
