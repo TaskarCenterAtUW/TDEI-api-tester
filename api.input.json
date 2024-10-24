@@ -16,6 +16,12 @@
         "pathways": {
             "published_dataset": "cb472b40-38cf-4006-abab-5c819682b08c",
             "pre_release_dataset": "b8e068b9-67b4-4fe9-8ddb-c1d64d3702ce"
+        },
+        "users":{
+            "poc": "adella.legros3@gmail.com",
+            "flex_data_generator": "reilly_connelly@yahoo.com",
+            "pathways_data_generator": "emiliano.terry@hotmail.com",
+            "osw_data_generator": "rhianna.runolfsson@yahoo.com"
         }
     },
     "stage": {
@@ -35,6 +41,12 @@
         "pathways": {
             "published_dataset": "7912bddf-5333-4a6e-9af8-81b1efd01707",
             "pre_release_dataset": "cc186aa4-8576-4d6e-bd89-f5df4e2e5851"
+        },
+        "users":{
+            "poc": "frederic71@gmail.com",
+            "flex_data_generator": "vern66@gmail.com",
+            "pathways_data_generator": "elvera.keeling@gmail.com",
+            "osw_data_generator": "alyce_kilback60@yahoo.com"
         }
     },
     "prod": {
@@ -54,6 +66,12 @@
         "pathways": {
             "published_dataset": "cb472b40-38cf-4006-abab-5c819682b08c",
             "pre_release_dataset": "b8e068b9-67b4-4fe9-8ddb-c1d64d3702ce"
+        },
+        "users":{
+            "poc": "adella.legros3@gmail.com",
+            "flex_data_generator": "reilly_connelly@yahoo.com",
+            "pathways_data_generator": "emiliano.terry@hotmail.com",
+            "osw_data_generator": "rhianna.runolfsson@yahoo.com"
         }
     }
 }
