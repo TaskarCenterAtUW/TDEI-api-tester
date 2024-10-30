@@ -1,4 +1,4 @@
-import { OSWApi, VersionSpec, GeneralApi, Configuration, QualityMetricRequestAlgorithmsEnum, JobDetails, JobDetailsJobTypeEnum, JobDetailsStatusEnum } from "tdei-client";
+import { OSWApi, VersionSpec, CommonAPIsApi, Configuration, JobDetails, JobDetailsJobTypeEnum, JobDetailsStatusEnum } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
@@ -114,8 +114,8 @@ const oswConfidenceRequestInterceptor = (request: InternalAxiosRequestConfig, td
 
 beforeAll(async () => {
   let seedData = Utility.seedData;
-  tdei_project_group_id = seedData.tdei_project_group_id;
-  service_id = seedData.service_id.find(x => x.data_type == "osw")!.serviceId;
+  tdei_project_group_id = seedData.project_group.tdei_project_group_id;
+  service_id = seedData.services.find(x => x.service_type == "osw")!.tdei_service_id;
   adminConfiguration = Utility.getAdminConfiguration();
   apiKeyConfiguration = Utility.getApiKeyConfiguration();
   pocConfiguration = Utility.getPocConfiguration();
@@ -208,16 +208,16 @@ describe('Upload OSW dataset', () => {
     }
   }, 20000)
 
-  it('Admin | Authenticated , When request made with invalid service id, should return bad request', async () => {
+  it('Admin | Authenticated , When request made with invalid service id, should return service id not found', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
-      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, 'invalid_service_id', 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, 'invalid_service_id')
 
-      expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+      expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
 
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
@@ -225,16 +225,50 @@ describe('Upload OSW dataset', () => {
     }
   }, 20000)
 
-  it('Admin | Authenticated , When request made with invalid project id, should return bad request', async () => {
+  it('Admin | Authenticated , When request made with invalid project id, should return project id not found', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let changesetToUpload = Utility.getChangesetBlob();
+    let dataset = Utility.getOSWBlob();
+    try {
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, 'invalid_tdei_project_group_id', service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, 'invalid_tdei_project_group_id', service_id)
+
+      expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
+
+      axios.interceptors.request.eject(uploadInterceptor);
+    } catch (e) {
+      console.log(e);
+    }
+  }, 20000)
+
+  it('Admin | Authenticated , When request made with invalid derived dataset id, should return derived dataset id not found', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
     try {
       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
-      const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, 'invalid_tdei_project_group_id', service_id)
+      const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, "InvalidDerivedDatasetId")
 
-      expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+      expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
+
+      axios.interceptors.request.eject(uploadInterceptor);
+    } catch (e) {
+      console.log(e);
+    }
+  }, 20000)
+
+  it('Flex Data generator | Authenticated , When request made with valid input, should return unauthorized request', async () => {
+    let oswAPI = new OSWApi(flexDgConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let changesetToUpload = Utility.getChangesetBlob();
+    let dataset = Utility.getOSWBlob();
+    try {
+      const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.txt', 'metadata.json'))
+      const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+
+      expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 403 } });
 
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
@@ -257,7 +291,7 @@ describe('Upload OSW dataset', () => {
   }, 20000)
 
   it('API-Key | Authenticated , When request made with dataset, metadata and changeset file, should respond with unauthorized request', async () => {
-    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+    let oswAPI = new OSWApi(apiKeyConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let changesetToUpload = Utility.getChangesetBlob();
     let dataset = Utility.getOSWBlob();
@@ -265,7 +299,7 @@ describe('Upload OSW dataset', () => {
     const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
-    await expect(uploadFileResponse).toReject();
+    await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
     axios.interceptors.request.eject(uploadInterceptor);
 
   }, 20000)
@@ -275,9 +309,9 @@ describe('Upload OSW dataset', () => {
 describe('Check upload request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 190000));
-    let uploadStatus = await generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, uploadedJobId, true);
     expect(uploadStatus.status).toBe(200);
     expect(uploadStatus.data).toEqual(
       expect.arrayContaining([
@@ -292,9 +326,9 @@ describe('Check upload request job completion status', () => {
   }, 195000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     await new Promise((r) => setTimeout(r, 25000));
-    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease_poc, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, uploadedJobId_PreRelease_poc, true);
     expect(uploadStatus.status).toBe(200);
     uploadedDatasetId_PreRelease_poc = uploadStatus.data[0].response_props.tdei_dataset_id;
     expect(uploadStatus.data).toEqual(
@@ -309,9 +343,9 @@ describe('Check upload request job completion status', () => {
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     await new Promise((r) => setTimeout(r, 25000));
-    let uploadStatus = await generalAPI.listJobs(uploadedJobId_PreRelease_admin, true, NULL_PARAM, NULL_PARAM);
+    let uploadStatus = await generalAPI.listJobs("", uploadedJobId_PreRelease_admin, true);
     expect(uploadStatus.status).toBe(200);
     uploadedDatasetId_PreRelease_admin = uploadStatus.data[0].response_props.tdei_dataset_id;
     expect(uploadStatus.data).toEqual(
@@ -325,9 +359,9 @@ describe('Check upload request job completion status', () => {
   }, 30000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let downloadResponse = generalAPI.listJobs(uploadedJobId, true, NULL_PARAM, NULL_PARAM);
+    let downloadResponse = generalAPI.listJobs("", uploadedJobId, true);
 
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -338,7 +372,7 @@ describe("Edit Metadata API", () => {
 
   it('OSW Data Generator | Authenticated , When request made, expect to return sucess', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = uploadedDatasetId;
     // Action
@@ -351,7 +385,7 @@ describe("Edit Metadata API", () => {
 
   it('POC | Authenticated , When request made, expect to return sucess', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = uploadedDatasetId;
     // Action
@@ -364,7 +398,7 @@ describe("Edit Metadata API", () => {
 
   it('Admin | Authenticated , When request made, expect to return sucess', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = uploadedDatasetId;
     // Action
@@ -375,10 +409,34 @@ describe("Edit Metadata API", () => {
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
+  it('Admin | Authenticated, When request made with invalid dataset id, should respond with dataset not found error', async () => {
+
+    // Arrange
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, "invalid_tdei_dataset_id", 'metadata.json'))
+    // Assert
+    await expect(generalAPI.editMetadataForm(metaToUpload, "invalid_tdei_dataset_id")).rejects.toMatchObject({ response: { status: 404 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('Admin | Authenticated, When request made with invalid osw schema version, should respond with metadata error', async () => {
+
+    // Arrange
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+    let metaToUpload = Utility.getEditMetadataBlob("osw", { schema_version: "invalid" });
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, uploadedDatasetId, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.editMetadataForm(metaToUpload, uploadedDatasetId)).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
   it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
 
     // Arrange
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = uploadedDatasetId;
     // Action
@@ -387,9 +445,46 @@ describe("Edit Metadata API", () => {
     await expect(generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id)).rejects.toMatchObject({ response: { status: 401 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
+
+  it('API-Key | Authenticated, When request made, should respond with unauthorized request', async () => {
+
+    // Arrange
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("osw");
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id)).rejects.toMatchObject({ response: { status: 403 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
 });
 
 describe('Publish the OSW dataset', () => {
+  it('Admin | When passed with valid input having null valid_from & valid_to metadata, should respond with required field error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let publishResponse = oswAPI.publishOswFile(uploadedDatasetId);
+
+    await expect(publishResponse).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('OSW Data Generator | Authenticated , Edit metadata before publishing, should return success', async () => {
+    // Arrange
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
+    let metaToUpload = Utility.getEditMetadataBlob("osw", {
+      valid_from: "2021-01-01",
+      valid_to: "2021-12-31"
+    });
+    let tdei_dataset_id = uploadedDatasetId;
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => editMetadataRequestInterceptor(req, tdei_dataset_id, 'metadata.json'))
+    const versions = await generalAPI.editMetadataForm(metaToUpload, tdei_dataset_id);
+    // Assert
+    expect(versions.status).toBe(200);
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
     let oswAPI = new OSWApi(dgConfiguration);
@@ -400,16 +495,6 @@ describe('Publish the OSW dataset', () => {
     await addMsg({ message: { "OSW Data Generator - publish Job Id ": publishJobId } });
     console.log("publish job_id", publishJobId);
   });
-
-  //We need this pre release dataset to testing dataset tag api
-  // it('POC | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
-
-  //   let oswAPI = new OSWApi(pocConfiguration);
-  //   let publishOsw = await oswAPI.publishOswFile(uploadedDatasetId_PreRelease_poc);
-  //   await addMsg({ message: { "OSW POC - publish Job Id ": publishOsw.data } });
-  //   expect(publishOsw.status).toBe(202);
-  //   expect(publishOsw.data).toBeNumber();
-  // });
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should return request job id as response', async () => {
 
@@ -423,12 +508,30 @@ describe('Publish the OSW dataset', () => {
   it('When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
-    let tdei_dataset_id = apiInput.osw.published_dataset; //"40566429d02c4c80aee68c970977bed8";
+    let tdei_dataset_id = apiInput.osw.published_dataset;
 
     let publishOswResponse = oswAPI.publishOswFile(tdei_dataset_id);
 
     await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 400 } });
-  })
+  });
+
+  it('When passed with flex tdei_dataset_id, should respond dataset data type mismatch error', async () => {
+
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let publishOswResponse = oswAPI.publishOswFile(apiInput.flex.pre_release_dataset);
+
+    await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('When passed with invalid tdei_dataset_id, should respond with dataset id not found error', async () => {
+
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let publishOswResponse = oswAPI.publishOswFile("invalid_tdei_dataset_id");
+
+    await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 404 } });
+  });
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
@@ -443,17 +546,17 @@ describe('Publish the OSW dataset', () => {
 
     let publishOswResponse = oswAPI.publishOswFile(uploadedDatasetId);
 
-    await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 401 } });
+    await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 403 } });
   });
 });
 
 describe('Check publish request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generaror | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
-    let uploadStatus = await generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, publishJobId, true, NULL_PARAM, NULL_PARAM);
 
     expect(uploadStatus.status).toBe(200);
     expect(uploadStatus.data).toEqual(
@@ -467,22 +570,22 @@ describe('Check publish request job running status', () => {
   }, 45000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, publishJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", publishJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let downloadResponse = generalAPI.listJobs(publishJobId, true, NULL_PARAM, NULL_PARAM);
+    let downloadResponse = generalAPI.listJobs("", publishJobId, true);
 
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -543,7 +646,7 @@ describe('Validate-only OSW dataset request', () => {
     const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
     const uploadFileResponse = oswAPI.validateOswFileForm(dataset);
 
-    await expect(uploadFileResponse).toReject();
+    await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
     axios.interceptors.request.eject(validateInterceptor);
 
   }, 20000);
@@ -555,7 +658,7 @@ describe('Validate-only OSW dataset request', () => {
     const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
     const uploadFileResponse = oswAPI.validateOswFileForm(dataset);
 
-    await expect(uploadFileResponse).toReject();
+    await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 403 } });
     axios.interceptors.request.eject(validateInterceptor);
 
   }, 20000);
@@ -565,10 +668,10 @@ describe('Validate-only OSW dataset request', () => {
 describe('Check validation-only request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
 
     await new Promise((r) => setTimeout(r, 90000));
-    let validateStatus = await generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let validateStatus = await generalAPI.listJobs(tdei_project_group_id, validationJobId, true);
 
     expect(validateStatus.status).toBe(200);
     expect(validateStatus.data).toEqual(
@@ -582,21 +685,21 @@ describe('Check validation-only request job running status', () => {
   }, 95000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, validationJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", validationJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
-    let validateStatusResponse = generalAPI.listJobs(validationJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+    let validateStatusResponse = generalAPI.listJobs("", validationJobId, true);
     await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
 });
@@ -666,6 +769,29 @@ describe('Calculate dataset confidence request', () => {
     await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 400 } });
   })
 
+  it('Admin | Authenticated , When request made with invalid sub-region file type zip , should respond with bad request', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let calculateConfidenceResponse = oswAPI.oswConfidenceCalculateForm(uploadedDatasetId, Utility.getOSWBlob());
+
+    await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 400 } });
+  })
+
+  it('Admin | Authenticated , When request made with invalid dataset id, should respond with Dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let calculateConfidenceResponse = oswAPI.oswConfidenceCalculateForm("Invalid_uploadedDatasetId");
+
+    await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 404 } });
+  })
+
+  it('Admin | Authenticated , When request made with flex dataset id, should respond with Dataset type mismatch error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let calculateConfidenceResponse = oswAPI.oswConfidenceCalculateForm(apiInput.flex.pre_release_dataset);
+
+    await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 400 } });
+  })
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
@@ -690,9 +816,9 @@ describe('Check confidence request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 10000));
-    let confidenceStatus = await generalAPI.listJobs(confidenceJobId.toString(), true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let confidenceStatus = await generalAPI.listJobs(tdei_project_group_id, confidenceJobId.toString(), true);
 
     expect(confidenceStatus.status).toBe(200);
 
@@ -713,9 +839,9 @@ describe('Check confidence request job running status', () => {
   }, 15000);
 
   it('OSW Data Generator | Authenticated , When request made to check confidence with sub-region request, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 10000));
-    let confidenceStatus = await generalAPI.listJobs(confidenceJobWithSubRegionId.toString(), true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let confidenceStatus = await generalAPI.listJobs(tdei_project_group_id, confidenceJobWithSubRegionId.toString(), true);
 
     expect(confidenceStatus.status).toBe(200);
 
@@ -736,21 +862,21 @@ describe('Check confidence request job running status', () => {
   }, 15000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(confidenceJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, confidenceJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(confidenceJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", confidenceJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
-    let confidenceStatusResponse = generalAPI.listJobs(confidenceJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+    let confidenceStatusResponse = generalAPI.listJobs("", confidenceJobId, true);
 
     await expect(confidenceStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -902,7 +1028,7 @@ describe('Convert dataset request', () => {
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
-    let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+    let formatResponse = await oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osm");
 
     expect(formatResponse.status).toBe(202);
     expect(formatResponse.data).toBeNumber();
@@ -916,7 +1042,7 @@ describe('Convert dataset request', () => {
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
-    let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+    let formatResponse = await oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osm");
 
     expect(formatResponse.status).toBe(202);
     expect(formatResponse.data).toBeNumber();
@@ -928,7 +1054,7 @@ describe('Convert dataset request', () => {
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
-    let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+    let formatResponse = await oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osm");
 
     expect(formatResponse.status).toBe(202);
     expect(formatResponse.data).toBeNumber();
@@ -940,21 +1066,53 @@ describe('Convert dataset request', () => {
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
-    let formatResponse = oswAPI.oswOnDemandFormatForm("osw", "osw", oswBlob);
+    let formatResponse = oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osw");
 
     await expect(formatResponse).rejects.toMatchObject({ response: { status: 400 } });
     axios.interceptors.request.eject(convertInterceptor);
   });
 
+  it('Admin | Authenticated , When request made with dataset with invalid source, should return with bad request', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let oswBlob = Utility.getOSWBlob();
+
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+    let formatResponse = oswAPI.oswOnDemandFormatForm(oswBlob, "osw_invalid", "osm");
+
+    await expect(formatResponse).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(convertInterceptor);
+  });
+
+  it('Admin | Authenticated , When request made with dataset with invalid target, should return with bad request', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let oswBlob = Utility.getOSWBlob();
+
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+    let formatResponse = oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osm_invalid");
+
+    await expect(formatResponse).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(convertInterceptor);
+  });
+
+  it('Admin | Authenticated , When request made with unsupported geojson extension dataset, should return with dataset file type error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let oswBlob = Utility.getMetadataBlob("osw");
+
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+    let formatResponse = oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osm");
+
+    await expect(formatResponse).rejects.toMatchObject({ response: { status: 400 } });
+    axios.interceptors.request.eject(convertInterceptor);
+  });
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
-    let formatResponse = oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+    let formatResponse = oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osm");
 
-    await expect(formatResponse).toReject();
+    await expect(formatResponse).rejects.toMatchObject({ response: { status: 401 } });
     axios.interceptors.request.eject(convertInterceptor);
   });
 
@@ -963,7 +1121,7 @@ describe('Convert dataset request', () => {
     let oswBlob = Utility.getOSWBlob();
 
     const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
-    let formatResponse = await oswAPI.oswOnDemandFormatForm("osw", "osm", oswBlob);
+    let formatResponse = await oswAPI.oswOnDemandFormatForm(oswBlob, "osw", "osm");
 
     expect(formatResponse.status).toBe(202);
     expect(formatResponse.data).toBeNumber();
@@ -976,10 +1134,10 @@ describe('Check convert request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 20000));
 
-    let formatStatus = await generalAPI.listJobs(convertJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, convertJobId, true);
 
     expect(formatStatus.data).toEqual(
       expect.arrayContaining([
@@ -998,22 +1156,22 @@ describe('Check convert request job running status', () => {
   }, 35000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(convertJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, convertJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(convertJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", convertJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let formatStatusResponse = generalAPI.listJobs(convertJobId, true, NULL_PARAM, NULL_PARAM);
+    let formatStatusResponse = generalAPI.listJobs("", convertJobId, true);
 
     await expect(formatStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1023,7 +1181,7 @@ describe('Check convert request job running status', () => {
 describe('Download converted file', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 20000));
 
     let response = await generalAPI.jobDownload(convertJobId, { responseType: 'arraybuffer' });
@@ -1041,7 +1199,7 @@ describe('Download converted file', () => {
   }, 30000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(convertJobId);
 
@@ -1067,7 +1225,29 @@ describe('Download OSW File as zip', () => {
     expect(response.status).toBe(200);
   }, 10000);
 
-  it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should respond with bad request', async () => {
+  it('Admin | Authenticated , When request made with invalid file format, should respond with bad request error', async () => {
+
+    let oswRecordId = 'dummyRecordId';
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let response = oswAPI.getOswFile(oswRecordId, "oos");
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+
+  });
+
+  it('Admin | Authenticated , When request made with invalid file version, should respond with bad request error', async () => {
+
+    let oswRecordId = 'dummyRecordId';
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let response = oswAPI.getOswFile(oswRecordId, "osm", "dummyVersion");
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+
+  });
+
+  it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should respond with dataset id not found error', async () => {
 
     let oswRecordId = 'dummyRecordId';
     let oswAPI = new OSWApi(adminConfiguration);
@@ -1075,6 +1255,16 @@ describe('Download OSW File as zip', () => {
     let response = oswAPI.getOswFile(oswRecordId);
 
     await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  });
+
+  it('Admin | Authenticated , When request made with flex tdei_dataset_id, should respond with dataset type mismatch error', async () => {
+
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let response = oswAPI.getOswFile(apiInput.flex.pre_release_dataset);
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
 
   });
 
@@ -1089,7 +1279,6 @@ describe('Download OSW File as zip', () => {
   });
 });
 
-// let bboxRecordId = 'f5fd7445fbbf4f248ea1096f0e17b7b3';
 describe('Dataset Bbox Request', () => {
   it('OSW Data Generator | Authenticated ,[OSM] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
@@ -1176,16 +1365,39 @@ describe('Dataset Bbox Request', () => {
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
 
+  it('Admin | Authenticated , When request made with invalid dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetBbox("invalid_bboxRecordId", 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | Authenticated , When request made with invalid bbox, should return with invalid bbox error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetBbox(bboxRecordId, 'osm', [47.691327]);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('Admin | Authenticated , When request made with flex dataset, should return with dataset type mismatch error error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
+  });
 
 });
 
 describe('Check dataset-bbox request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated ,[OSM] When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
-    let formatStatus = await generalAPI.listJobs(datasetBboxJobIdOSM, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetBboxJobIdOSM, true);
 
     expect(formatStatus.data).toEqual(
       expect.arrayContaining([
@@ -1204,10 +1416,10 @@ describe('Check dataset-bbox request job running status', () => {
   }, 45000);
 
   it('OSW Data Generator | Authenticated , [OSW] When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
-    let formatStatus = await generalAPI.listJobs(datasetBboxJobIdOSW, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetBboxJobIdOSW, true);
 
     expect(formatStatus.data).toEqual(
       expect.arrayContaining([
@@ -1226,22 +1438,22 @@ describe('Check dataset-bbox request job running status', () => {
   }, 45000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(datasetBboxJobIdOSM, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, datasetBboxJobIdOSM, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(datasetBboxJobIdOSM, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", datasetBboxJobIdOSM, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let bboxStatusResponse = generalAPI.listJobs(datasetBboxJobIdOSM, true, NULL_PARAM, NULL_PARAM);
+    let bboxStatusResponse = generalAPI.listJobs("", datasetBboxJobIdOSM, true);
 
     await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1251,7 +1463,7 @@ describe('Check dataset-bbox request job running status', () => {
 describe('Download Dataset Bbox request file', () => {
 
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
 
     let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1268,7 +1480,7 @@ describe('Download Dataset Bbox request file', () => {
   }, 20000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(datasetBboxJobIdOSM);
 
@@ -1320,6 +1532,22 @@ describe('Dataset Road Tag Request', () => {
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
   });
 
+  it('Admin | authenticated , When request made with invalid source dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetTagRoad("invalid_source", apiInput.osw.published_dataset);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | authenticated , When request made with invalid target dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, "invalid_target");
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
@@ -1333,7 +1561,7 @@ describe('Dataset Road Tag Request', () => {
 
     let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
 
-    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 403 } });
   });
 
 });
@@ -1342,10 +1570,10 @@ describe('Check dataset-road-tag request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 40000));
 
-    let formatStatus = await generalAPI.listJobs(datasetRoadTagJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetRoadTagJobId, true);
 
     expect(formatStatus.data).toEqual(
       expect.arrayContaining([
@@ -1358,22 +1586,22 @@ describe('Check dataset-road-tag request job completion status', () => {
   }, 45000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(datasetRoadTagJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, datasetRoadTagJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(datasetRoadTagJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", datasetRoadTagJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let bboxStatusResponse = generalAPI.listJobs(datasetRoadTagJobId, true, NULL_PARAM, NULL_PARAM);
+    let bboxStatusResponse = generalAPI.listJobs("", datasetRoadTagJobId, true);
 
     await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1383,7 +1611,7 @@ describe('Check dataset-road-tag request job completion status', () => {
 describe('Download Dataset Road Tag request file', () => {
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
 
     let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1400,7 +1628,7 @@ describe('Download Dataset Road Tag request file', () => {
   }, 20000);
 
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(apiKeyConfiguration);
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
 
     let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1417,7 +1645,7 @@ describe('Download Dataset Road Tag request file', () => {
   }, 20000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(datasetBboxJobIdOSM);
 
@@ -1429,7 +1657,7 @@ describe('Download Dataset Road Tag request file', () => {
 let spacialJoinJobId = '';
 describe('Spatial join Request', () => {
 
-  it('OSW Data Generator | Authenticated , When request made with invalid join input, should return bad response', async () => {
+  it('OSW Data Generator | Authenticated , When request made with invalid/missing join input, should return bad response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
     input.join_condition = "";
@@ -1438,10 +1666,18 @@ describe('Spatial join Request', () => {
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
 
-  it('OSW Data Generator | Authenticated , When request made with invalid dataset id input, should return not found response', async () => {
+  it('OSW Data Generator | Authenticated , When request made with invalid target dataset id input, should return dataset not found response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
     input.target_dataset_id = "invalid";
+
+    await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('OSW Data Generator | Authenticated , When request made with invalid source dataset id input, should return dataset not found response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+    let input = Utility.getSpatialJoinInput();
+    input.source_dataset_id = "invalid";
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 404 } });
   });
@@ -1457,7 +1693,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw source dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.source_dataset_id = apiInput.flex.published_dataset; //"459115ad-537d-4708-9ef6-52e4a15ca91f"; //flex dataset id
+    input.source_dataset_id = apiInput.flex.published_dataset;
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1465,7 +1701,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw target dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.target_dataset_id = apiInput.pathways.published_dataset; //"c2e63402-bd4c-4bd6-8335-10eca656bf7b"; //pathways dataset id
+    input.target_dataset_id = apiInput.pathways.published_dataset;
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1513,10 +1749,10 @@ describe('Check spatial join request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 20000));
 
-    let formatStatus = await generalAPI.listJobs(spacialJoinJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, spacialJoinJobId, true);
 
     expect(formatStatus.data).toEqual(
       expect.arrayContaining([
@@ -1535,22 +1771,22 @@ describe('Check spatial join request job completion status', () => {
   }, 45000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
-    let uploadStatus = await generalAPI.listJobs(spacialJoinJobId, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, spacialJoinJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs(spacialJoinJobId, true, NULL_PARAM, NULL_PARAM);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", spacialJoinJobId, true);
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let bboxStatusResponse = generalAPI.listJobs(spacialJoinJobId, true, NULL_PARAM, NULL_PARAM);
+    let bboxStatusResponse = generalAPI.listJobs("", spacialJoinJobId, true);
 
     await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1561,7 +1797,7 @@ describe('Download Spatial join request file', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
   it('Admin | Authenticated , When request made with job_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     await new Promise((r) => setTimeout(r, 20000));
 
     let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
@@ -1579,7 +1815,7 @@ describe('Download Spatial join request file', () => {
   }, 30000);
 
   it('API-Key | Authenticated , When request made with job_id, should stream the zip file', async () => {
-    let generalAPI = new GeneralApi(apiKeyConfiguration);
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
 
     let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1596,7 +1832,7 @@ describe('Download Spatial join request file', () => {
   }, 20000);
 
   it('Admin | un-authenticated , When request made with job_id, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(spacialJoinJobId);
 
@@ -1683,6 +1919,18 @@ describe("Tag Quality Metric", () => {
     axios.interceptors.request.eject(tagQualityInterceptor);
   }, 30000);
 
+  it('POC | authenticated, When request made with invalid dataset, should respond with dataset not found error', async () => {
+
+    // Arrange
+    let oswAPI = new OSWApi(pocConfiguration);
+    let tagMetricToUpload = Utility.getOSWTagMetricEmptyBlob();
+    // Action
+    const tagQualityInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => tagQualityRequestInterceptor(req, "invalid_tdei_dataset_id", 'tag-quality.json'))
+    // Assert
+    await expect(oswAPI.qualityMetricTagForm(tagMetricToUpload, "invalid_tdei_dataset_id")).rejects.toMatchObject({ response: { status: 404 } });
+    axios.interceptors.request.eject(tagQualityInterceptor);
+  }, 30000);
+
   it('POC | authenticated, When request made with empty file, should respond with invalid request', async () => {
 
     // Arrange
@@ -1740,7 +1988,7 @@ describe("Tag Quality Metric", () => {
 describe('Invalidate the OSW file', () => {
 
   it('POC | Authenticated , When request made, should return true if successful', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
 
     let downloadResponse = generalAPI.deleteDataset(uploadedDatasetId);
 
@@ -1748,7 +1996,7 @@ describe('Invalidate the OSW file', () => {
   });
 
   it('POC | Authenticated , When request made with invalid dataset id, should return dataset not found error', async () => {
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
 
     let downloadResponse = generalAPI.deleteDataset('invalid_dataset_id');
 
@@ -1756,7 +2004,7 @@ describe('Invalidate the OSW file', () => {
   });
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.deleteDataset(uploadedDatasetId);
 
@@ -1769,9 +2017,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made, expect to return job list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -1810,9 +2058,9 @@ describe("Job List API", () => {
 
   it('POC | Authenticated , When request made, expect to return job list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    const list_result = await generalAPI.listJobs(tdei_project_group_id, NULL_PARAM, true);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -1851,9 +2099,9 @@ describe("Job List API", () => {
 
   it('Flex Data Generator | Authenticated , When request made, expect to return job list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(flexDgConfiguration);
+    let generalAPI = new CommonAPIsApi(flexDgConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    const list_result = await generalAPI.listJobs(tdei_project_group_id, NULL_PARAM, true);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -1892,9 +2140,9 @@ describe("Job List API", () => {
 
   it('OSW Data Generator | Authenticated , When request made, expect to return job list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(dgConfiguration);
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    const list_result = await generalAPI.listJobs(tdei_project_group_id, NULL_PARAM, true);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -1933,9 +2181,9 @@ describe("Job List API", () => {
 
   it('Pathways Data Generator | Authenticated , When request made, expect to return job list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pathwaysDgConfiguration);
+    let generalAPI = new CommonAPIsApi(pathwaysDgConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+    const list_result = await generalAPI.listJobs(tdei_project_group_id, NULL_PARAM, true);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -1974,9 +2222,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made with Job type filter `ConfidenceCalculate`, expect to return job list with filter job type', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, JobDetailsJobTypeEnum.ConfidenceCalculate, NULL_PARAM);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.ConfidenceCalculate);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2015,9 +2263,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made with Job type filter `DatasetUpload`, expect to return job list with filter job type', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetUpload, NULL_PARAM);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetUpload);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2056,9 +2304,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made with Job type filter `DatasetPublish`, expect to return job list with filter job type', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetPublish, NULL_PARAM);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetPublish);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2095,11 +2343,11 @@ describe("Job List API", () => {
     );
   }, 30000);
 
-  it('Admin | Authenticated , When request made with Job type filter `DatasetQueries`, expect to return job list with filter job type', async () => {
+  it('Admin | Authenticated , When request made with Job type filter `DatasetSpatialJoin`, expect to return job list with filter job type', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetQueries, NULL_PARAM);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetSpatialJoin);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2113,7 +2361,7 @@ describe("Job List API", () => {
           download_url: expect.toBeNullOrString(),
           message: expect.toBeNullOrString(),
           status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED"]),
-          job_type: expect.stringContaining(JobDetailsJobTypeEnum.DatasetQueries),
+          job_type: expect.stringContaining(JobDetailsJobTypeEnum.DatasetSpatialJoin),
           tdei_project_group_id: expect.toBeNullOrString(),
           tdei_project_group_name: expect.toBeNullOrString(),
           requested_by: expect.any(String),
@@ -2138,9 +2386,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made with Job type filter `DatasetReformat`, expect to return job list with filter job type', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetReformat, NULL_PARAM);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetReformat);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2179,9 +2427,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made with Job type filter `DatasetValidate`, expect to return job list with filter job type', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetValidate, NULL_PARAM);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetValidate);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2218,11 +2466,175 @@ describe("Job List API", () => {
     );
   }, 30000);
 
+  it('Admin | Authenticated , When request made with Job type filter `DatasetInclineTag`, expect to return job list with filter job type', async () => {
+    // Arrange
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    // Action
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetInclineTag);
+
+    // Assert
+    expect(list_result.status).toBe(200);
+    expect(list_result.data).not.toBeNull();
+    expect(list_result.data).toBeArray();
+
+    expect(list_result.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(<JobDetails>{
+          job_id: expect.any(String),
+          download_url: expect.toBeNullOrString(),
+          message: expect.toBeNullOrString(),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED"]),
+          job_type: expect.stringContaining(JobDetailsJobTypeEnum.DatasetInclineTag),
+          tdei_project_group_id: expect.toBeNullOrString(),
+          tdei_project_group_name: expect.toBeNullOrString(),
+          requested_by: expect.any(String),
+          request_input: expect.any(Object),
+          response_props: expect.any(Object),
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+          data_type: expect.any(String),
+          current_stage: expect.any(String),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            current_stage: expect.any(String),
+            completed_stages: expect.any(Number),
+            last_updated_at: expect.any(String),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
+            current_stage_percent_done: expect.any(Number)
+          })
+        })
+      ])
+    );
+  }, 30000);
+
+  it('Admin | Authenticated , When request made with Job type filter `DatasetRoadTag`, expect to return job list with filter job type', async () => {
+    // Arrange
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    // Action
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetRoadTag);
+
+    // Assert
+    expect(list_result.status).toBe(200);
+    expect(list_result.data).not.toBeNull();
+    expect(list_result.data).toBeArray();
+
+    expect(list_result.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(<JobDetails>{
+          job_id: expect.any(String),
+          download_url: expect.toBeNullOrString(),
+          message: expect.toBeNullOrString(),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED"]),
+          job_type: expect.stringContaining(JobDetailsJobTypeEnum.DatasetRoadTag),
+          tdei_project_group_id: expect.toBeNullOrString(),
+          tdei_project_group_name: expect.toBeNullOrString(),
+          requested_by: expect.any(String),
+          request_input: expect.any(Object),
+          response_props: expect.any(Object),
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+          data_type: expect.any(String),
+          current_stage: expect.any(String),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            current_stage: expect.any(String),
+            completed_stages: expect.any(Number),
+            last_updated_at: expect.any(String),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
+            current_stage_percent_done: expect.any(Number)
+          })
+        })
+      ])
+    );
+  }, 30000);
+
+  it('Admin | Authenticated , When request made with Job type filter `DatasetUnion`, expect to return job list with filter job type', async () => {
+    // Arrange
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    // Action
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetUnion);
+
+    // Assert
+    expect(list_result.status).toBe(200);
+    expect(list_result.data).not.toBeNull();
+    expect(list_result.data).toBeArray();
+
+    expect(list_result.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(<JobDetails>{
+          job_id: expect.any(String),
+          download_url: expect.toBeNullOrString(),
+          message: expect.toBeNullOrString(),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED"]),
+          job_type: expect.stringContaining(JobDetailsJobTypeEnum.DatasetUnion),
+          tdei_project_group_id: expect.toBeNullOrString(),
+          tdei_project_group_name: expect.toBeNullOrString(),
+          requested_by: expect.any(String),
+          request_input: expect.any(Object),
+          response_props: expect.any(Object),
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+          data_type: expect.any(String),
+          current_stage: expect.any(String),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            current_stage: expect.any(String),
+            completed_stages: expect.any(Number),
+            last_updated_at: expect.any(String),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
+            current_stage_percent_done: expect.any(Number)
+          })
+        })
+      ])
+    );
+  }, 30000);
+
+  it('Admin | Authenticated , When request made with Job type filter `DatasetBBox`, expect to return job list with filter job type', async () => {
+    // Arrange
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    // Action
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, JobDetailsJobTypeEnum.DatasetBBox);
+
+    // Assert
+    expect(list_result.status).toBe(200);
+    expect(list_result.data).not.toBeNull();
+    expect(list_result.data).toBeArray();
+
+    expect(list_result.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(<JobDetails>{
+          job_id: expect.any(String),
+          download_url: expect.toBeNullOrString(),
+          message: expect.toBeNullOrString(),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED"]),
+          job_type: expect.stringContaining(JobDetailsJobTypeEnum.DatasetBBox),
+          tdei_project_group_id: expect.toBeNullOrString(),
+          tdei_project_group_name: expect.toBeNullOrString(),
+          requested_by: expect.any(String),
+          request_input: expect.any(Object),
+          response_props: expect.any(Object),
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+          data_type: expect.any(String),
+          current_stage: expect.any(String),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            current_stage: expect.any(String),
+            completed_stages: expect.any(Number),
+            last_updated_at: expect.any(String),
+            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "FAILED", "RUNNING"]),
+            current_stage_percent_done: expect.any(Number)
+          })
+        })
+      ])
+    );
+  }, 30000);
+
   it('Admin | Authenticated , When request made with Status `COMPLETED`, expect to return job list with COMPLETED status', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, NULL_PARAM, JobDetailsStatusEnum.COMPLETED);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, NULL_PARAM, JobDetailsStatusEnum.COMPLETED);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2261,9 +2673,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made with Status `INPROGRESS`, expect to return job list with INPROGRESS status', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, NULL_PARAM, JobDetailsStatusEnum.INPROGRESS);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, NULL_PARAM, JobDetailsStatusEnum.INPROGRESS);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2303,9 +2715,9 @@ describe("Job List API", () => {
 
   it('Admin | Authenticated , When request made with Status `FAILED`, expect to return job list with FAILED status', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
-    const list_result = await generalAPI.listJobs(NULL_PARAM, true, NULL_PARAM, JobDetailsStatusEnum.FAILED);
+    const list_result = await generalAPI.listJobs("", NULL_PARAM, true, NULL_PARAM, JobDetailsStatusEnum.FAILED);
 
     // Assert
     expect(list_result.status).toBe(200);
@@ -2342,8 +2754,33 @@ describe("Job List API", () => {
       );
     }
   }, 30000);
+
+  it('Admin | un-authenticated , When request made with invalid job id, should return job id not found error', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let jobResponse = generalAPI.listJobs("", "invalid_job_id", true);
+
+    await expect(jobResponse).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | un-authenticated , When request made with invalid project group id, should return project group id not found error', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let jobResponse = generalAPI.listJobs("project group id", NULL_PARAM, true);
+
+    await expect(jobResponse).rejects.toMatchObject({ response: { status: 404 } });
+  });
 });
 
+describe("Job Download API", () => {
+  it('Admin | un-authenticated , When request made with invalid job id, should return job id not found error', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let response = generalAPI.jobDownload("invalidJobId", { responseType: 'arraybuffer' });
+
+    await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+  });
+});
 
 async function authenticate() {
   await Utility.setAuthToken(adminConfiguration);

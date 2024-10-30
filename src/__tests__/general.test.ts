@@ -1,7 +1,6 @@
-import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, GeneralApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum, JobDetails, JobProgress } from "tdei-client";
+import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, CommonAPIsApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum, JobDetails, JobProgress, ServiceModel, AuthenticationApi } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
-
 
 const NULL_PARAM = void 0;
 
@@ -16,6 +15,7 @@ let tdei_service_id_osw: string = "";
 let tdei_service_id_flex: string = "";
 let tdei_service_id_pathways: string = "";
 let apiInput: any = {};
+
 const cloneDatasetRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, tdei_project_group_id: string, tdei_service_id: string, datasetName: string) => {
   if (
     request.url === `${adminConfiguration.basePath}/api/v1/dataset/clone/${tdei_dataset_id}/${tdei_project_group_id}/${tdei_service_id}`
@@ -43,10 +43,10 @@ beforeAll(async () => {
   await Utility.setAuthToken(oswDgConfiguration);
 
   let seedData = Utility.seedData;
-  tdei_project_group_id = seedData.tdei_project_group_id;
-  tdei_service_id_osw = seedData.service_id.find(x => x.data_type == "osw")!.serviceId;
-  tdei_service_id_flex = seedData.service_id.find(x => x.data_type == "flex")!.serviceId;
-  tdei_service_id_pathways = seedData.service_id.find(x => x.data_type == "pathways")!.serviceId;
+  tdei_project_group_id = seedData.project_group.tdei_project_group_id;
+  tdei_service_id_osw = seedData.services.find(x => x.service_type == "osw")!.tdei_service_id;
+  tdei_service_id_flex = seedData.services.find(x => x.service_type == "flex")!.tdei_service_id;
+  tdei_service_id_pathways = seedData.services.find(x => x.service_type == "pathways")!.tdei_service_id;
   apiInput = Utility.getApiInput();
 
 }, 30000);
@@ -54,7 +54,7 @@ beforeAll(async () => {
 describe('List Datasets', () => {
 
   it('API-Key | Authenticated , When request made with no filters, should return list of dataset', async () => {
-    let oswAPI = new GeneralApi(apiKeyConfiguration);
+    let oswAPI = new CommonAPIsApi(apiKeyConfiguration);
 
     const datasetFiles = await oswAPI.listDatasetFiles();
 
@@ -173,7 +173,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with no filters, should return list of dataset', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
 
     const datasetFiles = await oswAPI.listDatasetFiles();
 
@@ -292,7 +292,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with page size, should return datasets less than or equal to page size', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let page_size = 5;
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -359,7 +359,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with project group Id, should return datasets of the specified project group', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     //TODO: read from seeder or config
     //let project_group_id = '5e339544-3b12-40a5-8acd-78c66d1fa981';
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -427,7 +427,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should return dataset of the specified tdei_dataset_id', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     //let recordId = "40566429d02c4c80aee68c970977bed8";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -495,7 +495,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with schema_version, should return datasets matching schema_version', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let schema_version = "v0.1";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -562,7 +562,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with name, should return dataset matching name', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let name = "manual";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -629,7 +629,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with collection_method, should return datasets matching collection_method', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let collection_method = "manual";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -695,7 +695,7 @@ describe('List Datasets', () => {
     });
   });
   it('Admin | Authenticated , When request made with collected_by, should return datasets matching collected_by', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let collected_by = "John Doe";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -762,7 +762,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with data_source, should return datasets matching data_source', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let data_source = "3rdParty";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -829,7 +829,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with data_type OSW, should return datasets matching data_type', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let data_type = "osw";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -896,7 +896,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with data_type Flex, should return datasets matching data_type', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let data_type = "flex";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -963,7 +963,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with data_type Pathways, should return datasets matching data_type', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let data_type = "pathways";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -1030,7 +1030,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with derived_from_dataset_id, should return datasets matching derived_from_dataset_id', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     //let derived_from_dataset_id = "a042a1b3aa874701929cb33a98f28e9d";
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -1097,7 +1097,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with valid_to, should return datasets valid from input datetime', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     //set date one date before today
     let valid_to = (new Date(new Date().setMonth(new Date().getMonth() - 1))).toISOString();
 
@@ -1165,7 +1165,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | Authenticated , When request made with invalid tdei_dataset_id, should return empty dataset', async () => {
-    let oswAPI = new GeneralApi(adminConfiguration);
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
     let recordId = 'dummyRecordId';
 
     const datasetFiles = await oswAPI.listDatasetFiles(
@@ -1231,7 +1231,7 @@ describe('List Datasets', () => {
   });
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let oswAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let oswAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     const datasetFiles = oswAPI.listDatasetFiles();
 
@@ -1243,7 +1243,7 @@ describe("List API versions", () => {
 
   it('Admin | Authenticated , When request made, expect to return api version list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     // Action
     const versions = await generalAPI.listApiVersions();
 
@@ -1262,7 +1262,7 @@ describe("List API versions", () => {
 
   it('API-Key | Authenticated , When request made, expect to return api version list', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(apiKeyConfiguration);
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
     // Action
     const versions = await generalAPI.listApiVersions();
 
@@ -1281,7 +1281,7 @@ describe("List API versions", () => {
 
   it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
 
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     const version = generalAPI.listApiVersions();
 
@@ -1294,7 +1294,25 @@ describe("List API versions", () => {
 describe('List Project Groups', () => {
 
   it('Admin | Authenticated , When request made, expect to return list of project groups', async () => {
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+
+    const projectGroupList = await generalAPI.listProjectGroups();
+
+    expect(projectGroupList.status).toBe(200);
+    expect(Array.isArray(projectGroupList.data)).toBe(true);
+
+    projectGroupList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_project_group_id: expect.any(String),
+        project_group_name: expect.any(String),
+        polygon: expect.any(Object || null)
+      })
+    })
+  }, 30000);
+
+
+  it('POC | Authenticated , When request made, expect to return list of project groups', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
 
     const projectGroupList = await generalAPI.listProjectGroups();
 
@@ -1311,7 +1329,7 @@ describe('List Project Groups', () => {
   }, 30000);
 
   it('API-Key | Authenticated , When request made, expect to return list of project groups', async () => {
-    let generalAPI = new GeneralApi(apiKeyConfiguration);
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
 
     const projectGroupList = await generalAPI.listProjectGroups();
 
@@ -1325,21 +1343,46 @@ describe('List Project Groups', () => {
         polygon: expect.any(Object || null)
       })
     })
-  }, 30000)
+  }, 30000);
 
-  //Commenting below test case, we cannot predict project_group_id to be present in list unless we filter by project_group_id. 
-  //Currently project_group_id filter is not defined as part of API spec, when introduced we can modify below test case
-  //by applying project_group_id filter and expect the desired output
+  it('POC | Authenticated , When requested with invalid tdei_project_group_id, expect to return tdei_project_group_id not found', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    const projectGroupList = generalAPI.listProjectGroups('D552d5d1-0719-4647-b86d-6ae9b25327b7');
 
-  // it('When valid token provided, expect to return 200 status and contain project_group_id that is predefined ', async () => {
-  //   let generalAPI = new GeneralApi(configuration);
-  //   const projectGroupList = await generalAPI.listProjectGroups();
+    await expect(projectGroupList).rejects.toMatchObject({ response: { status: 404 } });
+  }, 30000);
 
-  //   expect(projectGroupList.status).toBe(200);
-  //   expect(projectGroupList.data).toEqual(expect.arrayContaining([expect.objectContaining({ tdei_project_group_id: 'c552d5d1-0719-4647-b86d-6ae9b25327b7' })]));
-  // }, 30000)
+  it('POC | Authenticated , When requested with specific tdei_project_group_id, expect to return project details identified by tdei_project_group_id', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    const projectGroupList = await generalAPI.listServices(NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+
+    expect(projectGroupList.status).toBe(200);
+    expect(Array.isArray(projectGroupList.data)).toBe(true);
+
+    projectGroupList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_project_group_id: expect.any(tdei_project_group_id)
+      });
+    });
+  }, 30000);
+
+  it('POC | Authenticated , When requested with specific service name, expect to return project details name matching input', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let project_name = "";
+    const projectGroupList = await generalAPI.listProjectGroups(NULL_PARAM, project_name);
+
+    expect(projectGroupList.status).toBe(200);
+    expect(Array.isArray(projectGroupList.data)).toBe(true);
+
+    projectGroupList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        project_group_name: expect.containskey(project_name)
+      });
+    });
+  }, 30000);
+
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     const projectGroupList = generalAPI.listProjectGroups();
 
@@ -1352,7 +1395,7 @@ describe('Clone Dataset', () => {
   //Clone flex dataset
   it('POC | Authenticated , When request made to clone flex dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.published_dataset; //"ecf96dce3d36477b8ba53c6833ca4545"; //Published flex dataset
 
@@ -1368,7 +1411,7 @@ describe('Clone Dataset', () => {
 
   it('Admin | Authenticated , When request made to clone flex dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.published_dataset;//"ecf96dce3d36477b8ba53c6833ca4545";//Published flex dataset
 
@@ -1384,7 +1427,7 @@ describe('Clone Dataset', () => {
 
   it('Flex Data Generator | Authenticated , When request made to clone flex dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(flexDgConfiguration);
+    let generalAPI = new CommonAPIsApi(flexDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.published_dataset;//"ecf96dce3d36477b8ba53c6833ca4545";//Published flex dataset
 
@@ -1401,7 +1444,7 @@ describe('Clone Dataset', () => {
   //Clone Pathways dataset
   it('POC | Authenticated , When request made to clone pathways dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
     let tdei_dataset_id = apiInput.pathways.published_dataset;//"1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
 
@@ -1417,7 +1460,7 @@ describe('Clone Dataset', () => {
 
   it('Admin | Authenticated , When request made to clone pathways dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
     let tdei_dataset_id = apiInput.pathways.published_dataset;//"1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
 
@@ -1433,7 +1476,7 @@ describe('Clone Dataset', () => {
 
   it('Pathways Data Generator | Authenticated , When request made to clone pathways dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pathwaysDgConfiguration);
+    let generalAPI = new CommonAPIsApi(pathwaysDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("pathways");
     let tdei_dataset_id = apiInput.pathways.published_dataset;//"1fa972ecdd034ed6807dc5027dd26da2";//Published Pathways dataset
 
@@ -1450,7 +1493,7 @@ describe('Clone Dataset', () => {
   //Clone osw dataset
   it('POC | Authenticated , When request made to clone OSW dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = apiInput.osw.published_dataset;//"d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset`
 
@@ -1466,7 +1509,7 @@ describe('Clone Dataset', () => {
 
   it('Admin | Authenticated , When request made to clone OSW dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(adminConfiguration);
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = apiInput.osw.published_dataset;//"d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset
 
@@ -1482,7 +1525,7 @@ describe('Clone Dataset', () => {
 
   it('OSW Data Generator | Authenticated , When request made to clone OSW dataset, expect to return cloned dataset id', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(oswDgConfiguration);
+    let generalAPI = new CommonAPIsApi(oswDgConfiguration);
     let metaToUpload = Utility.getMetadataBlob("osw");
     let tdei_dataset_id = apiInput.osw.published_dataset;//"d4dc9901f4794f2da414dcb96412b7c1";//Published OSW dataset
 
@@ -1498,7 +1541,7 @@ describe('Clone Dataset', () => {
 
   it('POC | Authenticated , When request made to clone Pre-Release flex dataset which user not belong to project group, expect to return unauthorized error', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.pre_release_dataset;//"f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
 
@@ -1509,35 +1552,48 @@ describe('Clone Dataset', () => {
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
-  it('POC | Authenticated , When request made to clone flex dataset with invalid service id, expect to return input error', async () => {
+  it('POC | Authenticated , When request made to clone flex dataset with invalid service type, expect to return input error', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.pre_release_dataset;//"f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
 
     // Action
-    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
     // Assert
-    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw)).rejects.toMatchObject({ response: { status: 400 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
-  it('POC | Authenticated , When request made to clone flex dataset with invalid project group id, expect to return input error', async () => {
+  it('POC | Authenticated , When request made to clone flex dataset with invalid service id, expect to return not found error', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.pre_release_dataset;//"f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
 
     // Action
-    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, "invalid_service_id", 'metadata.json'))
     // Assert
-    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, "invalid_service_id")).rejects.toMatchObject({ response: { status: 404 } });
+    axios.interceptors.request.eject(editMetaInterceptor);
+  }, 30000);
+
+  it('POC | Authenticated , When request made to clone flex dataset with invalid project group id, expect to return not found error', async () => {
+    // Arrange
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let metaToUpload = Utility.getMetadataBlob("flex");
+    let tdei_dataset_id = apiInput.flex.pre_release_dataset;//"f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
+
+    // Action
+    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, "invalid_project_id", tdei_service_id_flex, 'metadata.json'))
+    // Assert
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, "invalid_project_id", tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 404 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
   it('POC | Authenticated , When request made to clone flex dataset with service id not associated with project group id, expect to return input error', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.pre_release_dataset;//"0b165272-afff-46b9-8eb4-14f81bfb92b7";//Pre-Release other project group dataset
 
@@ -1550,7 +1606,7 @@ describe('Clone Dataset', () => {
 
   it('POC | Authenticated , When request made to clone flex dataset with invalid metadata, expect to return input error', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(pocConfiguration);
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
     let metaToUpload = Utility.getInvalidMetadataBlob("flex");
     let tdei_dataset_id = apiInput.flex.pre_release_dataset;//"f2574fe66f0046389acc68ee5848e3a9";//Pre-Release dataset
 
@@ -1563,15 +1619,274 @@ describe('Clone Dataset', () => {
 
   it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
     // Arrange
-    let generalAPI = new GeneralApi(Utility.getAdminConfiguration());
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
     let metaToUpload = Utility.getMetadataBlob("flex");
-    let tdei_dataset_id = apiInput.flex.pre_release_dataset;//"f2574fe66f0046389acc68ee5848e3a9";
+    let tdei_dataset_id = apiInput.flex.pre_release_dataset;
 
     // Action
-    const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
+    const cloneMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw, 'metadata.json'))
     // Assert
     await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_osw)).rejects.toMatchObject({ response: { status: 401 } });
-    axios.interceptors.request.eject(editMetaInterceptor);
+    axios.interceptors.request.eject(cloneMetaInterceptor);
   }, 30000);
 });
 
+describe('List Services', () => {
+
+  it('Admin | Authenticated , When request made, expect to return list of services', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+
+    const serviceList = await generalAPI.listServices();
+
+    expect(serviceList.status).toBe(200);
+    expect(Array.isArray(serviceList.data)).toBe(true);
+
+    serviceList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_service_id: expect.any(String),
+        service_name: expect.any(String),
+        polygon: expect.any(Object || null),
+        service_type: expect.any(String)
+      });
+    });
+  }, 30000);
+
+
+  it('POC | Authenticated , When request made, expect to return list of services', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+
+    const serviceList = await generalAPI.listServices();
+
+    expect(serviceList.status).toBe(200);
+    expect(Array.isArray(serviceList.data)).toBe(true);
+
+    serviceList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_service_id: expect.any(String),
+        service_name: expect.any(String),
+        polygon: expect.any(Object || null),
+        service_type: expect.any(String)
+      });
+    });
+  }, 30000);
+
+  it('API-Key | Authenticated , When request made, expect to return list of services', async () => {
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
+
+    const serviceList = await generalAPI.listServices();
+
+    expect(serviceList.status).toBe(200);
+    expect(Array.isArray(serviceList.data)).toBe(true);
+
+    serviceList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_service_id: expect.any(String),
+        service_name: expect.any(String),
+        polygon: expect.any(Object || null),
+        service_type: expect.any(String)
+      });
+    });
+  }, 30000);
+
+  it('POC | Authenticated , When requested with invalid tdei_project_group_id, expect to return tdei_project_group_id not found', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    const serviceList = generalAPI.listServices(NULL_PARAM, NULL_PARAM, 'D552d5d1-0719-4647-b86d-6ae9b25327b7');
+
+    await expect(serviceList).rejects.toMatchObject({ response: { status: 404 } });
+  }, 30000);
+
+  it('POC | Authenticated , When requested with invalid tdei_service_id, expect to return tdei_service_id not found', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    const serviceList = generalAPI.listServices('D552d5d1-0719-4647-b86d-6ae9b25327b7');
+
+    await expect(serviceList).rejects.toMatchObject({ response: { status: 404 } });
+  }, 30000);
+
+  it('POC | Authenticated , When requested with invalid service type, expect to return invalid service type input error', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    const serviceList = generalAPI.listServices(NULL_PARAM, NULL_PARAM, NULL_PARAM, 'invalidServiceType');
+
+    await expect(serviceList).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated , When requested with specific tdei_service_id, expect to return service details identified by tdei_service_id', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    const serviceList = await generalAPI.listServices(tdei_service_id_osw);
+
+    expect(serviceList.status).toBe(200);
+    expect(Array.isArray(serviceList.data)).toBe(true);
+
+    serviceList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_service_id: expect.any(tdei_service_id_osw)
+      });
+    });
+  }, 30000);
+
+  it('POC | Authenticated , When requested with specific tdei_project_group_id, expect to return service details identified by tdei_project_group_id', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    const serviceList = await generalAPI.listServices(NULL_PARAM, NULL_PARAM, tdei_project_group_id);
+
+    expect(serviceList.status).toBe(200);
+    expect(Array.isArray(serviceList.data)).toBe(true);
+
+    serviceList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        tdei_project_group_id: expect.any(tdei_project_group_id)
+      });
+    });
+  }, 30000);
+
+  it('POC | Authenticated , When requested with specific service name, expect to return service details name matching input', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let service_name = "";
+    const serviceList = await generalAPI.listServices(NULL_PARAM, service_name);
+
+    expect(serviceList.status).toBe(200);
+    expect(Array.isArray(serviceList.data)).toBe(true);
+
+    serviceList.data.forEach(data => {
+      expect(data).toMatchObject(<any>{
+        service_name: expect.containskey(service_name)
+      });
+    });
+  }, 30000);
+
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    const serviceList = generalAPI.listProjectGroups();
+
+    await expect(serviceList).rejects.toMatchObject({ response: { status: 401 } });
+
+  }, 30000);
+});
+
+describe('Authentication', () => {
+
+  it('When request made with valid credentials, expect to return access_token & refresh_token in response', async () => {
+    let authApi = new AuthenticationApi(adminConfiguration);
+
+    const response = await authApi.authenticate({ username: adminConfiguration.username, password: adminConfiguration.password });
+
+    expect(response.status).toBe(200);
+
+    expect(response.data).toMatchObject(<any>{
+      access_token: expect.any(String),
+      refresh_token: expect.any(String)
+    });
+  }, 30000);
+
+  it('When request made with invalid user, should respond with user not found error', async () => {
+    let authApi = new AuthenticationApi(undefined, adminConfiguration.basePath);
+
+    const response = authApi.authenticate({ username: 'invalid', password: 'Invalid01*' });
+
+    await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  }, 30000);
+
+  it('When request made with invalid creds, should respond with unauthenticated request', async () => {
+    let authApi = new AuthenticationApi(undefined, adminConfiguration.basePath);
+
+    const response = authApi.authenticate({ username: 'admin@tdei.com', password: 'Invalid01*' });
+
+    await expect(response).rejects.toMatchObject({ response: { status: 401 } });
+
+  }, 30000);
+
+  it('When request made with invalid password policy, should respond with bad request', async () => {
+    let authApi = new AuthenticationApi(undefined, adminConfiguration.basePath);
+
+    const response = authApi.authenticate({ username: 'admin@tdei.com', password: 'Invalid' });
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+
+  }, 30000);
+
+  it('When request made with long password > 255, should respond with bad request', async () => {
+    let authApi = new AuthenticationApi(undefined, adminConfiguration.basePath);
+
+    const response = authApi.authenticate({
+      username: 'admin@tdei.com', password: `ABCDEFG*IJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567HIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678CDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`
+    });
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+
+  }, 30000);
+});
+
+describe('Refresh token', () => {
+
+  it('When request made with valid refresh token, expect to return fresh access_token & refresh_token in response', async () => {
+    let authApi = new AuthenticationApi(adminConfiguration);
+
+    const response = await authApi.authenticate({ username: adminConfiguration.username, password: adminConfiguration.password });
+
+    expect(response.status).toBe(200);
+
+    expect(response.data).toMatchObject(<any>{
+      access_token: expect.any(String),
+      refresh_token: expect.any(String)
+    });
+
+    let requestResponse = await authApi.refreshToken(response.data.refresh_token!);
+    expect(requestResponse.status).toBe(200);
+
+    expect(requestResponse.data).toMatchObject(<any>{
+      access_token: expect.any(String),
+      refresh_token: expect.any(String)
+    });
+
+
+  }, 30000);
+
+  it('When request made with invalid refresh_token, should respond with unauthenticated request', async () => {
+    let authApi = new AuthenticationApi(adminConfiguration);
+
+    const response = authApi.refreshToken("invalid");
+
+    await expect(response).rejects.toMatchObject({ response: { status: 401 } });
+
+  }, 30000);
+});
+
+describe('Recover password', () => {
+
+  it('When request made with valid email, expect to return success response', async () => {
+    let authApi = new AuthenticationApi(adminConfiguration);
+
+    let requestResponse = await authApi.recoverPassword(pocConfiguration.username!);
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('When request made with invalid username, should respond with user not found error', async () => {
+    let authApi = new AuthenticationApi(adminConfiguration);
+
+    const response = authApi.recoverPassword("invalid");
+
+    await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  }, 30000);
+});
+
+describe('Verify Email', () => {
+
+  it('When request made with valid email, expect to return success response', async () => {
+    let authApi = new AuthenticationApi(adminConfiguration);
+
+    let requestResponse = await authApi.verifyEmail(pocConfiguration.username!);
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('When request made with invalid username, should respond with user not found error', async () => {
+    let authApi = new AuthenticationApi(adminConfiguration);
+
+    const response = authApi.verifyEmail("invalid");
+
+    await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  }, 30000);
+});

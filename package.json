@@ -27,11 +27,11 @@
   },
   "dependencies": {
     "@faker-js/faker": "^7.6.0",
-    "axios": "1.6.5",
+    "axios": "^1.7.7",
     "dotenv": "^16.3.1",
     "jest-html-reporters": "^3.1.7",
     "puppeteer": "^22.6.5",
-    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#d671e18290896490324b5731dc141d887e4c42cf",
+    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#14f7f6e57a5e35cfc41d39650d6a7250a3d3ddf1",
     "typescript": "5.0.4"
   }
 }

@@ -16,6 +16,7 @@ import metadata_flex from "../assets/payloads/gtfs-flex/metadata.json";
 import metadata_osw from "../assets/payloads/osw/metadata.json";
 import metadata_pathways from "../assets/payloads/gtfs-pathways/metadata.json";
 import apiInput from "../api.input.json";
+import { SeedData } from "./models/types";
 /**
  * Utility class.
  */
@@ -23,10 +24,11 @@ export class Utility {
 
     static get seedData() {
         const seedData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../seed.data.json'), 'utf-8'));
-        return seedData;
+        return seedData as SeedData;
     }
 
     static async setAuthToken(configuration: Configuration) {
+        configuration.basePath = 'https://tdei-api-dev.azurewebsites.net';
         let authAPI = new AuthenticationApi(configuration);
         const loginResponse = await authAPI.authenticate({
             username: configuration.username,
@@ -200,6 +202,40 @@ export class Utility {
             randomMetadata = metadata_osw;
             randomMetadata['dataset_detail']['schema_version'] = 'v0.2';
         }
+
+        randomMetadata['dataset_detail']['name'] = faker.random.alphaNumeric(9) + `_${type}`;
+        let jsonString = JSON.stringify(randomMetadata);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        return blob;
+    }
+
+    static replaceValues(obj: any, keyMap: { [key: string]: string }): any {
+        if (typeof obj !== 'object' || obj === null) {
+            return obj;
+        }
+
+        return Object.keys(obj).reduce((acc, key) => {
+            acc[key] = keyMap.hasOwnProperty(key) ? keyMap[key] : this.replaceValues(obj[key], keyMap);
+            return acc;
+        }, {} as any);
+    }
+
+    static getEditMetadataBlob(type: string, keyMap: any): Blob {
+        //const blob = new Blob([jsonString], { type: 'application/json' });
+        let randomMetadata = {};
+        if (type == 'flex') {
+            randomMetadata = metadata_flex;
+            randomMetadata['dataset_detail']['schema_version'] = 'v2.0';
+        } else if (type == 'pathways') {
+            randomMetadata = metadata_pathways;
+            randomMetadata['dataset_detail']['schema_version'] = 'v1.0';
+        } else if (type == 'osw') {
+            randomMetadata = metadata_osw;
+            randomMetadata['dataset_detail']['schema_version'] = 'v0.2';
+        }
+
+        randomMetadata = this.replaceValues(randomMetadata, keyMap);
 
         randomMetadata['dataset_detail']['name'] = faker.random.alphaNumeric(9) + `_${type}`;
         let jsonString = JSON.stringify(randomMetadata);
