@@ -1,4 +1,4 @@
-import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, CommonAPIsApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum, JobDetails, JobProgress, ServiceModel, AuthenticationApi } from "tdei-client";
+import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, CommonAPIsApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum, JobDetails, JobProgress, ServiceModel, AuthenticationApi, MetricsApi } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 
@@ -308,6 +308,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -348,7 +349,9 @@ describe('List Datasets', () => {
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
       NULL_PARAM,// page_no,
-      page_size
+      page_size,
+      "status",
+      "asc"
       // options ?: AxiosRequestConfig
     );
 
@@ -375,6 +378,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       tdei_project_group_id,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -414,14 +418,87 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,// page_size,
+      1,// page_no,
+      1,// page_size,
+      "valid_from",
+      "asc"
       // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
       expect(file.project_group.tdei_project_group_id).toBe(tdei_project_group_id)
+    })
+
+  });
+
+  it('Admin | Authenticated , When request made with service Id, should return datasets of the specified service', async () => {
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
+    //TODO: read from seeder or config
+    //let project_group_id = '5e339544-3b12-40a5-8acd-78c66d1fa981';
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      tdei_service_id_osw,// service_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      1,// page_no,
+      1,// page_size,
+      "valid_to",
+      "asc"
+      // options ?: AxiosRequestConfig
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    datasetFiles.data.forEach(file => {
+      expect(file.service.tdei_service_id).toBe(tdei_service_id_osw)
     })
 
   });
@@ -443,6 +520,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       apiInput.osw.published_dataset,// tdei_dataset_id,
@@ -482,8 +560,10 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size,
+      "uploaded_timestamp",
+      "asc"
       // options ?: AxiosRequestConfig
     );
 
@@ -511,6 +591,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       schema_version,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -550,8 +631,10 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size,
+      "project_group_name",
+      "asc"
       // options ?: AxiosRequestConfig
     );
 
@@ -578,6 +661,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -617,8 +701,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -645,6 +729,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -684,8 +769,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -711,6 +796,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -750,8 +836,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -760,7 +846,6 @@ describe('List Datasets', () => {
       expect(file.metadata.dataset_detail!.collected_by).toBe(collected_by)
     });
   });
-
   it('Admin | Authenticated , When request made with data_source, should return datasets matching data_source', async () => {
     let oswAPI = new CommonAPIsApi(adminConfiguration);
     let data_source = "3rdParty";
@@ -778,6 +863,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -817,8 +903,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -845,6 +931,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -884,8 +971,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -912,6 +999,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -951,8 +1039,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -979,6 +1067,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -1018,8 +1107,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -1046,6 +1135,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -1085,8 +1175,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -1114,6 +1204,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       valid_to,// valid_to,
       NULL_PARAM,// tdei_dataset_id,
@@ -1153,14 +1244,83 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
     expect(datasetFiles.status).toBe(200);
     datasetFiles.data.forEach(file => {
       expect(new Date(file.metadata.dataset_detail!.valid_to!)).toBeAfter(new Date(valid_to))
+    })
+  });
+
+  it('Admin | Authenticated , When request made with valid_from, should return datasets valid from input datetime', async () => {
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
+    //set date one date before today
+    let valid_from = (new Date(new Date().setMonth(new Date().getMonth() - 1))).toISOString();
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
+      valid_from,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations_of_the_dataset,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      1,// page_no,
+      1,//page_size
+      // options ?: AxiosRequestConfig
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    datasetFiles.data.forEach(file => {
+      expect(new Date(file.metadata.dataset_detail!.valid_from!)).toBeAfter(new Date(valid_from))
     })
   });
 
@@ -1181,6 +1341,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// confidence_level,
       NULL_PARAM,// schema_version,
       NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
       NULL_PARAM,// valid_from,
       NULL_PARAM,// valid_to,
       recordId,// tdei_dataset_id,
@@ -1220,8 +1381,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// page_no,
-      NULL_PARAM,//page_size
+      1,// page_no,
+      1,//page_size
       // options ?: AxiosRequestConfig
     );
 
@@ -1853,8 +2014,8 @@ describe('Refresh token', () => {
 
 describe('Recover password', () => {
 
-  it('When request made with valid email, expect to return success response', async () => {
-    let authApi = new AuthenticationApi(adminConfiguration);
+  it('Admin | Authenticated, When request made with valid email, expect to return success response', async () => {
+    let authApi = new AuthenticationApi(Utility.getAdminConfiguration());
 
     let requestResponse = await authApi.recoverPassword(pocConfiguration.username!);
     expect(requestResponse.status).toBe(200);
@@ -1862,7 +2023,7 @@ describe('Recover password', () => {
   }, 30000);
 
   it('When request made with invalid username, should respond with user not found error', async () => {
-    let authApi = new AuthenticationApi(adminConfiguration);
+    let authApi = new AuthenticationApi(Utility.getAdminConfiguration());
 
     const response = authApi.recoverPassword("invalid");
 
@@ -1874,7 +2035,7 @@ describe('Recover password', () => {
 describe('Verify Email', () => {
 
   it('When request made with valid email, expect to return success response', async () => {
-    let authApi = new AuthenticationApi(adminConfiguration);
+    let authApi = new AuthenticationApi(Utility.getAdminConfiguration());
 
     let requestResponse = await authApi.verifyEmail(pocConfiguration.username!);
     expect(requestResponse.status).toBe(200);
@@ -1882,11 +2043,84 @@ describe('Verify Email', () => {
   }, 30000);
 
   it('When request made with invalid username, should respond with user not found error', async () => {
-    let authApi = new AuthenticationApi(adminConfiguration);
+    let authApi = new AuthenticationApi(Utility.getAdminConfiguration());
 
     const response = authApi.verifyEmail("invalid");
 
     await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  }, 30000);
+
+});
+
+describe('System metrics', () => {
+
+  it('Admin | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(adminConfiguration);
+
+    let requestResponse = await metricsApi.systemMetrics();
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('POC | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(pocConfiguration);
+
+    let requestResponse = await metricsApi.systemMetrics();
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('API-Key | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(apiKeyConfiguration);
+
+    let requestResponse = await metricsApi.systemMetrics();
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
+    let metricsApi = new MetricsApi(Utility.getAdminConfiguration());
+
+    const response = metricsApi.systemMetrics();
+
+    await expect(response).rejects.toMatchObject({ response: { status: 401 } });
+
+  }, 30000);
+});
+
+describe('Data metrics', () => {
+
+  it('Admin | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(adminConfiguration);
+
+    let requestResponse = await metricsApi.dataMetrics();
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('POC | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(pocConfiguration);
+
+    let requestResponse = await metricsApi.dataMetrics();
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('API-Key | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(apiKeyConfiguration);
+
+    let requestResponse = await metricsApi.dataMetrics();
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
+    let metricsApi = new MetricsApi(Utility.getAdminConfiguration());
+
+    const response = metricsApi.dataMetrics();
+
+    await expect(response).rejects.toMatchObject({ response: { status: 401 } });
 
   }, 30000);
 });

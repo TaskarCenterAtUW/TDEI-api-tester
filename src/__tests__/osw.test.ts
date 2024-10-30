@@ -123,7 +123,7 @@ beforeAll(async () => {
   flexDgConfiguration = Utility.getFlexDataGeneratorConfiguration();
   pathwaysDgConfiguration = Utility.getPathwaysDataGeneratorConfiguration();
   apiInput = Utility.getApiInput();
-  bboxRecordId = apiInput.osw.bbox_test_dataset;
+  bboxRecordId = apiInput.osw.test_dataset;
   await authenticate();
 });
 
@@ -1492,13 +1492,13 @@ describe('Download Dataset Bbox request file', () => {
 
 let datasetRoadTagJobId = '1';
 describe('Dataset Road Tag Request', () => {
-  // let datasetTagSourceRecordId = apiInput.osw.road_tag_test_src_dataset;
+  // let datasetTagSourceRecordId = apiInput.osw.test_dataset;
   // let datasetTagTargetPublishedRecordId = apiInput.osw.published_dataset;//'762f3533-b18f-470f-8051-1a7988bf80c7';
 
   it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1509,7 +1509,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1518,7 +1518,7 @@ describe('Dataset Road Tag Request', () => {
   it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1527,7 +1527,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | authenticated , When request made with publish target dataset, should return with bad request', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, apiInput.osw.published_dataset);
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, apiInput.osw.published_dataset);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1543,7 +1543,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | authenticated , When request made with invalid target dataset, should return with dataset not found error', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, "invalid_target");
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, "invalid_target");
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
   });
@@ -1551,7 +1551,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1559,7 +1559,7 @@ describe('Dataset Road Tag Request', () => {
   it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.road_tag_test_src_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 403 } });
   });
@@ -1648,6 +1648,193 @@ describe('Download Dataset Road Tag request file', () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(datasetBboxJobIdOSM);
+
+    await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+let datasetUnionJobId = '1';
+describe('Dataset Union Request', () => {
+
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+
+    let bboxRequest = await oswAPI.oswUnion({
+      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+    }
+    );
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+    datasetUnionJobId = bboxRequest.data!;
+    console.log("dataset Union job_id", datasetUnionJobId);
+  });
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = await oswAPI.oswUnion({
+      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+    });
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+  });
+
+  it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    let bboxRequest = await oswAPI.oswUnion({
+      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+    });
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+  });
+
+  it('Admin | authenticated , When request made with publish target dataset, should return with bad request', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.oswUnion({
+      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+    });
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('Admin | authenticated , When request made with invalid left dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.oswUnion({
+      tdei_dataset_id_one: "invalid",
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+    });
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | authenticated , When request made with invalid right dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.oswUnion({
+      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_two: "invalid"
+    });
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+
+    let bboxRequest = oswAPI.oswUnion({
+      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+    });
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+  it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+
+    let bboxRequest = oswAPI.oswUnion({
+      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+    });
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 403 } });
+  });
+
+});
+
+describe('Check dataset union request job completion status', () => {
+  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
+    await new Promise((r) => setTimeout(r, 40000));
+
+    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetUnionJobId, true);
+
+    expect(formatStatus.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${datasetUnionJobId}`]),
+          status: expect.toBeOneOf(["COMPLETED"])
+        })
+      ])
+    );
+  }, 45000);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, datasetUnionJobId, true);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs("", datasetUnionJobId, true);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let bboxStatusResponse = generalAPI.listJobs("", datasetUnionJobId, true);
+
+    await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+describe('Download Dataset Union request file', () => {
+
+  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+
+    let response = await generalAPI.jobDownload(datasetUnionJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(1);
+    }
+  }, 20000);
+
+  it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
+
+    let response = await generalAPI.jobDownload(datasetUnionJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(1);
+    }
+  }, 20000);
+
+  it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let downloadResponse = generalAPI.jobDownload(datasetUnionJobId);
 
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
