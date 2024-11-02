@@ -28,7 +28,6 @@ export class Utility {
     }
 
     static async setAuthToken(configuration: Configuration) {
-        configuration.basePath = "https://tdei-api-dev.azurewebsites.net";
         let authAPI = new AuthenticationApi(configuration);
         const loginResponse = await authAPI.authenticate({
             username: configuration.username,
@@ -181,7 +180,7 @@ export class Utility {
     }
 
     static getOSWBlob(): Blob {
-        return this.getFileBlob('osw', 'Archivew.zip');
+        return this.getFileBlob('osw', 'osw-la.zip');
     }
 
     // Change the implementation

@@ -50,7 +50,7 @@ const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_proj
 
 const validateRequestInterceptor = (request: InternalAxiosRequestConfig, datasetName: string) => {
   if (
-    request.url?.includes(`${adminConfiguration.basePath}/api/v1/gtfs-pathways/validate`)
+    request.url?.includes(`/api/v1/gtfs-pathways/validate`)
   ) {
     let data = request.data as FormData;
     let datasetFile = data.get("dataset") as File;
