@@ -63,7 +63,8 @@
     "city": "Seattle",
     "region": "North",
     "county": "King",
-    "key_limitations_of_the_dataset": "inaccurate",
+    "key_limitations": "inaccurate",
+    "release_notes": "NA",
     "challenges": null
   },
   "maintenance": {

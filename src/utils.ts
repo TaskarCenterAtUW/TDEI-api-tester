@@ -28,7 +28,7 @@ export class Utility {
     }
 
     static async setAuthToken(configuration: Configuration) {
-        configuration.basePath = 'https://tdei-api-dev.azurewebsites.net';
+        configuration.basePath = "https://tdei-api-dev.azurewebsites.net";
         let authAPI = new AuthenticationApi(configuration);
         const loginResponse = await authAPI.authenticate({
             username: configuration.username,
@@ -173,7 +173,7 @@ export class Utility {
      * All the file blob datas
      */
     static getFlexBlob(): Blob {
-        return this.getFileBlob('gtfs-flex', 'flex_success_1.zip');
+        return this.getFileBlob('gtfs-flex', 'otterexpress-mn-us--flex-v2.zip');
     }
 
     static getPathwaysBlob(): Blob {
@@ -213,6 +213,10 @@ export class Utility {
     static replaceValues(obj: any, keyMap: { [key: string]: string }): any {
         if (typeof obj !== 'object' || obj === null) {
             return obj;
+        }
+
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.replaceValues(item, keyMap));
         }
 
         return Object.keys(obj).reduce((acc, key) => {

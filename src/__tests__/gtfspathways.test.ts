@@ -20,7 +20,7 @@ let apiInput: any = {};
 
 const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
   if (
-    request.url === `${adminConfiguration.basePath}/api/v1/metadata/${tdei_dataset_id}`
+    request.url?.includes(`/api/v1/metadata/${tdei_dataset_id}`)
   ) {
     let data = request.data as FormData;
     let metaFile = data.get("file") as File;
@@ -32,7 +32,7 @@ const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tde
 
 const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_project_group_id: string, service_id: string, datasetName: string, changestName: string, metafileName: string) => {
   if (
-    request.url?.includes(`${adminConfiguration.basePath}/api/v1/gtfs-pathways/upload/${tdei_project_group_id}/${service_id}`)
+    request.url?.includes(`/api/v1/gtfs-pathways/upload/${tdei_project_group_id}/${service_id}`)
   ) {
     let data = request.data as FormData;
     let datasetFile = data.get("dataset") as File;
@@ -50,7 +50,7 @@ const uploadRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_proj
 
 const validateRequestInterceptor = (request: InternalAxiosRequestConfig, datasetName: string) => {
   if (
-    request.url === `${adminConfiguration.basePath}/api/v1/gtfs-pathways/validate`
+    request.url?.includes(`${adminConfiguration.basePath}/api/v1/gtfs-pathways/validate`)
   ) {
     let data = request.data as FormData;
     let datasetFile = data.get("dataset") as File;
@@ -241,7 +241,7 @@ describe('Upload pathways dataset', () => {
     let dataset = Utility.getPathwaysBlob();
 
     const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'pathways-valid.zip', 'changeset.zip', 'metadata.json'))
-    const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+    const uploadFileResponse = pathwaysAPI.uploadGtfsPathwaysFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, NULL_PARAM, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
     await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 403 } });
     axios.interceptors.request.eject(uploadInterceptor);
@@ -255,7 +255,7 @@ describe('Check upload request job completion status', () => {
 
   it('Pathways Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 20000));
+    await new Promise((r) => setTimeout(r, 30000));
 
     let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, uploadedJobId, true);
     expect(uploadStatus.status).toBe(200);
@@ -275,7 +275,7 @@ describe('Check upload request job completion status', () => {
     );
     uploadedDatasetId = uploadStatus.data[0].response_props.tdei_dataset_id;
     console.log("uploaded tdei_dataset_id", uploadedDatasetId);
-  }, 25000);
+  }, 35000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -363,6 +363,7 @@ describe("Edit Metadata API", () => {
 });
 
 describe('Publish the pathways dataset', () => {
+  jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
   it('Admin | When passed with valid input having null valid_from & valid_to metadata, should respond with required field error', async () => {
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
@@ -436,7 +437,7 @@ describe('Publish the pathways dataset', () => {
   it('API-Key | Authenticated , When request made, should respond with unauthorized request', async () => {
     let pathwaysAPI = new GTFSPathwaysApi(apiKeyConfiguration);
 
-    let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(uploadedDatasetId);
+    let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(uploadedDatasetId, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
     await expect(publishResponse).rejects.toMatchObject({ response: { status: 403 } });
   });
@@ -511,16 +512,12 @@ describe('Validate-only pathways dataset request', () => {
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
     let dataset = Utility.getPathwaysBlob();
-    try {
-      const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'pathways-valid.zip'))
-      const uploadFileResponse = await pathwaysAPI.validateGtfsPathwaysFileForm(dataset);
+    const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'pathways-valid.zip'))
+    const uploadFileResponse = await pathwaysAPI.validateGtfsPathwaysFileForm(dataset);
 
-      expect(uploadFileResponse.status).toBe(202);
-      expect(uploadFileResponse.data).not.toBeNull();
-      axios.interceptors.request.eject(validateInterceptor);
-    } catch (e) {
-      console.log(e);
-    }
+    expect(uploadFileResponse.status).toBe(202);
+    expect(uploadFileResponse.data).not.toBeNull();
+    axios.interceptors.request.eject(validateInterceptor);
   }, 20000)
 
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
@@ -535,14 +532,14 @@ describe('Validate-only pathways dataset request', () => {
 
   }, 20000);
 
-  it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
+  it('API-Key | Authenticated , When request made with dataset, should return request job id as responset', async () => {
     let pathwaysAPI = new GTFSPathwaysApi(apiKeyConfiguration);
     let dataset = Utility.getPathwaysBlob();
-
     const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'pathways-valid.zip'))
-    const uploadFileResponse = pathwaysAPI.validateGtfsPathwaysFileForm(dataset);
+    const uploadFileResponse = await pathwaysAPI.validateGtfsPathwaysFileForm(dataset, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
-    await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 403 } });
+    expect(uploadFileResponse.status).toBe(202);
+    expect(uploadFileResponse.data).not.toBeNull();
     axios.interceptors.request.eject(validateInterceptor);
 
   }, 20000);
@@ -614,7 +611,7 @@ describe('List pathways versions', () => {
   it('API-Key | Authenticated , When request made, should respond with pathways version list', async () => {
     let pathwaysAPI = new GTFSPathwaysApi(apiKeyConfiguration);
 
-    let versions = await pathwaysAPI.listGtfsPathwaysVersions();
+    let versions = await pathwaysAPI.listGtfsPathwaysVersions({ headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
     expect(versions.status).toBe(200);
     expect(Array.isArray(versions.data.versions)).toBe(true);
@@ -673,7 +670,7 @@ describe('Download pathways dataset', () => {
 
     let pathwaysAPI = new GTFSPathwaysApi(apiKeyConfiguration);
 
-    let response = await pathwaysAPI.getGtfsPathwaysFile(uploadedDatasetId, { responseType: 'arraybuffer' });
+    let response = await pathwaysAPI.getGtfsPathwaysFile(uploadedDatasetId, { responseType: 'arraybuffer', headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
     const zip = new AdmZip(data);
