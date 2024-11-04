@@ -31,7 +31,7 @@
     "dotenv": "^16.3.1",
     "jest-html-reporters": "^3.1.7",
     "puppeteer": "^22.6.5",
-    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#d671e18290896490324b5731dc141d887e4c42cf",
+    "tdei-client": "git+https://github.com/TaskarCenterAtUW/TDEI-api-client.git#dc2bfcf7b375cfb81d4b5f8cbddf9e17051cdb2b",
     "typescript": "5.0.4"
   }
 }
