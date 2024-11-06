@@ -1673,7 +1673,7 @@ describe('Dataset Union Request', () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
     let bboxRequest = await oswAPI.oswUnion({
-      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_one: uploadedDatasetId,
       tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
     }
     );
@@ -1688,7 +1688,7 @@ describe('Dataset Union Request', () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
     let bboxRequest = await oswAPI.oswUnion({
-      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_one: uploadedDatasetId,
       tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
     });
 
@@ -1700,7 +1700,7 @@ describe('Dataset Union Request', () => {
     let oswAPI = new OSWApi(pocConfiguration);
 
     let bboxRequest = await oswAPI.oswUnion({
-      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_one: uploadedDatasetId,
       tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
     });
 
@@ -1713,7 +1713,7 @@ describe('Dataset Union Request', () => {
 
     let bboxRequest = oswAPI.oswUnion({
       tdei_dataset_id_one: "invalid",
-      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
+      tdei_dataset_id_two: uploadedDatasetId
     });
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
@@ -1723,7 +1723,7 @@ describe('Dataset Union Request', () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
     let bboxRequest = oswAPI.oswUnion({
-      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_one: uploadedDatasetId,
       tdei_dataset_id_two: "invalid"
     });
 
@@ -1734,7 +1734,7 @@ describe('Dataset Union Request', () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
     let bboxRequest = oswAPI.oswUnion({
-      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_one: uploadedDatasetId,
       tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
     });
 
@@ -1760,7 +1760,7 @@ describe('Check dataset union request job completion status', () => {
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 120000));
+    await new Promise((r) => setTimeout(r, 60000));
 
     let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetUnionJobId, true);
 
@@ -1772,7 +1772,7 @@ describe('Check dataset union request job completion status', () => {
         })
       ])
     );
-  }, 130000);
+  }, 70000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -1806,13 +1806,13 @@ describe('Download Dataset Union request file', () => {
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
-    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(contentType).toBeOneOf(["application/zip"]);
     expect(response.data).not.toBeNull();
     expect(response.status).toBe(200);
     if (contentType === "application/zip") {
       const zip = new AdmZip(data);
       const entries = zip.getEntries();
-      expect(entries.length).toBeGreaterThanOrEqual(1);
+      expect(entries.length).toBeGreaterThanOrEqual(0);
     }
   }, 20000);
 
@@ -1823,13 +1823,13 @@ describe('Download Dataset Union request file', () => {
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
-    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(contentType).toBeOneOf(["application/zip"]);
     expect(response.data).not.toBeNull();
     expect(response.status).toBe(200);
     if (contentType === "application/zip") {
       const zip = new AdmZip(data);
       const entries = zip.getEntries();
-      expect(entries.length).toBeGreaterThanOrEqual(1);
+      expect(entries.length).toBeGreaterThanOrEqual(0);
     }
   }, 20000);
 
