@@ -1,5 +1,5 @@
 
-interface Credentials {
+export interface Credentials {
     username: string
     password: string
 }
@@ -13,8 +13,16 @@ export interface Users {
 
 
 export interface SeedData {
-    tdei_project_group_id: string;
-    service_id: [{ data_type: string; serviceId: string; }];
-    users: Users | {};
+    project_group: {
+        tdei_project_group_id: string,
+        name: string,
+    };
+    services: [{
+        tdei_project_group_id: string,
+        service_type: string,
+        service_name: string,
+        tdei_service_id: string
+    }];
+    users: Users;
     api_key: string;
 }

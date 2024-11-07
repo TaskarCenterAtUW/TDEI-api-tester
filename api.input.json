@@ -3,11 +3,9 @@
         "osw": {
             "published_dataset": "40566429d02c4c80aee68c970977bed8",
             "pre_release_dataset": "26f0ec82-1434-4944-ae8c-dea8aa5e0075",
-            "bbox_test_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
-            "road_tag_test_src_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
+            "test_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
             "spatial_target_dataset": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
-            "spatial_source_dataset": "0d661b69495d47fb838862edf699fe09",
-            "derived_dataset_id": "a042a1b3aa874701929cb33a98f28e9d"
+            "spatial_source_dataset": "0d661b69495d47fb838862edf699fe09"
         },
         "flex": {
             "published_dataset": "309dea0b-0fb2-4c19-a771-9f3719b48030",
@@ -17,7 +15,7 @@
             "published_dataset": "cb472b40-38cf-4006-abab-5c819682b08c",
             "pre_release_dataset": "b8e068b9-67b4-4fe9-8ddb-c1d64d3702ce"
         },
-        "users":{
+        "users": {
             "poc": "adella.legros3@gmail.com",
             "flex_data_generator": "reilly_connelly@yahoo.com",
             "pathways_data_generator": "emiliano.terry@hotmail.com",
@@ -28,11 +26,9 @@
         "osw": {
             "published_dataset": "047c8e5f-bfce-48ee-8dd0-3cdc16d72624",
             "pre_release_dataset": "2bf948ba-7ccf-4a6a-b21f-5c3151fb17c0",
-            "bbox_test_dataset": "74d2d6fc-db4a-4f72-8042-e521ef5c3520",
-            "road_tag_test_src_dataset": "892897ec-d75e-47f5-84ed-efc08ca6a8c6",
+            "test_dataset": "74d2d6fc-db4a-4f72-8042-e521ef5c3520",
             "spatial_target_dataset": "892897ec-d75e-47f5-84ed-efc08ca6a8c6",
-            "spatial_source_dataset": "0c384536b471477db07a4c6e9d8476bf",
-            "derived_dataset_id": "0c384536b471477db07a4c6e9d8476bf"
+            "spatial_source_dataset": "0c384536b471477db07a4c6e9d8476bf"
         },
         "flex": {
             "published_dataset": "3cb8a738-b274-4c6c-a8d4-a212de9a7623",
@@ -42,7 +38,7 @@
             "published_dataset": "7912bddf-5333-4a6e-9af8-81b1efd01707",
             "pre_release_dataset": "cc186aa4-8576-4d6e-bd89-f5df4e2e5851"
         },
-        "users":{
+        "users": {
             "poc": "frederic71@gmail.com",
             "flex_data_generator": "vern66@gmail.com",
             "pathways_data_generator": "elvera.keeling@gmail.com",
@@ -53,11 +49,9 @@
         "osw": {
             "published_dataset": "40566429d02c4c80aee68c970977bed8",
             "pre_release_dataset": "26f0ec82-1434-4944-ae8c-dea8aa5e0075",
-            "bbox_test_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
-            "road_tag_test_src_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
+            "test_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
             "spatial_target_dataset": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
-            "spatial_source_dataset": "0d661b69495d47fb838862edf699fe09",
-            "derived_dataset_id": "a042a1b3aa874701929cb33a98f28e9d"
+            "spatial_source_dataset": "0d661b69495d47fb838862edf699fe09"
         },
         "flex": {
             "published_dataset": "309dea0b-0fb2-4c19-a771-9f3719b48030",
@@ -67,7 +61,7 @@
             "published_dataset": "cb472b40-38cf-4006-abab-5c819682b08c",
             "pre_release_dataset": "b8e068b9-67b4-4fe9-8ddb-c1d64d3702ce"
         },
-        "users":{
+        "users": {
             "poc": "adella.legros3@gmail.com",
             "flex_data_generator": "reilly_connelly@yahoo.com",
             "pathways_data_generator": "emiliano.terry@hotmail.com",

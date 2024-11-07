@@ -2,7 +2,7 @@
 - Import the collection to your postman
 - Pre-run the `Authenticate` call to ensure that there is access token
 - The .zip files needed for upload are available in [payloads](../payloads/) folder
-- For flex, use [valid-flex-zip-file](../payloads/gtfs-flex/files/flex_success_1.zip)
+- For flex, use [valid-flex-zip-file](../payloads/gtfs-flex/files/otterexpress-mn-us--flex-v2.zip)
 - For pathways, use [valid-pathway-file](../payloads/gtfs-pathways/files/gtfs-pathways-valid.zip)
 - Run either of the folders to run all the tests of that specific file type of files
 

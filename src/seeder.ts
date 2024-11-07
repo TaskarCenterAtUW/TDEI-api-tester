@@ -18,27 +18,32 @@ export class Seeder {
     }
 
     public async seed(freshSeed = false): Promise<{} | SeedData> {
-        if (!freshSeed && existsSync('seed.data.json')) {
-            const data = await readFile('seed.data.json', { encoding: 'utf8' });
-            if (data) {
-                console.log("Serving from local seed data!");
-                return JSON.parse(data);
+        try {
+            if (!freshSeed && existsSync('seed.data.json')) {
+                const data = await readFile('seed.data.json', { encoding: 'utf8' });
+                if (data) {
+                    console.log("Serving from local seed data!");
+                    return JSON.parse(data);
+                }
+                return {};
+            } else {
+                console.log('Seeding...');
+                await this.client.login()
+                let seedData: SeedData = {} as any;
+                const project_group = await this.client.createProjectGroup()
+                seedData.project_group = project_group
+                const services = await this.createService(project_group.tdei_project_group_id)
+                seedData.services = services
+                seedData.users = await this.assignUserRoles(project_group.tdei_project_group_id)
+                let userProfile = (await this.getUserProfile((seedData.users as Users).poc.username));
+                seedData.api_key = userProfile.apiKey;
+                await this.writeFile(seedData);
+                console.info('Seeding complete');
+                return seedData;
             }
-            return {};
-        } else {
-            console.log('Seeding...');
-            await this.client.login()
-            let seedData: SeedData = {} as any;
-            const project_group_id = await this.client.createProjectGroup()
-            seedData.tdei_project_group_id = project_group_id
-            const serviceId = await this.createService(project_group_id)
-            seedData.service_id = serviceId
-            seedData.users = await this.assignUserRoles(project_group_id)
-            let userProfile = (await this.getUserProfile((seedData.users as Users).poc.username));
-            seedData.api_key = userProfile.apiKey;
-            await this.writeFile(seedData);
-            console.info('Seeding complete');
-            return seedData;
+        } catch (error) {
+            console.error('seed error ', error);
+            throw error;
         }
     }
 
@@ -54,16 +59,27 @@ export class Seeder {
         } catch (error) {
             console.log(user_name)
             console.error('getUserProfile', error);
+            throw error;
         }
     }
 
-    public async createService(project_group_id: string): Promise<[{ data_type: string; serviceId: string; }]> {
+    public async createService(project_group_id: string): Promise<[{
+        tdei_project_group_id: string,
+        service_type: string,
+        service_name: string,
+        tdei_service_id: string
+    }]> {
         await this.client.login();
-        let list: [{ data_type: string; serviceId: string; }] = [] as any;
+        let list: [{
+            tdei_project_group_id: string,
+            service_type: string,
+            service_name: string,
+            tdei_service_id: string
+        }] = [] as any;
         for await (const data_type of this.data_types) {
-            const serviceId = await this.client.createService(project_group_id, data_type)
-            console.info(`Created Service with ID: ${serviceId}`);
-            list.push({ data_type, serviceId });
+            const service = await this.client.createService(project_group_id, data_type)
+            console.info(`Created Service with ID: ${service.tdei_service_id}`);
+            list.push(service);
 
         }
         return list;
@@ -73,10 +89,10 @@ export class Seeder {
         axios.defaults.headers.common.Authorization = null;
     }
 
-    private async assignUserRoles(project_group_id: string): Promise<object> {
+    private async assignUserRoles(project_group_id: string): Promise<Users> {
         console.log('Assigning user roles...')
-        const users =  apiInput.dev.users; // Have to change based on the environment though.
-        const usersDictionary = {}
+        const users = apiInput.dev.users; // Have to change based on the environment though.
+        let usersDictionary = {} as Users;
         try {
             for await (const role of this.roles) {
                 await this.client.addPermission(project_group_id, users[role], role)
@@ -93,19 +109,19 @@ export class Seeder {
         }
     }
 
-    private async createUsers(project_group_id): Promise<object> {
-        const users = {}
-        for await (const role of this.roles) {
-            const userDetails = await this.client.createUser()
-            await this.client.addPermission(project_group_id, userDetails.username, role)
-            console.info(`Added ${role} permission to username: ${userDetails.username}`)
-            users[role] = {
-                username: userDetails.username,
-                password: 'Pa$s1word'
-            }
-        }
-        return users
-    }
+    // private async createUsers(project_group_id): Promise<object> {
+    //     const users = {}
+    //     for await (const role of this.roles) {
+    //         const userDetails = await this.client.createUser()
+    //         await this.client.addPermission(project_group_id, userDetails.username, role)
+    //         console.info(`Added ${role} permission to username: ${userDetails.username}`)
+    //         users[role] = {
+    //             username: userDetails.username,
+    //             password: 'Pa$s1word'
+    //         }
+    //     }
+    //     return users
+    // }
 
     // public async deactivateProjectGroup(project_group_id: string): Promise<boolean> {
     //     return await this.client.activateOrDeactivateProjectGroup(project_group_id, false)
@@ -135,24 +151,31 @@ class APIUtility {
                     username: userName,
                     password: password
                 }
-            })
+            });
             const accessToken = resp?.data?.access_token
             axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
         } catch (err: any) {
-            throw err?.response?.data?.message
+            throw err;
         }
     }
 
-    async createProjectGroup(): Promise<string> {
+    async createProjectGroup(): Promise<{
+        tdei_project_group_id: string;
+        name: string;
+    }> {
         try {
+            let data: any = Utility.getRandomProjectGroupUpload();
             const resp = await axios({
                 method: 'post',
                 url: '/api/v1/project-group',
-                data: Utility.getRandomProjectGroupUpload()
-            })
-            return resp?.data?.data
+                data: data
+            });
+
+            data.tdei_project_group_id = resp?.data?.data;
+
+            return { tdei_project_group_id: data.tdei_project_group_id, name: data.project_group_name };
         } catch (err: any) {
-            throw err?.response?.data?.message
+            throw err;
         }
     }
 
@@ -165,7 +188,7 @@ class APIUtility {
             })
             return resp?.data?.data
         } catch (err: any) {
-            throw err?.response?.data?.message
+            throw err;
         }
     }
 
@@ -183,20 +206,22 @@ class APIUtility {
             return resp?.data?.data
         } catch (err: any) {
             console.error(err)
-            throw err?.response?.data?.message
+            throw err;
         }
     }
 
-    async createService(project_group_id: string, service_type: string): Promise<string> {
+    async createService(project_group_id: string, service_type: string): Promise<any> {
         try {
+            let data: any = Utility.getServiceUpload(project_group_id, service_type);
             const resp = await axios({
                 method: 'post',
                 url: '/api/v1/service',
-                data: Utility.getServiceUpload(project_group_id, service_type)
+                data: data
             })
-            return resp?.data?.data
+            data.tdei_service_id = resp?.data?.data;
+            return { tdei_service_id: data.tdei_service_id, service_type: data.service_type, service_name: data.service_name, tdei_project_group_id: data.tdei_project_group_id };
         } catch (err: any) {
-            throw err?.response?.data?.message
+            throw err;
         }
     }
 
@@ -211,7 +236,7 @@ class APIUtility {
             })
             return resp?.data
         } catch (err: any) {
-            throw err?.response?.data
+            throw err;
         }
     }
 
@@ -225,7 +250,7 @@ class APIUtility {
             console.log(resp)
             return resp?.data;
         } catch (err: any) {
-            throw err?.response?.data?.message;
+            throw err;
         }
     }
 }

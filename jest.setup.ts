@@ -3,14 +3,32 @@ import * as matchers from 'jest-extended';
 expect.extend(matchers);
 expect.extend({
     toBeNullOrString(received) {
-        if (received === null || typeof received === 'string') {
+        const pass = received === undefined || received === null || typeof received === 'string';
+        if (pass) {
             return {
-                message: () => `expected ${received} not to be null or a string`,
+                message: () => `expected ${received} not to be absent, null, or a string`,
                 pass: true,
             };
         } else {
             return {
-                message: () => `expected ${received} to be null or a string`,
+                message: () => `expected ${received} to be absent, null, or a string`,
+                pass: false,
+            };
+        }
+    },
+});
+
+expect.extend({
+    toBeAbsentOrNullOrString(received) {
+        const pass = received === undefined || received === null || typeof received === 'string';
+        if (pass) {
+            return {
+                message: () => `expected ${received} not to be absent, null, or a string`,
+                pass: true,
+            };
+        } else {
+            return {
+                message: () => `expected ${received} to be absent, null, or a string`,
                 pass: false,
             };
         }
