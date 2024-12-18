@@ -6,9 +6,9 @@ on:
       - "**"
     # Remove the line above to run when pushing to master
   pull_request:
-    branches: [main, dev]
+    branches: [ main, dev ]
   repository_dispatch:
-    types: [run_api_tests]
+    types: [ run_api_tests ]
   schedule:
     - cron: "0 0 * * 0"
 
@@ -113,34 +113,35 @@ jobs:
           echo -e "\nCoverage Report\n" >> $log_file
           coverage report >> $log_file
 
+
       - name: Determine output folder
         id: set_output_folder
         run: |
           if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
-            branch_name=$GITHUB_BASE_REF
+          branch_name=$GITHUB_BASE_REF
           else
-            branch_name=$GITHUB_REF_NAME
+          branch_name=$GITHUB_REF_NAME
           fi
           if [[ $branch_name == "main" ]]; then
-            echo "output_folder=prod" >> $GITHUB_ENV
+          echo "output_folder=prod" >> $GITHUB_ENV
           elif [[ $branch_name == "stage" ]]; then
-            echo "output_folder=stage" >> $GITHUB_ENV
+          echo "output_folder=stage" >> $GITHUB_ENV
           elif [[ $branch_name == "dev" ]]; then
-            echo "output_folder=dev" >> $GITHUB_ENV
+          echo "output_folder=dev" >> $GITHUB_ENV
           else
-            echo "Unknown branch: $branch_name"
-            exit 1
+          echo "Unknown branch: $branch_name"
+          exit 1
           fi
 
-        - name: Upload report to Azure
-          uses: LanceMcCarthy/Action-AzureBlobUpload@v2
-          with:
-            source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
-            destination_folder: 'test-${{ env.TIMESTAMP }}.log'
-            connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-            container_name: 'api-tester'
-            clean_destination_folder: false
-            delete_if_exists: false
+          - name: Upload report to Azure
+            uses: LanceMcCarthy/Action-AzureBlobUpload@v2
+            with:
+              source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
+              destination_folder: 'test-${{ env.TIMESTAMP }}.log'
+              connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+              container_name: 'api-tester'
+              clean_destination_folder: false
+              delete_if_exists: false
 
 
       - name: send email notification
