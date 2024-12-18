@@ -102,6 +102,47 @@ jobs:
           " > upload_to_blob.py
           python3 upload_to_blob.py
 
+      - name: Run tests with coverage
+        run: |
+          timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
+          mkdir -p test_results
+          log_file="test_results/${timestamp}_report.log"
+          echo -e "\nTest Cases Report Report\n" >> $log_file
+          # Run the tests and append output to the log file
+          python -m coverage run --source=src/python_ms_core -m unittest discover -v tests/unit_tests >> $log_file 2>&1
+          echo -e "\nCoverage Report\n" >> $log_file
+          coverage report >> $log_file
+
+      - name: Determine output folder
+        id: set_output_folder
+        run: |
+          if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
+            branch_name=$GITHUB_BASE_REF
+          else
+            branch_name=$GITHUB_REF_NAME
+          fi
+          if [[ $branch_name == "main" ]]; then
+            echo "output_folder=prod" >> $GITHUB_ENV
+          elif [[ $branch_name == "stage" ]]; then
+            echo "output_folder=stage" >> $GITHUB_ENV
+          elif [[ $branch_name == "dev" ]]; then
+            echo "output_folder=dev" >> $GITHUB_ENV
+          else
+            echo "Unknown branch: $branch_name"
+            exit 1
+          fi
+
+        - name: Upload report to Azure
+          uses: LanceMcCarthy/Action-AzureBlobUpload@v2
+          with:
+            source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
+            destination_folder: 'test-${{ env.TIMESTAMP }}.log'
+            connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+            container_name: 'api-tester'
+            clean_destination_folder: false
+            delete_if_exists: false
+
+
       - name: send email notification
         if: always()
         uses: dawidd6/action-send-mail@v3

@@ -1577,6 +1577,81 @@ describe('Dataset Road Tag Request', () => {
 
 });
 
+let datasetInclineTagJobId = '1';
+describe('Dataset Incline Tag Request', () => {
+
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+
+    let bboxRequest = await oswAPI.datasetTagIncline(apiInput.osw.test_dataset);
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+    datasetInclineTagJobId = bboxRequest.data!;
+    console.log("incline tag job_id", datasetInclineTagJobId);
+  });
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = await oswAPI.datasetTagIncline(apiInput.osw.test_dataset);
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+  });
+
+  it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    let bboxRequest = await oswAPI.datasetTagIncline(apiInput.osw.test_dataset);
+
+    expect(bboxRequest.status).toBe(202);
+    expect(bboxRequest.data).toBeNumber();
+  });
+
+  it('Admin | authenticated , When request made with publish target dataset, should return with bad request', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetTagIncline(apiInput.osw.test_dataset);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('Admin | authenticated , When request made with invalid source dataset, should return with dataset not found error', async () => {
+
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetTagIncline("invalid_source");
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | authenticated , When request made with invalid target dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let bboxRequest = oswAPI.datasetTagIncline(apiInput.osw.test_dataset);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+
+    let bboxRequest = oswAPI.datasetTagIncline(apiInput.osw.test_dataset);
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+  it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+
+    let bboxRequest = oswAPI.datasetTagIncline(apiInput.osw.test_dataset, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
+
+    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 403 } });
+  });
+
+});
+
 describe('Check dataset-road-tag request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
 
