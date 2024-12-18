@@ -102,17 +102,6 @@ jobs:
           " > upload_to_blob.py
           python3 upload_to_blob.py
 
-      - name: Run tests with coverage
-        run: |
-          timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
-          mkdir -p test_results
-          log_file="test_results/${timestamp}_report.log"
-          echo -e "\nTest Cases Report Report\n" >> $log_file
-          # Run the tests and append output to the log file
-          python -m coverage run --source=src/python_ms_core -m unittest discover -v tests/unit_tests >> $log_file 2>&1
-          echo -e "\nCoverage Report\n" >> $log_file
-          coverage report >> $log_file
-
 
       - name: Determine output folder
         id: set_output_folder
@@ -133,15 +122,15 @@ jobs:
           exit 1
           fi
 
-          - name: Upload report to Azure
-            uses: LanceMcCarthy/Action-AzureBlobUpload@v2
-            with:
-              source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
-              destination_folder: 'test-${{ env.TIMESTAMP }}.log'
-              connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-              container_name: 'api-tester'
-              clean_destination_folder: false
-              delete_if_exists: false
+      - name: Upload report to Azure
+        uses: LanceMcCarthy/Action-AzureBlobUpload@v2
+        with:
+          source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
+          destination_folder: 'test-${{ env.TIMESTAMP }}.log'
+          connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          container_name: 'api-tester'
+          clean_destination_folder: false
+          delete_if_exists: false
 
 
       - name: send email notification
