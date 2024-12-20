@@ -5,8 +5,7 @@
             "pre_release_dataset": "26f0ec82-1434-4944-ae8c-dea8aa5e0075",
             "test_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
             "spatial_target_dataset": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
-            "spatial_source_dataset": "0d661b69495d47fb838862edf699fe09",
-            "pre_release_dataset_for_incline": "411d0d71-6735-43a9-99d5-0e0406c46f3b"
+            "spatial_source_dataset": "0d661b69495d47fb838862edf699fe09"
         },
         "flex": {
             "published_dataset": "309dea0b-0fb2-4c19-a771-9f3719b48030",

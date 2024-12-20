@@ -460,6 +460,119 @@ describe("Edit Metadata API", () => {
   }, 30000);
 });
 
+let datasetInclineTagJobId = '1';
+describe('Dataset Incline Tag Request', () => {
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let inclineRequest = await oswAPI.datasetTagIncline(uploadedDatasetId_PreRelease_admin);
+
+    expect(inclineRequest.status).toBe(202);
+    expect(inclineRequest.data).toBeNumber();
+    datasetInclineTagJobId = inclineRequest.data!;
+  });
+
+  it('Admin | authenticated , When request made with invalid dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let inclineRequest = oswAPI.datasetTagIncline('invalid_dataset_id');
+
+    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | authenticated , When request made with empty source dataset, should return with dataset not found error', async () => {
+
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let inclineRequest = oswAPI.datasetTagIncline(" ");
+
+    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+
+    let inclineRequest = oswAPI.datasetTagIncline(uploadedDatasetId_PreRelease_admin);
+
+    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+  it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+
+    let inclineRequest = oswAPI.datasetTagIncline(uploadedDatasetId_PreRelease_admin, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
+
+    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 403 } });
+  });
+});
+
+describe('Check dataset-incline request job running status', () => {
+  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+  it('Admin | Authenticated, When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    await new Promise((r) => setTimeout(r, 40000));
+    let formatStatus = await generalAPI.listJobs('', datasetInclineTagJobId, true);
+
+    expect(formatStatus.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            job_id: expect.toBeOneOf([`${datasetInclineTagJobId}`]),
+            status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
+            progress: expect.objectContaining({
+              total_stages: expect.any(Number),
+              completed_stages: expect.any(Number),
+              current_stage: expect.any(String)
+            })
+          })
+        ])
+    );
+  }, 45000);
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let uploadStatus = await generalAPI.listJobs('', datasetInclineTagJobId, true);
+    expect(uploadStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let bboxStatusResponse = generalAPI.listJobs('', datasetInclineTagJobId, true);
+
+    await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+describe('Download Incline request file', () => {
+
+  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    await new Promise((r) => setTimeout(r, 10000));
+
+    let response = await generalAPI.jobDownload(datasetInclineTagJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(1);
+    }
+  }, 20000);
+
+  it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let downloadResponse = generalAPI.jobDownload(datasetInclineTagJobId);
+
+    await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+});
+
 describe('Publish the OSW dataset', () => {
   it('Admin | When passed with valid input having null valid_from & valid_to metadata, should respond with required field error', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
@@ -1550,119 +1663,6 @@ describe('Download Dataset Road Tag request file', () => {
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
 
-});
-
-let datasetInclineTagJobId = '1';
-describe('Dataset Incline Tag Request', () => {
-
-  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
-    let oswAPI = new OSWApi(adminConfiguration);
-    let inclineRequest = await oswAPI.datasetTagIncline(apiInput.osw.pre_release_dataset_for_incline);
-
-    expect(inclineRequest.status).toBe(202);
-    expect(inclineRequest.data).toBeNumber();
-    datasetInclineTagJobId = inclineRequest.data!;
-  });
-
-  it('Admin | authenticated , When request made with invalid dataset, should return with dataset not found error', async () => {
-    let oswAPI = new OSWApi(adminConfiguration);
-
-    let inclineRequest = oswAPI.datasetTagIncline('invalid_dataset_id');
-
-    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 404 } });
-  });
-
-  it('Admin | authenticated , When request made with empty source dataset, should return with dataset not found error', async () => {
-
-    let oswAPI = new OSWApi(adminConfiguration);
-
-    let inclineRequest = oswAPI.datasetTagIncline(" ");
-
-    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 404 } });
-  });
-
-  it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
-    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
-
-    let inclineRequest = oswAPI.datasetTagIncline(apiInput.osw.pre_release_dataset_for_incline);
-
-    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 401 } });
-  });
-
-  it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
-    let oswAPI = new OSWApi(apiKeyConfiguration);
-
-    let inclineRequest = oswAPI.datasetTagIncline(apiInput.osw.pre_release_dataset_for_incline, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
-
-    await expect(inclineRequest).rejects.toMatchObject({ response: { status: 403 } });
-  });
-});
-
-describe('Check dataset-incline request job running status', () => {
-  jest.retryTimes(1, { logErrorsBeforeRetry: true });
-  it('Admin | Authenticated, When request made, should respond with job status', async () => {
-    let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 40000));
-    let formatStatus = await generalAPI.listJobs('', datasetInclineTagJobId, true);
-
-    expect(formatStatus.data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            job_id: expect.toBeOneOf([`${datasetInclineTagJobId}`]),
-            status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
-            progress: expect.objectContaining({
-              total_stages: expect.any(Number),
-              completed_stages: expect.any(Number),
-              current_stage: expect.any(String)
-            })
-          })
-        ])
-    );
-  }, 45000);
-
-  it('Admin | Authenticated , When request made, should respond with job status', async () => {
-    let generalAPI = new CommonAPIsApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs('', datasetInclineTagJobId, true);
-    expect(uploadStatus.status).toBe(200);
-  }, 25000);
-
-  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
-    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
-
-    let bboxStatusResponse = generalAPI.listJobs('', datasetInclineTagJobId, true);
-
-    await expect(bboxStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
-  });
-
-});
-
-describe('Download Incline request file', () => {
-
-  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 10000));
-
-    let response = await generalAPI.jobDownload(datasetInclineTagJobId, { responseType: 'arraybuffer' });
-    const data: any = response.data;
-    const contentType = response.headers['content-type'];
-
-    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
-    expect(response.data).not.toBeNull();
-    expect(response.status).toBe(200);
-    if (contentType === "application/zip") {
-      const zip = new AdmZip(data);
-      const entries = zip.getEntries();
-      expect(entries.length).toBeGreaterThanOrEqual(1);
-    }
-  }, 20000);
-
-  it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
-    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
-
-    let downloadResponse = generalAPI.jobDownload(datasetInclineTagJobId);
-
-    await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
-  });
 });
 
 let datasetUnionJobId = '1';
