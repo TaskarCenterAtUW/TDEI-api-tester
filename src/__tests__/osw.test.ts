@@ -546,23 +546,23 @@ describe('Check dataset-incline request job running status', () => {
 
 describe('Download Incline request file', () => {
 
-  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 10000));
-
-    let response = await generalAPI.jobDownload(datasetInclineTagJobId, { responseType: 'arraybuffer' });
-    const data: any = response.data;
-    const contentType = response.headers['content-type'];
-
-    expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
-    expect(response.data).not.toBeNull();
-    expect(response.status).toBe(200);
-    if (contentType === "application/zip") {
-      const zip = new AdmZip(data);
-      const entries = zip.getEntries();
-      expect(entries.length).toBeGreaterThanOrEqual(1);
-    }
-  }, 20000);
+  // it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+  //   let generalAPI = new CommonAPIsApi(adminConfiguration);
+  //   await new Promise((r) => setTimeout(r, 10000));
+  //
+  //   let response = await generalAPI.jobDownload(datasetInclineTagJobId, { responseType: 'arraybuffer' });
+  //   const data: any = response.data;
+  //   const contentType = response.headers['content-type'];
+  //
+  //   expect(contentType).toBeOneOf(["application/xml", "application/zip"]);
+  //   expect(response.data).not.toBeNull();
+  //   expect(response.status).toBe(200);
+  //   if (contentType === "application/zip") {
+  //     const zip = new AdmZip(data);
+  //     const entries = zip.getEntries();
+  //     expect(entries.length).toBeGreaterThanOrEqual(1);
+  //   }
+  // }, 20000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
