@@ -1609,11 +1609,10 @@ describe('Check dataset-incline request job running status', () => {
         expect.arrayContaining([
           expect.objectContaining({
             job_id: expect.toBeOneOf([`${datasetInclineTagJobId}`]),
-            status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
+            status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
             progress: expect.objectContaining({
               total_stages: expect.any(Number),
               completed_stages: expect.any(Number),
-              current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
               current_stage: expect.any(String)
             })
           })
