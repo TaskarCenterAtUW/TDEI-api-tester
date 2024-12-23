@@ -6,9 +6,9 @@ on:
       - "**"
     # Remove the line above to run when pushing to master
   pull_request:
-    branches: [main, dev]
+    branches: [ main, dev ]
   repository_dispatch:
-    types: [run_api_tests]
+    types: [ run_api_tests ]
   schedule:
     - cron: "0 0 * * 0"
 
@@ -80,6 +80,7 @@ jobs:
           echo "
           from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
           import os
+          import shutil
 
           connect_str = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
           account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
@@ -96,11 +97,44 @@ jobs:
           file_path = '/home/runner/work/TDEI-api-tester/TDEI-api-tester/test-report.html'
           timestamp = os.getenv('TIMESTAMP')
           blob_name = f'test-report-{timestamp}.html'
+          renamed_file=f'{log_dir}/{blob_name}'
+          shutil.copyfile(file_path, renamed_file)
           blob_client = container_client.get_blob_client(blob_name)
           with open(file_path, 'rb') as data:
               blob_client.upload_blob(data, overwrite=True)
           " > upload_to_blob.py
           python3 upload_to_blob.py
+
+
+      - name: Determine output folder
+        id: set_output_folder
+        run: |
+          if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
+          branch_name=$GITHUB_BASE_REF
+          else
+          branch_name=$GITHUB_REF_NAME
+          fi
+          if [[ $branch_name == "main" ]]; then
+          echo "output_folder=prod" >> $GITHUB_ENV
+          elif [[ $branch_name == "stage" ]]; then
+          echo "output_folder=stage" >> $GITHUB_ENV
+          elif [[ $branch_name == "dev" ]]; then
+          echo "output_folder=dev" >> $GITHUB_ENV
+          else
+          echo "Unknown branch: $branch_name"
+          exit 1
+          fi
+
+      - name: Upload report to Azure
+        uses: LanceMcCarthy/Action-AzureBlobUpload@v2
+        with:
+          source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
+          destination_folder: '${{ env.output_folder }}'
+          connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          container_name: 'api-tester'
+          clean_destination_folder: false
+          delete_if_exists: false
+
 
       - name: send email notification
         if: always()

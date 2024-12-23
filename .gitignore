@@ -110,3 +110,4 @@ wallaby.js
 
 jest-html-reporters-attach
 seed.data.json
+.idea/
