@@ -19,7 +19,8 @@
             "poc": "adella.legros3@gmail.com",
             "flex_data_generator": "reilly_connelly@yahoo.com",
             "pathways_data_generator": "emiliano.terry@hotmail.com",
-            "osw_data_generator": "rhianna.runolfsson@yahoo.com"
+            "osw_data_generator": "rhianna.runolfsson@yahoo.com",
+            "api_key_tester": "apikeytester@mailinator.com"
         }
     },
     "stage": {
@@ -42,7 +43,8 @@
             "poc": "frederic71@gmail.com",
             "flex_data_generator": "vern66@gmail.com",
             "pathways_data_generator": "elvera.keeling@gmail.com",
-            "osw_data_generator": "alyce_kilback60@yahoo.com"
+            "osw_data_generator": "alyce_kilback60@yahoo.com",
+            "api_key_tester": "apikeytester@mailinator.com"
         }
     },
     "prod": {
@@ -65,7 +67,8 @@
             "poc": "adella.legros3@gmail.com",
             "flex_data_generator": "reilly_connelly@yahoo.com",
             "pathways_data_generator": "emiliano.terry@hotmail.com",
-            "osw_data_generator": "rhianna.runolfsson@yahoo.com"
+            "osw_data_generator": "rhianna.runolfsson@yahoo.com",
+            "api_key_tester": "apikeytester@mailinator.com"
         }
     }
 }
