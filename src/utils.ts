@@ -89,6 +89,23 @@ export class Utility {
             basePath: environment.system.baseUrl
         });
     }
+
+    static getAPITesterConfiguration(): Configuration {
+        return new Configuration({
+            username: this.seedData.users.api_key_tester.username,
+            password: this.seedData.users.api_key_tester.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
+    static getApiTesterKeyConfiguration() {
+        let configuration = new Configuration({
+            basePath: environment.system.baseUrl,
+            apiKey: this.seedData.api_key_tester
+        });
+        return configuration;
+    }
+
     static addAuthZHeader(accessToken) {
         return { Authorization: `Bearer ${accessToken}` };
     }
