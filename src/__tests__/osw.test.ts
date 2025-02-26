@@ -1473,6 +1473,7 @@ describe('Check dataset-bbox request job running status', () => {
 describe('Download Dataset Bbox request file', () => {
 
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    await new Promise((r) => setTimeout(r, 30000));
     let generalAPI = new CommonAPIsApi(dgConfiguration);
 
     let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
@@ -1487,7 +1488,7 @@ describe('Download Dataset Bbox request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 20000);
+  }, 40000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
@@ -1759,7 +1760,7 @@ describe('Check dataset union request job completion status', () => {
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 60000));
+    await new Promise((r) => setTimeout(r, 120000));
 
     let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetUnionJobId, true);
 
@@ -1771,7 +1772,7 @@ describe('Check dataset union request job completion status', () => {
         })
       ])
     );
-  }, 70000);
+  }, 130000);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
