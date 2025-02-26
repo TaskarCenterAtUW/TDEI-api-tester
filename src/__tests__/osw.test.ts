@@ -1985,7 +1985,7 @@ describe('Download Spatial join request file', () => {
 
   it('Admin | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 60000));
+    await new Promise((r) => setTimeout(r, 40000));
     let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
@@ -1998,7 +1998,7 @@ describe('Download Spatial join request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 30000);
+  }, 50000);
 
   it('API-Key | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
@@ -2014,7 +2014,7 @@ describe('Download Spatial join request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 30000);
+  });
 
   it('Admin | un-authenticated , When request made with job_id, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
