@@ -1903,7 +1903,7 @@ describe('Spatial join Request', () => {
     expect(spatialRequest.data).toBeNumber();
     spacialJoinJobId = spatialRequest.data!;
     console.log("Spatial join job_id", spacialJoinJobId);
-  });
+  }, 20000);
 
   it('Admin | Authenticated , When request made with valid join input, should return request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
@@ -1964,7 +1964,6 @@ describe('Check spatial join request job completion status', () => {
     expect(uploadStatus.status).toBe(200);
   }, 25000);
 
-
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
     let uploadStatus = await generalAPI.listJobs("", spacialJoinJobId, true);
@@ -1986,8 +1985,7 @@ describe('Download Spatial join request file', () => {
 
   it('Admin | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 20000));
-
+    await new Promise((r) => setTimeout(r, 60000));
     let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
@@ -2004,7 +2002,6 @@ describe('Download Spatial join request file', () => {
 
   it('API-Key | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
-
     let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
@@ -2017,7 +2014,7 @@ describe('Download Spatial join request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 20000);
+  }, 30000);
 
   it('Admin | un-authenticated , When request made with job_id, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());

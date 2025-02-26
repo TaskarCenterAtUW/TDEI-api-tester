@@ -88,18 +88,14 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
         let derived_from_dataset_id = '';
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
-            expect(uploadFileResponse.status).toBe(202);
-            expect(uploadFileResponse.data).not.toBeNull();
-            uploadedJobId = uploadFileResponse.data;
-            console.log("uploaded job_id", uploadedJobId);
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        expect(uploadFileResponse.status).toBe(202);
+        expect(uploadFileResponse.data).not.toBeNull();
+        uploadedJobId = uploadFileResponse.data;
+        console.log("uploaded job_id", uploadedJobId);
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000);
 
     it('POC | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
@@ -108,16 +104,12 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
         let derived_from_dataset_id = '';
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
-            expect(uploadFileResponse.status).toBe(202);
-            expect(uploadFileResponse.data).not.toBeNull();
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        expect(uploadFileResponse.status).toBe(202);
+        expect(uploadFileResponse.data).not.toBeNull();
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000);
 
     it('Admin | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
@@ -126,17 +118,13 @@ describe('Upload flex dataset', () => {
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
         let derived_from_dataset_id = '';
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = await flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, derived_from_dataset_id);
 
-            expect(uploadFileResponse.status).toBe(202);
-            expect(uploadFileResponse.data).not.toBeNull();
+        expect(uploadFileResponse.status).toBe(202);
+        expect(uploadFileResponse.data).not.toBeNull();
 
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000);
 
     it('Admin | Authenticated , When request made with dataset and invalid metafile, should return bad request with metadata validation errors', async () => {
@@ -144,16 +132,12 @@ describe('Upload flex dataset', () => {
         let metaToUpload = Utility.getInvalidMetadataBlob("flex");
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
-            expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
 
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000)
 
     it('Admin | Authenticated , When request made with invalid service id, should return service id not found', async () => {
@@ -161,16 +145,12 @@ describe('Upload flex dataset', () => {
         let metaToUpload = Utility.getMetadataBlob("flex");
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, "invalid_service_id", 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, "invalid_service_id")
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, "invalid_service_id", 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, "invalid_service_id")
 
-            expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
 
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000)
 
     it('Admin | Authenticated , When request made with invalid project id, should return project id not found', async () => {
@@ -178,16 +158,12 @@ describe('Upload flex dataset', () => {
         let metaToUpload = Utility.getMetadataBlob("flex");
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, "invalid_tdei_project_group_id", service_id)
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, "invalid_tdei_project_group_id", service_id)
 
-            expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
 
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000);
 
     it('Admin | Authenticated , When request made with invalid derived dataset id, should return derived dataset id not found', async () => {
@@ -195,16 +171,12 @@ describe('Upload flex dataset', () => {
         let metaToUpload = Utility.getMetadataBlob("flex");
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, "Invalid-derived-dataset-id");
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id, "Invalid-derived-dataset-id");
 
-            expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
 
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000);
 
     it('OSW Data Generator | Authenticated , When request made with valid inputs, should return unauthorized error', async () => {
@@ -212,16 +184,12 @@ describe('Upload flex dataset', () => {
         let metaToUpload = Utility.getMetadataBlob("flex");
         let changesetToUpload = Utility.getChangesetBlob();
         let dataset = Utility.getFlexBlob();
-        try {
-            const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
-            const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
+        const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, tdei_project_group_id, service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
+        const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
-            expect(await uploadFileResponse).rejects.toMatchObject({ response: { status: 403 } });
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 403 } });
 
-            axios.interceptors.request.eject(uploadInterceptor);
-        } catch (e) {
-            console.log(e);
-        }
+        axios.interceptors.request.eject(uploadInterceptor);
     }, 20000);
 
     it('Admin | un-authenticated , When request made with dataset, metadata and changeset file, should respond with unauthenticated request', async () => {

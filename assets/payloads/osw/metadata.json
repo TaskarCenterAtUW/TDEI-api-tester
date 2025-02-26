@@ -11,7 +11,7 @@
   "dataset_detail": {
     "name": "Seattle Downtown",
     "description": "Seattle Downtown",
-    "version": "v1.0",
+    "version": "1.0",
     "custom_metadata": null,
     "collected_by": "Paul John",
     "collection_date": "2023-01-01T00:00:00",
