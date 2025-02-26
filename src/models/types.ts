@@ -9,6 +9,7 @@ export interface Users {
     flex_data_generator: Credentials
     pathways_data_generator: Credentials
     osw_data_generator: Credentials
+    api_key_tester: Credentials
 }
 
 
@@ -25,4 +26,5 @@ export interface SeedData {
     }];
     users: Users;
     api_key: string;
+    api_key_tester: string
 }

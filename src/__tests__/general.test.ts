@@ -15,6 +15,8 @@ let tdei_service_id_osw: string = "";
 let tdei_service_id_flex: string = "";
 let tdei_service_id_pathways: string = "";
 let apiInput: any = {};
+let apiTesterConfiguration: Configuration = {};
+let apiTesterKeyConfiguration: Configuration = {};
 
 const cloneDatasetRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, tdei_project_group_id: string, tdei_service_id: string, datasetName: string) => {
   if (
@@ -35,12 +37,17 @@ beforeAll(async () => {
   flexDgConfiguration = Utility.getFlexDataGeneratorConfiguration();
   pathwaysDgConfiguration = Utility.getPathwaysDataGeneratorConfiguration();
   oswDgConfiguration = Utility.getOSWDataGeneratorConfiguration();
+  apiTesterConfiguration = Utility.getAPITesterConfiguration();
+  apiTesterKeyConfiguration = Utility.getApiTesterKeyConfiguration();
+  
 
   await Utility.setAuthToken(adminConfiguration);
   await Utility.setAuthToken(pocConfiguration);
   await Utility.setAuthToken(flexDgConfiguration);
   await Utility.setAuthToken(pathwaysDgConfiguration);
   await Utility.setAuthToken(oswDgConfiguration);
+  await Utility.setAuthToken(apiTesterConfiguration);
+  
 
   let seedData = Utility.seedData;
   tdei_project_group_id = seedData.project_group.tdei_project_group_id;
@@ -2123,4 +2130,108 @@ describe('Data metrics', () => {
     await expect(response).rejects.toMatchObject({ response: { status: 401 } });
 
   }, 30000);
+});
+
+describe('Service metrics', () => {
+
+  it('Admin | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(adminConfiguration);
+
+    let requestResponse = await metricsApi.serviceMetrics(tdei_project_group_id);
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('POC | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(pocConfiguration);
+
+    let requestResponse = await metricsApi.serviceMetrics(tdei_project_group_id);
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('API-Key | Authenticated, When request made, expect to return success response', async () => {
+    let metricsApi = new MetricsApi(apiKeyConfiguration);
+
+    let requestResponse = await metricsApi.serviceMetrics(tdei_project_group_id);
+    expect(requestResponse.status).toBe(200);
+
+  }, 30000);
+
+  it('Admin | un-authenticated, When request made, should respond with unauthenticated request', async () => {
+    let metricsApi = new MetricsApi(Utility.getAdminConfiguration());
+
+    const response = metricsApi.serviceMetrics(tdei_project_group_id);
+    await expect(response).rejects.toMatchObject({ response: { status: 401 } });
+
+  }, 30000);
+
+  it('Admin | Authenticated, When request made, expect to return bad request response', async () => {
+    let metricsApi = new MetricsApi(adminConfiguration);
+
+    const response = metricsApi.serviceMetrics('invalid project group id');
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+
+  }, 30000);
+
+  it('POC | Authenticated, When request made, expect to return bad request response', async () => {
+    let metricsApi = new MetricsApi(pocConfiguration);
+
+    const response = metricsApi.serviceMetrics('invalid project group id');
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+
+  }, 30000);
+
+  it('API-Key | Authenticated, When request made, expect to return bad request response', async () => {
+    let metricsApi = new MetricsApi(apiKeyConfiguration);
+
+    const response = metricsApi.serviceMetrics('invalid project group id');
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+
+  }, 30000);
+
+  it('Admin | Authenticated, When request made, expect to return not found response', async () => {
+    let metricsApi = new MetricsApi(adminConfiguration);
+    
+    const response = metricsApi.serviceMetrics('9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d');
+    await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  }, 30000);
+
+  it('POC | Authenticated, When request made, expect to return not found response', async () => {
+    let metricsApi = new MetricsApi(pocConfiguration);
+
+    const response = metricsApi.serviceMetrics('9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d');
+    await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  }, 30000);
+
+  it('API-Key | Authenticated, When request made, expect to return not found response', async () => {
+    let metricsApi = new MetricsApi(apiKeyConfiguration);
+
+    const response = metricsApi.serviceMetrics('9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d');
+    await expect(response).rejects.toMatchObject({ response: { status: 404 } });
+
+  }, 30000);
+
+});
+
+describe('regenerateApiKey', () => {
+
+  it('POC | Authenticated, When request made, expect to return success response', async () => {
+    let authApi = new AuthenticationApi(apiTesterConfiguration);
+
+    let respone = await authApi.regenerateApiKey();
+    expect(respone.status).toBe(200);
+    
+  }, 30000);
+
+  it('API-Key | Authenticated, When request made with same api key, expect to return unauthorizes response', async () => {
+    let authApi = new AuthenticationApi(apiTesterKeyConfiguration);
+
+    const response = authApi.regenerateApiKey();
+    await expect(response).rejects.toMatchObject({ response: { status: 401 } });
+
+  }, 30000);
+
 });

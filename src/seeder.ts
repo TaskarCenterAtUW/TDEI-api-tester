@@ -37,6 +37,11 @@ export class Seeder {
                 seedData.users = await this.assignUserRoles(project_group.tdei_project_group_id)
                 let userProfile = (await this.getUserProfile((seedData.users as Users).poc.username));
                 seedData.api_key = userProfile.apiKey;
+                if (seedData.users.api_key_tester) {
+                    let apiTesterProfile = await this.getUserProfile(seedData.users.api_key_tester.username);
+                    seedData.api_key_tester = apiTesterProfile.apiKey;
+                }
+
                 await this.writeFile(seedData);
                 console.info('Seeding complete');
                 return seedData;
@@ -99,6 +104,15 @@ export class Seeder {
                 console.info(`Added ${role} permission to username: ${users[role]}`)
                 usersDictionary[role] = {
                     username: users[role],
+                    password: 'Pa$s1word'
+                }
+            }
+            // Assugn api_key_tester user to poc
+            if (users.api_key_tester) {
+                await this.client.addPermission(project_group_id, users.api_key_tester, 'poc')
+                console.info(`Added poc permission to username: ${users.api_key_tester}`)
+                usersDictionary['api_key_tester'] = {
+                    username: users.api_key_tester,
                     password: 'Pa$s1word'
                 }
             }
@@ -247,7 +261,6 @@ class APIUtility {
                 method: 'get',
                 url: '/api/v1/user-profile?user_name=' + user_name,
             })
-            console.log(resp)
             return resp?.data;
         } catch (err: any) {
             throw err;
