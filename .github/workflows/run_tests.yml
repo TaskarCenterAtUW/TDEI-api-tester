@@ -60,16 +60,21 @@ jobs:
             echo "${{ secrets.STAGE_ENV_FILE }}" > .env
           fi
 
+      - name: Set TIMESTAMP
+        run: |
+          # Save the timestamp as an environment variable for reuse in subsequent steps.
+          echo "TIMESTAMP=$(date '+%d.%m.%Y_%H.%M.%S')" >> $GITHUB_ENV
+
       - name: Run tests with coverage
         run: |
-          timestamp=$(date '+%d.%m.%Y_%H.%M.%S')
+          # Use the TIMESTAMP variable from the environment.
           mkdir -p test_results
-          log_file="test_results/${timestamp}_report.log"
-          echo -e "\nTest Cases Report\n" >> $log_file
+          log_file="test_results/${TIMESTAMP}_report.log"
+          echo -e "\nTest Cases Report\n" >> "$log_file"
           # Run the tests and append output to the log file
-          npm run test >> $log_file 2>&1
-          # Copy and rename the generated test report with a timestamp
-          cp test-report.html test_results/test-report_${timestamp}.html
+          npm run test >> "$log_file" 2>&1
+          # Copy and rename the generated test report with the timestamp
+          cp test-report.html test_results/test-report_${TIMESTAMP}.html
 
       - name: Set Date Folder
         run: |
