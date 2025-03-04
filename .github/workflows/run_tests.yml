@@ -10,11 +10,8 @@ on:
   repository_dispatch:
     types: [ run_api_tests ]
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 0 * * 0"  # Runs every day at midnight (UTC)
 
-###############
-# Set the Job #
-###############
 jobs:
   UnitTest:
     name: Unit Test Cases
@@ -24,117 +21,70 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          # Full git history is needed to get a proper
-          # list of changed files within `super-linter`
+          # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
 
       - name: Install npm dependencies
         run: npm install
 
-      - name: Create env file
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: Create Test Log Directory
-        run: |
-          echo "Creating test log directory"
-          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
-          LOG_DIR="unit-test-report-${TIMESTAMP}"
-          mkdir -p "$LOG_DIR"
-          echo "Test log directory created: $LOG_DIR"
-          ls -la "$LOG_DIR"
-
-      - name: Run unit test cases
-        run: |
-          echo "Starting test run"
-          LOG_DIR="unit-test-report-${{ env.TIMESTAMP }}"
-          LOG_FILE="${LOG_DIR}/test-${{ env.TIMESTAMP }}.log"
-          echo "Log directory: $LOG_DIR"
-          echo "Log file: $LOG_FILE"
-          echo "Running npm test and capturing output..."
-          npm run test | tee "$LOG_FILE"
-          TEST_EXIT_CODE=${PIPESTATUS[0]}
-          echo "Test run complete. Log file created: $LOG_FILE"
-          cat "$LOG_FILE"
-          exit $TEST_EXIT_CODE
-
-      - name: Install Python and Azure Dependencies
-        if: always()
-        run: |
-          sudo apt-get update
-          sudo apt-get install python3-pip -y
-          pip3 install azure-storage-blob
-
-      # - name: Scrape HTML and Generate report HTML
-      #   if: always()
-      #   run: node scrape.js
-
-      - name: Upload Unit Test Report to Azure Blob Storage
-        if: always()
-        env:
-          AZURE_STORAGE_ACCOUNT_NAME: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
-          AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
-          AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
-        run: |
-          echo "
-          from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
-          import os
-          import shutil
-
-          connect_str = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
-          account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
-          blob_service_client = BlobServiceClient(account_url=f'https://{account_name}.blob.core.windows.net', credential=connect_str)
-          container_client = blob_service_client.get_container_client(os.getenv('AZURE_STORAGE_CONTAINER_NAME'))
-
-          log_dir = './unit-test-report-' + os.getenv('TIMESTAMP')
-          if os.path.exists(log_dir):
-            for file_name in os.listdir(log_dir):
-              local_file_name = os.path.join(log_dir, file_name)
-              blob_client = container_client.get_blob_client(file_name)
-              with open(local_file_name, 'rb') as data:
-                  blob_client.upload_blob(data, overwrite=True)
-          file_path = '/home/runner/work/TDEI-api-tester/TDEI-api-tester/test-report.html'
-          timestamp = os.getenv('TIMESTAMP')
-          blob_name = f'test-report-{timestamp}.html'
-          renamed_file=f'{log_dir}/{blob_name}'
-          shutil.copyfile(file_path, renamed_file)
-          blob_client = container_client.get_blob_client(blob_name)
-          with open(file_path, 'rb') as data:
-              blob_client.upload_blob(data, overwrite=True)
-          " > upload_to_blob.py
-          python3 upload_to_blob.py
-
-
       - name: Determine output folder
         id: set_output_folder
         run: |
+          # For pull_request events, use the base branch; otherwise use the current branch reference
           if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
-          branch_name=$GITHUB_BASE_REF
+            branch_name=$GITHUB_BASE_REF
           else
-          branch_name=$GITHUB_REF_NAME
+            branch_name=$GITHUB_REF_NAME
           fi
+          
           if [[ $branch_name == "main" ]]; then
-          echo "output_folder=prod" >> $GITHUB_ENV
-          elif [[ $branch_name == "stage" ]]; then
-          echo "output_folder=stage" >> $GITHUB_ENV
+            echo "output_folder=stage" >> $GITHUB_ENV
           elif [[ $branch_name == "dev" ]]; then
-          echo "output_folder=dev" >> $GITHUB_ENV
+            echo "output_folder=dev" >> $GITHUB_ENV
           else
-          echo "Unknown branch: $branch_name"
-          exit 1
+            echo "Unknown branch: $branch_name"
+            exit 1
           fi
+
+      - name: Create env file
+        run: |
+          # For pull requests, choose the env file based on the base branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
+              echo "${{ secrets.STAGE_ENV_FILE }}" > .env
+            else
+              echo "${{ secrets.ENV_FILE }}" > .env
+            fi
+          else
+            # For non-PR events (push, schedule, repository_dispatch), use the stage env file
+            echo "${{ secrets.STAGE_ENV_FILE }}" > .env
+          fi
+
+      - name: Run tests with coverage
+        run: |
+          timestamp=$(date '+%d.%m.%Y_%H.%M.%S')
+          mkdir -p test_results
+          log_file="test_results/${timestamp}_report.log"
+          echo -e "\nTest Cases Report\n" >> $log_file
+          # Run the tests and append output to the log file
+          npm run test >> $log_file 2>&1
+          # Copy and rename the generated test report with a timestamp
+          cp test-report.html test_results/test-report_${timestamp}.html
+
+      - name: Set Date Folder
+        run: |
+          DATE_FOLDER=$(date '+%d.%m.%Y')
+          echo "date_folder=${DATE_FOLDER}" >> $GITHUB_ENV
 
       - name: Upload report to Azure
         uses: LanceMcCarthy/Action-AzureBlobUpload@v2
         with:
-          source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
-          destination_folder: '${{ env.output_folder }}'
+          source_folder: 'test_results'
+          destination_folder: '${{ env.date_folder }}'
           connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
           container_name: 'api-tester'
           clean_destination_folder: false
           delete_if_exists: false
-
 
       - name: send email notification
         if: always()
@@ -147,7 +97,7 @@ jobs:
           subject: ${{ job.status }} - API Testing Report | ${{ github.event_name == 'pull_request' && format('{0}-{1}', 'PR', github.event.pull_request.title)  || 'Triggered via Schema Changed' }}
           to: gs-tdei-coreteam@gaussiansolutions.com
           cc: sureshd@gaussiansolutions.com
-          bcc: rakeshd@gaussiansolutions.com
+          bcc: rakeshd@gaussiansolutions.com, sujatam@gaussiansolutions.com
           from: Workflow Notification
           attachments: test-report.html
           html_body: |
