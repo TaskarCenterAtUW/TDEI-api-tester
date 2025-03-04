@@ -10,11 +10,8 @@ on:
   repository_dispatch:
     types: [ run_api_tests ]
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 0 * * 0"  # Runs every day at midnight (UTC)
 
-###############
-# Set the Job #
-###############
 jobs:
   UnitTest:
     name: Unit Test Cases
@@ -24,8 +21,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          # Full git history is needed to get a proper
-          # list of changed files within `super-linter`
+          # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
 
       - name: Install npm dependencies
@@ -34,14 +30,14 @@ jobs:
       - name: Determine output folder
         id: set_output_folder
         run: |
+          # For pull_request events, use the base branch; otherwise use the current branch reference
           if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
             branch_name=$GITHUB_BASE_REF
           else
             branch_name=$GITHUB_REF_NAME
           fi
+          
           if [[ $branch_name == "main" ]]; then
-            echo "output_folder=prod" >> $GITHUB_ENV
-          elif [[ $branch_name == "stage" ]]; then
             echo "output_folder=stage" >> $GITHUB_ENV
           elif [[ $branch_name == "dev" ]]; then
             echo "output_folder=dev" >> $GITHUB_ENV
@@ -52,6 +48,7 @@ jobs:
 
       - name: Create env file
         run: |
+          # For pull requests, choose the env file based on the base branch
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             if [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
               echo "${{ secrets.STAGE_ENV_FILE }}" > .env
@@ -59,31 +56,30 @@ jobs:
               echo "${{ secrets.ENV_FILE }}" > .env
             fi
           else
+            # For non-PR events (push, schedule, repository_dispatch), use the stage env file
             echo "${{ secrets.STAGE_ENV_FILE }}" > .env
           fi
-
 
       - name: Run tests with coverage
         run: |
           timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
           mkdir -p test_results
           log_file="test_results/${timestamp}_report.log"
-          echo -e "\nTest Cases Report Report\n" >> $log_file
+          echo -e "\nTest Cases Report\n" >> $log_file
           # Run the tests and append output to the log file
           npm run test >> $log_file 2>&1
+          # Copy and rename the generated test report with a timestamp
           cp test-report.html test_results/test-report_${timestamp}.html
-
 
       - name: Upload report to Azure
         uses: LanceMcCarthy/Action-AzureBlobUpload@v2
         with:
-          source_folder: 'unit-test-report-${{ env.TIMESTAMP }}'
+          source_folder: 'test_results'
           destination_folder: '${{ env.output_folder }}'
           connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
           container_name: 'api-tester'
           clean_destination_folder: false
           delete_if_exists: false
-
 
       - name: send email notification
         if: always()
