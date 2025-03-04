@@ -62,7 +62,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
+          timestamp=$(date '%d.%m.+%Y_%H.%M.%S')
           mkdir -p test_results
           log_file="test_results/${timestamp}_report.log"
           echo -e "\nTest Cases Report\n" >> $log_file
@@ -71,11 +71,16 @@ jobs:
           # Copy and rename the generated test report with a timestamp
           cp test-report.html test_results/test-report_${timestamp}.html
 
+      - name: Set Date Folder
+        run: |
+          DATE_FOLDER=$(date '+%d.%m.%Y')
+          echo "date_folder=${DATE_FOLDER}" >> $GITHUB_ENV
+
       - name: Upload report to Azure
         uses: LanceMcCarthy/Action-AzureBlobUpload@v2
         with:
           source_folder: 'test_results'
-          destination_folder: '${{ env.output_folder }}'
+          destination_folder: '${{ env.date_folder }}'
           connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
           container_name: 'api-tester'
           clean_destination_folder: false
@@ -92,7 +97,7 @@ jobs:
           subject: ${{ job.status }} - API Testing Report | ${{ github.event_name == 'pull_request' && format('{0}-{1}', 'PR', github.event.pull_request.title)  || 'Triggered via Schema Changed' }}
           to: gs-tdei-coreteam@gaussiansolutions.com
           cc: sureshd@gaussiansolutions.com
-          bcc: rakeshd@gaussiansolutions.com
+          bcc: rakeshd@gaussiansolutions.com, sujatam@gaussiansolutions.com
           from: Workflow Notification
           attachments: test-report.html
           html_body: |
