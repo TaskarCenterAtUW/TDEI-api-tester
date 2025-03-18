@@ -3,7 +3,7 @@ import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 
 const NULL_PARAM = void 0;
-
+let defaultUserConfiguration: Configuration = {};
 let adminConfiguration: Configuration = {};
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -32,6 +32,7 @@ const cloneDatasetRequestInterceptor = (request: InternalAxiosRequestConfig, tde
 
 beforeAll(async () => {
   adminConfiguration = Utility.getAdminConfiguration();
+  defaultUserConfiguration = Utility.getDefaultUserConfiguration();
   apiKeyConfiguration = Utility.getApiKeyConfiguration();
   pocConfiguration = Utility.getPocConfiguration();
   flexDgConfiguration = Utility.getFlexDataGeneratorConfiguration();
@@ -39,15 +40,16 @@ beforeAll(async () => {
   oswDgConfiguration = Utility.getOSWDataGeneratorConfiguration();
   apiTesterConfiguration = Utility.getAPITesterConfiguration();
   apiTesterKeyConfiguration = Utility.getApiTesterKeyConfiguration();
-  
+
 
   await Utility.setAuthToken(adminConfiguration);
+  await Utility.setAuthToken(defaultUserConfiguration);
   await Utility.setAuthToken(pocConfiguration);
   await Utility.setAuthToken(flexDgConfiguration);
   await Utility.setAuthToken(pathwaysDgConfiguration);
   await Utility.setAuthToken(oswDgConfiguration);
   await Utility.setAuthToken(apiTesterConfiguration);
-  
+
 
   let seedData = Utility.seedData;
   tdei_project_group_id = seedData.project_group.tdei_project_group_id;
@@ -59,6 +61,77 @@ beforeAll(async () => {
 }, 30000);
 
 describe('List Datasets', () => {
+  //MAN-05, MAN-06
+  it('Default-User | Authenticated , When request made with Pre-Release filter, should return empty list', async () => {
+    let oswAPI = new CommonAPIsApi(defaultUserConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,
+      // data_type,
+      "Pre-Release",// status,
+    );
+
+    expect(datasetFiles.status).toBe(200);
+
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+    expect(datasetFiles.data).toBeEmpty();
+  });
+
+  it('Default-User | Authenticated , When request made with Pre-Release dataset id filter which user does not have access, should return empty list', async () => {
+    let oswAPI = new CommonAPIsApi(defaultUserConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      apiInput.osw.pre_release_dataset
+    );
+
+    expect(datasetFiles.status).toBe(200);
+
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+    expect(datasetFiles.data).toBeEmpty();
+  });
+
+  it('POC | Authenticated , When request made with Pre-Release dataset id filter which user group owns, should return dataset list with details', async () => {
+    let oswAPI = new CommonAPIsApi(pocConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      apiInput.osw.pre_release_dataset
+    );
+
+    expect(datasetFiles.status).toBe(200);
+
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+    expect(datasetFiles.data).not.toBeEmpty();
+  });
 
   it('API-Key | Authenticated , When request made with no filters, should return list of dataset', async () => {
     let oswAPI = new CommonAPIsApi(apiKeyConfiguration);
@@ -2192,7 +2265,7 @@ describe('Service metrics', () => {
 
   it('Admin | Authenticated, When request made, expect to return not found response', async () => {
     let metricsApi = new MetricsApi(adminConfiguration);
-    
+
     const response = metricsApi.serviceMetrics('9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d');
     await expect(response).rejects.toMatchObject({ response: { status: 404 } });
 
@@ -2223,7 +2296,7 @@ describe('regenerateApiKey', () => {
 
     let respone = await authApi.regenerateApiKey();
     expect(respone.status).toBe(200);
-    
+
   }, 30000);
 
   it('API-Key | Authenticated, When request made with same api key, expect to return unauthorizes response', async () => {

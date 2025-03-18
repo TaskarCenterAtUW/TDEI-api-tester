@@ -42,6 +42,14 @@ export class Utility {
         return apiInput[`${environment.environment}`];
     }
 
+    static getDefaultUserConfiguration(): Configuration {
+        return new Configuration({
+            username: this.seedData.users.default_user.username,
+            password: this.seedData.users.default_user.password,
+            basePath: environment.system.baseUrl
+        });
+    }
+
     static getApiKeyConfiguration() {
         let configuration = new Configuration({
             basePath: environment.system.baseUrl,

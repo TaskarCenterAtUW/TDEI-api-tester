@@ -2,7 +2,7 @@
     "dev": {
         "osw": {
             "published_dataset": "40566429d02c4c80aee68c970977bed8",
-            "pre_release_dataset": "26f0ec82-1434-4944-ae8c-dea8aa5e0075",
+            "pre_release_dataset": "1978d16b-46f6-4d0c-b1d1-78123178a65b",
             "test_dataset": "f5fd7445fbbf4f248ea1096f0e17b7b3",
             "spatial_target_dataset": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
             "spatial_source_dataset": "0d661b69495d47fb838862edf699fe09"
@@ -20,13 +20,14 @@
             "flex_data_generator": "reilly_connelly@yahoo.com",
             "pathways_data_generator": "emiliano.terry@hotmail.com",
             "osw_data_generator": "rhianna.runolfsson@yahoo.com",
-            "api_key_tester": "apikeytester@mailinator.com"
+            "api_key_tester": "apikeytester@mailinator.com",
+            "default_user": "defaultuser@mailinator.com"
         }
     },
     "stage": {
         "osw": {
             "published_dataset": "047c8e5f-bfce-48ee-8dd0-3cdc16d72624",
-            "pre_release_dataset": "2bf948ba-7ccf-4a6a-b21f-5c3151fb17c0",
+            "pre_release_dataset": "42982431-d983-4c0a-aadb-c88b4ef7d2b8",
             "test_dataset": "74d2d6fc-db4a-4f72-8042-e521ef5c3520",
             "spatial_target_dataset": "892897ec-d75e-47f5-84ed-efc08ca6a8c6",
             "spatial_source_dataset": "0c384536b471477db07a4c6e9d8476bf"
@@ -44,7 +45,8 @@
             "flex_data_generator": "vern66@gmail.com",
             "pathways_data_generator": "elvera.keeling@gmail.com",
             "osw_data_generator": "alyce_kilback60@yahoo.com",
-            "api_key_tester": "apikeytester@mailinator.com"
+            "api_key_tester": "apikeytester@mailinator.com",
+            "default_user": "defaultuser@mailinator.com"
         }
     },
     "prod": {
@@ -68,7 +70,8 @@
             "flex_data_generator": "reilly_connelly@yahoo.com",
             "pathways_data_generator": "emiliano.terry@hotmail.com",
             "osw_data_generator": "rhianna.runolfsson@yahoo.com",
-            "api_key_tester": "apikeytester@mailinator.com"
+            "api_key_tester": "apikeytester@mailinator.com",
+            "default_user": "defaultuser@mailinator.com"
         }
     }
 }
