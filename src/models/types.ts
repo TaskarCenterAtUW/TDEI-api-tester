@@ -10,6 +10,7 @@ export interface Users {
     pathways_data_generator: Credentials
     osw_data_generator: Credentials
     api_key_tester: Credentials
+    default_user: Credentials
 }
 
 
