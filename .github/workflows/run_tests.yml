@@ -1,0 +1,112 @@
+name: run_api_tests
+
+on:
+  push:
+    branches-ignore:
+      - "**"
+    # Remove the line above to run when pushing to master
+  pull_request:
+    branches: [ main, dev ]
+  repository_dispatch:
+    types: [ run_api_tests ]
+  schedule:
+    - cron: "0 0 * * 0"  # Runs every day at midnight (UTC)
+
+jobs:
+  UnitTest:
+    name: Unit Test Cases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          # Full git history is needed to get a proper list of changed files within `super-linter`
+          fetch-depth: 0
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Determine output folder
+        id: set_output_folder
+        run: |
+          # For pull_request events, use the base branch; otherwise use the current branch reference
+          if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
+            branch_name=$GITHUB_BASE_REF
+          else
+            branch_name=$GITHUB_REF_NAME
+          fi
+          
+          if [[ $branch_name == "main" ]]; then
+            echo "output_folder=stage" >> $GITHUB_ENV
+          elif [[ $branch_name == "dev" ]]; then
+            echo "output_folder=dev" >> $GITHUB_ENV
+          else
+            echo "Unknown branch: $branch_name"
+            exit 1
+          fi
+
+      - name: Create env file
+        run: |
+          # For pull requests, choose the env file based on the base branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
+              echo "${{ secrets.STAGE_ENV_FILE }}" > .env
+            else
+              echo "${{ secrets.ENV_FILE }}" > .env
+            fi
+          else
+            # For non-PR events (push, schedule, repository_dispatch), use the stage env file
+            echo "${{ secrets.STAGE_ENV_FILE }}" > .env
+          fi
+
+      - name: Set TIMESTAMP
+        run: |
+          # Save the timestamp as an environment variable for reuse in subsequent steps.
+          echo "TIMESTAMP=$(date '+%d.%m.%Y_%H.%M.%S')" >> $GITHUB_ENV
+
+      - name: Run tests with coverage
+        run: |
+          # Use the TIMESTAMP variable from the environment.
+          mkdir -p test_results
+          log_file="test_results/${TIMESTAMP}_report.log"
+          echo -e "\nTest Cases Report\n" >> "$log_file"
+          # Run the tests and append output to the log file
+          npm run test >> "$log_file" 2>&1
+          # Copy and rename the generated test report with the timestamp
+          cp test-report.html test_results/test-report_${TIMESTAMP}.html
+
+      - name: Set Date Folder
+        run: |
+          DATE_FOLDER=$(date '+%d.%m.%Y')
+          echo "date_folder=${DATE_FOLDER}" >> $GITHUB_ENV
+
+      - name: Upload report to Azure
+        uses: LanceMcCarthy/Action-AzureBlobUpload@v2
+        with:
+          source_folder: 'test_results'
+          destination_folder: '${{ env.date_folder }}'
+          connection_string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          container_name: 'api-tester'
+          clean_destination_folder: false
+          delete_if_exists: false
+
+      - name: send email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: ${{ job.status }} - API Testing Report | ${{ github.event_name == 'pull_request' && format('{0}-{1}', 'PR', github.event.pull_request.title)  || 'Triggered via Schema Changed' }}
+          to: gs-tdei-coreteam@gaussiansolutions.com
+          cc: sureshd@gaussiansolutions.com
+          bcc: rakeshd@gaussiansolutions.com, sujatam@gaussiansolutions.com
+          from: Workflow Notification
+          attachments: test-report.html
+          html_body: |
+            <h2>API Testing Report</h2>
+            <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.workflow }}</a></p>
+            <p>Repository: <a href="${{ github.server_url }}/${{ github.repository }}">${{ github.repository }}</a></p>
+            ${{ github.event_name == 'pull_request' && format('<p>Pull Request: <a href="{0}">{1}</a></p>', github.event.pull_request.html_url, github.event.pull_request.title)  || '<br>' }}

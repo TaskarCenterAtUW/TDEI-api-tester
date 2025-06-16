@@ -1,0 +1,101 @@
+{
+  "data_provenance": {
+    "full_dataset_name": "Seattle Downtown",
+    "other_published_locations": "Seattle",
+    "dataset_update_frequency_months": 2,
+    "schema_validation_run": true,
+    "schema_validation_run_description": "automated",
+    "allow_crowd_contributions": true,
+    "location_inaccuracy_factors": "0.3"
+  },
+  "dataset_detail": {
+    "name": "Seattle Downtown",
+    "description": "Seattle Downtown",
+    "version": "1.0",
+    "custom_metadata": null,
+    "collected_by": "Paul John",
+    "collection_date": "2023-01-01T00:00:00",
+    "valid_from": null,
+    "valid_to": null,
+    "collection_method": "manual",
+    "data_source": "3rdParty",
+    "dataset_area": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -122.15355613777264,
+                  47.65546781881713
+                ],
+                [
+                  -122.15403331592054,
+                  47.624602277728656
+                ],
+                [
+                  -122.10997386694785,
+                  47.62567430349651
+                ],
+                [
+                  -122.1187221329894,
+                  47.65611065702191
+                ],
+                [
+                  -122.15355613777264,
+                  47.65546781881713
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          }
+        }
+      ]
+    },
+    "schema_version": "v0.2"
+  },
+  "dataset_summary": {
+    "collection_name": "tacoma",
+    "department_name": "DOT",
+    "city": "Seattle",
+    "region": "North",
+    "county": "King",
+    "key_limitations": "inaccurate",
+    "release_notes": "NA",
+    "challenges": null
+  },
+  "maintenance": {
+    "official_maintainer": [
+      "Paul",
+      "John"
+    ],
+    "last_updated": null,
+    "update_frequency": "weekly",
+    "authorization_chain": null,
+    "maintenance_funded": true,
+    "funding_details": "BOA"
+  },
+  "methodology": {
+    "point_data_collection_device": "mobile",
+    "node_locations_and_attributes_editing_software": "global",
+    "data_collected_by_people": false,
+    "data_collectors": null,
+    "data_captured_automatically": true,
+    "automated_collection": "NA",
+    "data_collectors_organization": "transit",
+    "data_collector_compensation": "commision",
+    "preprocessing_location": "washington",
+    "preprocessing_by": "govt",
+    "preprocessing_steps": "automated",
+    "data_collection_preprocessing_documentation": true,
+    "documentation_uri": "http://tdei.com",
+    "validation_process_exists": true,
+    "validation_process_description": "walking",
+    "validation_conducted_by": "volantary",
+    "excluded_data": null,
+    "excluded_data_reason": "not satisfied"
+  }
+}
