@@ -148,6 +148,10 @@ describe('Upload OSW dataset', () => {
       console.log("uploaded tdei_dataset_id", uploadedJobId);
       await addMsg({ message: { "OSW Data Generator - uploaded Job Id ": uploadedJobId } });
       axios.interceptors.request.eject(uploadInterceptor);
+
+      //verify location header
+      expect(uploadFileResponse.headers.location).toBeDefined();
+      expect(uploadFileResponse.headers.location).toContain(`/api/v1/jobs?job_id=${uploadedJobId}`);
     } catch (e) {
       console.log(e);
     }
@@ -470,6 +474,10 @@ describe('Dataset Incline Tag Request', () => {
     expect(inclineRequest.status).toBe(202);
     expect(inclineRequest.data).toBeNumber();
     datasetInclineTagJobId = inclineRequest.data!;
+
+    //verify location header
+    expect(inclineRequest.headers.location).toBeDefined();
+    expect(inclineRequest.headers.location).toContain(`/api/v1/jobs?job_id=${datasetInclineTagJobId}`);
   });
 
   it('Admin | authenticated , When request made with invalid dataset, should return with dataset not found error', async () => {
@@ -514,17 +522,17 @@ describe('Check dataset-incline request job running status', () => {
     let formatStatus = await generalAPI.listJobs('', datasetInclineTagJobId, true);
 
     expect(formatStatus.data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            job_id: expect.toBeOneOf([`${datasetInclineTagJobId}`]),
-            status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
-            progress: expect.objectContaining({
-              total_stages: expect.any(Number),
-              completed_stages: expect.any(Number),
-              current_stage: expect.any(String)
-            })
+      expect.arrayContaining([
+        expect.objectContaining({
+          job_id: expect.toBeOneOf([`${datasetInclineTagJobId}`]),
+          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
+          progress: expect.objectContaining({
+            total_stages: expect.any(Number),
+            completed_stages: expect.any(Number),
+            current_stage: expect.any(String)
           })
-        ])
+        })
+      ])
     );
   }, 45000);
 
@@ -607,6 +615,9 @@ describe('Publish the OSW dataset', () => {
     publishJobId = publishOsw.data;
     await addMsg({ message: { "OSW Data Generator - publish Job Id ": publishJobId } });
     console.log("publish job_id", publishJobId);
+    //verify location header
+    expect(publishOsw.headers.location).toBeDefined();
+    expect(publishOsw.headers.location).toContain(`/api/v1/jobs?job_id=${publishJobId}`);
   });
 
   it('OSW Data Generator | Authenticated , Pre-release dataset , edit metadata before publishing, should return success', async () => {
@@ -726,13 +737,17 @@ describe('Validate-only OSW dataset request', () => {
     let dataset = Utility.getOSWBlob();
     try {
       const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswValidateRequestInterceptor(req, 'osw-valid.zip'))
-      const uploadFileResponse = await oswAPI.validateOswFileForm(dataset);
+      const validateFileResponse = await oswAPI.validateOswFileForm(dataset);
 
-      expect(uploadFileResponse.status).toBe(202);
-      expect(uploadFileResponse.data).not.toBeNull();
-      validationJobId = uploadFileResponse.data;
+      expect(validateFileResponse.status).toBe(202);
+      expect(validateFileResponse.data).not.toBeNull();
+      validationJobId = validateFileResponse.data;
       console.log("validation job_id", validationJobId);
       axios.interceptors.request.eject(validateInterceptor);
+
+      //verify location header
+      expect(validateFileResponse.headers.location).toBeDefined();
+      expect(validateFileResponse.headers.location).toContain(`/api/v1/jobs?job_id=${validationJobId}`);
     } catch (e) {
       console.log(e);
     }
@@ -849,6 +864,9 @@ describe('Calculate dataset confidence request', () => {
 
     confidenceJobId = calculateConfidence.data;
     console.log("confidence job_id", confidenceJobId);
+    //verify location header
+    expect(calculateConfidence.headers.location).toBeDefined();
+    expect(calculateConfidence.headers.location).toContain(`/api/v1/jobs?job_id=${confidenceJobId}`);
   });
 
   it('OSW Data Generator | Authenticated , When request made with sub-region, should respond request job id as response', async () => {
@@ -1046,6 +1064,9 @@ describe('Convert dataset request', () => {
     convertJobId = formatResponse.data!;
     console.log("convert job_id", convertJobId);
     axios.interceptors.request.eject(convertInterceptor);
+    //verify location header
+    expect(formatResponse.headers.location).toBeDefined();
+    expect(formatResponse.headers.location).toContain(`/api/v1/jobs?job_id=${convertJobId}`);
   });
 
   it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
@@ -1298,6 +1319,9 @@ describe('Dataset Bbox Request', () => {
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
     datasetBboxJobIdOSM = bboxRequest.data!;
+    //verify location header
+    expect(bboxRequest.headers.location).toBeDefined();
+    expect(bboxRequest.headers.location).toContain(`/api/v1/jobs?job_id=${datasetBboxJobIdOSM}`);
   });
 
   it('POC | Authenticated ,[OSM] When request made with valid dataset, should return request job id as response', async () => {
@@ -1508,12 +1532,15 @@ describe('Dataset Road Tag Request', () => {
   it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
+    let roadTagRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
-    expect(bboxRequest.status).toBe(202);
-    expect(bboxRequest.data).toBeNumber();
-    datasetRoadTagJobId = bboxRequest.data!;
+    expect(roadTagRequest.status).toBe(202);
+    expect(roadTagRequest.data).toBeNumber();
+    datasetRoadTagJobId = roadTagRequest.data!;
     console.log("dataset road tag job_id", datasetRoadTagJobId);
+    //verify location header
+    expect(roadTagRequest.headers.location).toBeDefined();
+    expect(roadTagRequest.headers.location).toContain(`/api/v1/jobs?job_id=${datasetRoadTagJobId}`);
   });
 
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
@@ -1672,16 +1699,19 @@ describe('Dataset Union Request', () => {
   it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.oswUnion({
+    let unionRequest = await oswAPI.oswUnion({
       tdei_dataset_id_one: uploadedDatasetId,
       tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
     }
     );
 
-    expect(bboxRequest.status).toBe(202);
-    expect(bboxRequest.data).toBeNumber();
-    datasetUnionJobId = bboxRequest.data!;
+    expect(unionRequest.status).toBe(202);
+    expect(unionRequest.data).toBeNumber();
+    datasetUnionJobId = unionRequest.data!;
     console.log("dataset Union job_id", datasetUnionJobId);
+    //verify location header
+    expect(unionRequest.headers.location).toBeDefined();
+    expect(unionRequest.headers.location).toContain(`/api/v1/jobs?job_id=${datasetUnionJobId}`);
   });
 
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
@@ -1904,6 +1934,9 @@ describe('Spatial join Request', () => {
     expect(spatialRequest.data).toBeNumber();
     spacialJoinJobId = spatialRequest.data!;
     console.log("Spatial join job_id", spacialJoinJobId);
+    //verify location header
+    expect(spatialRequest.headers.location).toBeDefined();
+    expect(spatialRequest.headers.location).toContain(`/api/v1/jobs?job_id=${spacialJoinJobId}`);
   }, 20000);
 
   it('Admin | Authenticated , When request made with valid join input, should return request job id as response', async () => {

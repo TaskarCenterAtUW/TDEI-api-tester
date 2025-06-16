@@ -96,6 +96,10 @@ describe('Upload flex dataset', () => {
         uploadedJobId = uploadFileResponse.data;
         console.log("uploaded job_id", uploadedJobId);
         axios.interceptors.request.eject(uploadInterceptor);
+        //verify location header
+        expect(uploadFileResponse.headers.location).toBeDefined();
+        expect(uploadFileResponse.headers.location).toContain(`/api/v1/jobs?job_id=${uploadedJobId}`);
+
     }, 20000);
 
     it('POC | Authenticated , When request made with dataset, metadata and changeset file, should return request job id as response', async () => {
@@ -367,6 +371,9 @@ describe('Publish the flex dataset', () => {
         expect(publish.data).toBeNumber();
         publishJobId = publish.data;
         console.log("publish job_id", publishJobId);
+        //verify location header
+        expect(publish.headers.location).toBeDefined();
+        expect(publish.headers.location).toContain(`/api/v1/jobs?job_id=${publishJobId}`);
     }, 70000);
 
     it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
@@ -470,13 +477,16 @@ describe('Validate-only flex dataset request', () => {
         let dataset = Utility.getFlexBlob();
         try {
             const validateInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => validateRequestInterceptor(req, 'flex-valid.zip'))
-            const uploadFileResponse = await flexAPI.validateGtfsFlexFileForm(dataset);
+            const validateFileResponse = await flexAPI.validateGtfsFlexFileForm(dataset);
 
-            expect(uploadFileResponse.status).toBe(202);
-            expect(uploadFileResponse.data).not.toBeNull();
-            validationJobId = uploadFileResponse.data;
+            expect(validateFileResponse.status).toBe(202);
+            expect(validateFileResponse.data).not.toBeNull();
+            validationJobId = validateFileResponse.data;
             console.log("validation job_id", validationJobId);
             axios.interceptors.request.eject(validateInterceptor);
+            //verify location header
+            expect(validateFileResponse.headers.location).toBeDefined();
+            expect(validateFileResponse.headers.location).toContain(`/api/v1/jobs?job_id=${validationJobId}`);
         } catch (e) {
             console.log(e);
         }
