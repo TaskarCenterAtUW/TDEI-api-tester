@@ -1,7 +1,7 @@
 {
   "data_provenance": {
-    "full_dataset_name": "Seattle Downtown",
-    "other_published_locations": "Seattle",
+    "full_dataset_name": "MD MTA Subway GTFS",
+    "other_published_locations": "MD MTA Subway GTFS",
     "dataset_update_frequency_months": 2,
     "schema_validation_run": true,
     "schema_validation_run_description": "automated",
@@ -9,7 +9,7 @@
     "location_inaccuracy_factors": "0.3"
   },
   "dataset_detail": {
-    "name": "Seattle Downtown",
+    "name": "MD MTA Subway GTFS",
     "description": "Seattle Downtown",
     "version": "1.0",
     "custom_metadata": null,
@@ -60,7 +60,7 @@
   "dataset_summary": {
     "collection_name": "tacoma",
     "department_name": "DOT",
-    "city": "Seattle",
+    "city": "MD MTA Subway GTFS",
     "region": "North",
     "county": "King",
     "key_limitations": "inaccurate",
