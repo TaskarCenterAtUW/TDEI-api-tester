@@ -2,7 +2,7 @@
 
 This service repository contains automated test cases for TDEI API endpoints to verify their functionality and generate a comprehensive test report. The API specifications are received from Swagger (OpenAPI), ensuring tests are aligned with the latest API definition and remain reliable, functional, and compliant with their specifications
 
-1. Automated Testing of API Endpoints
+1. Automated Testing of API Endpoints 
    - Executes test cases for all TDEI API endpoints to validate expected responses.
 2. Test Case Management
 	- Covers positive, negative, and edge cases to ensure robustness.
