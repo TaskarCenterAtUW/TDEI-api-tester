@@ -52,7 +52,7 @@ beforeAll(async () => {
   await Utility.setAuthToken(apiTesterConfiguration);
 
 
-  let seedData = Utility.seedData;
+  seedData = Utility.seedData;
   tdei_project_group_id = seedData.project_group.tdei_project_group_id;
   tdei_service_id_osw = seedData.services.find(x => x.service_type == "osw")!.tdei_service_id;
   tdei_service_id_flex = seedData.services.find(x => x.service_type == "flex")!.tdei_service_id;
@@ -1818,7 +1818,7 @@ describe('Clone Dataset', () => {
     // Assert
     await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, "invalid_project_id", tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 404 } });
     axios.interceptors.request.eject(editMetaInterceptor);
-  }, 30000);``
+  }, 30000); ``
 
   it('POC | Authenticated , When request made to clone flex dataset with service id not associated with project group id, expect to return input error', async () => {
     // Arrange
