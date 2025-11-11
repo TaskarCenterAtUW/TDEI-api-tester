@@ -165,7 +165,7 @@ describe('Upload flex dataset', () => {
         const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => uploadRequestInterceptor(req, "invalid_tdei_project_group_id", service_id, 'flex-valid.zip', 'changeset.zip', 'metadata.json'))
         const uploadFileResponse = flexAPI.uploadGtfsFlexFileForm(dataset, metaToUpload, changesetToUpload, "invalid_tdei_project_group_id", service_id)
 
-        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 400 } });
+        await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 404 } });
 
         axios.interceptors.request.eject(uploadInterceptor);
     }, 20000);

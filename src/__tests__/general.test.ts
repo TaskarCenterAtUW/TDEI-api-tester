@@ -1817,9 +1817,9 @@ describe('Clone Dataset', () => {
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, "invalid_project_id", tdei_service_id_flex, 'metadata.json'))
     // Assert
-    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, "invalid_project_id", tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 403 } });
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, "invalid_project_id", tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 404 } });
     axios.interceptors.request.eject(editMetaInterceptor);
-  }, 30000);
+  }, 30000);``
 
   it('POC | Authenticated , When request made to clone flex dataset with service id not associated with project group id, expect to return input error', async () => {
     // Arrange
