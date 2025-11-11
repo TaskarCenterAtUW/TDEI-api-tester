@@ -15,6 +15,23 @@ export interface Users {
 
 
 export interface SeedData {
+    datasets: {
+        osw: {
+            pre_release_dataset: string;
+            test_dataset: string;
+            published_dataset: string;
+            spatial_target_dataset: string;
+            spatial_source_dataset: string;
+        },
+        flex: {
+            published_dataset: string;
+            pre_release_dataset: string;
+        },
+        pathways: {
+            published_dataset: string;
+            pre_release_dataset: string;
+        }
+    },
     project_group: {
         tdei_project_group_id: string,
         name: string,

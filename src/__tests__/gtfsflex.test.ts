@@ -3,6 +3,7 @@ import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
 import exp from "constants";
+import { SeedData } from "../models/types";
 
 const NULL_PARAM = void 0;
 
@@ -17,7 +18,7 @@ let uploadedDatasetId: string = '1';
 let publishJobId: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
-let apiInput: any = {};
+let seedData: SeedData = {} as SeedData;
 
 const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
     if (
@@ -63,7 +64,7 @@ const validateRequestInterceptor = (request: InternalAxiosRequestConfig, dataset
 };
 
 beforeAll(async () => {
-    let seedData = Utility.seedData;
+    seedData = Utility.seedData;
     tdei_project_group_id = seedData.project_group.tdei_project_group_id;
     service_id = seedData.services.find(x => x.service_type == "flex")!.tdei_service_id;
     apiKeyConfiguration = Utility.getApiKeyConfiguration();
@@ -75,8 +76,6 @@ beforeAll(async () => {
     await Utility.setAuthToken(pocConfiguration);
     await Utility.setAuthToken(dgConfiguration);
     await Utility.setAuthToken(oswdgConfiguration);
-    apiInput = Utility.getApiInput();
-
 });
 
 
@@ -379,7 +378,7 @@ describe('Publish the flex dataset', () => {
     it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
         let flexAPI = new GTFSFlexApi(adminConfiguration);
-        let tdei_dataset_id = apiInput.flex.published_dataset;
+        let tdei_dataset_id = seedData.datasets.flex.published_dataset;
 
         let publishResponse = flexAPI.publishGtfsFlexFile(tdei_dataset_id);
 
@@ -398,7 +397,7 @@ describe('Publish the flex dataset', () => {
     it('Admin | When passed with osw tdei_dataset_id, should respond with daset type mismatch error', async () => {
 
         let flexAPI = new GTFSFlexApi(adminConfiguration);
-        let tdei_dataset_id = apiInput.osw.pre_release_dataset;
+        let tdei_dataset_id = seedData.datasets.osw.pre_release_dataset;
 
         let publishResponse = flexAPI.publishGtfsFlexFile(tdei_dataset_id);
 
@@ -683,7 +682,7 @@ describe('Download flex dataset', () => {
 
         let flexAPI = new GTFSFlexApi(adminConfiguration);
 
-        let response = flexAPI.getGtfsFlexFile(apiInput.pathways.pre_release_dataset);
+        let response = flexAPI.getGtfsFlexFile(seedData.datasets.pathways.pre_release_dataset);
 
         await expect(response).rejects.toMatchObject({ response: { status: 400 } });
 

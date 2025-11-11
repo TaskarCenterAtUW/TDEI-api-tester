@@ -2,6 +2,7 @@ import { Configuration, GTFSPathwaysApi, CommonAPIsApi, VersionSpec } from "tdei
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
+import { SeedData } from "../models/types";
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -16,7 +17,7 @@ let publishJobId: string = '1';
 let uploadedDatasetId: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
-let apiInput: any = {};
+let seedData: SeedData = {} as SeedData;
 
 const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
   if (
@@ -61,7 +62,7 @@ const validateRequestInterceptor = (request: InternalAxiosRequestConfig, dataset
 };
 
 beforeAll(async () => {
-  let seedData = Utility.seedData;
+  seedData = Utility.seedData;
   tdei_project_group_id = seedData.project_group.tdei_project_group_id;
   service_id = seedData.services.find(x => x.service_type == "pathways")!.tdei_service_id;
   adminConfiguration = Utility.getAdminConfiguration();
@@ -73,7 +74,6 @@ beforeAll(async () => {
   await Utility.setAuthToken(pocConfiguration);
   await Utility.setAuthToken(dgConfiguration);
   await Utility.setAuthToken(oswDgConfiguration);
-  apiInput = Utility.getApiInput();
 });
 
 
@@ -408,7 +408,7 @@ describe('Publish the pathways dataset', () => {
   it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
-    let tdei_dataset_id = apiInput.pathways.published_dataset;
+    let tdei_dataset_id = seedData.datasets.pathways.published_dataset;
 
     let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(tdei_dataset_id);
 
@@ -417,7 +417,7 @@ describe('Publish the pathways dataset', () => {
 
   it('Admin | When passed with osw dataset id, should respond with invalid dataset type error', async () => {
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
-    let tdei_dataset_id = apiInput.osw.pre_release_dataset;
+    let tdei_dataset_id = seedData.datasets.osw.pre_release_dataset;
 
     let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(tdei_dataset_id);
 
@@ -716,7 +716,7 @@ describe('Download pathways dataset', () => {
 
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
 
-    let response = pathwaysAPI.getGtfsPathwaysFile(apiInput.flex.pre_release_dataset);
+    let response = pathwaysAPI.getGtfsPathwaysFile(seedData.datasets.flex.pre_release_dataset);
 
     await expect(response).rejects.toMatchObject({ response: { status: 400 } });
 

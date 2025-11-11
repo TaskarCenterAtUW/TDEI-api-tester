@@ -2,6 +2,7 @@ import { OSWApi, VersionSpec, CommonAPIsApi, Configuration, JobDetails, JobDetai
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
+import { SeedData } from "../models/types";
 const { addMsg } = require("jest-html-reporters/helper");
 
 let apiKeyConfiguration: Configuration = {};
@@ -27,8 +28,8 @@ let tdei_project_group_id = "";
 let service_id = "";
 let qualityMetricJobId = '1';
 const NULL_PARAM = void 0;
-let apiInput: any = {};
 let bboxRecordId = "";
+let seedData: SeedData = {} as SeedData;
 
 
 const tagQualityRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
@@ -114,7 +115,7 @@ const oswConfidenceRequestInterceptor = (request: InternalAxiosRequestConfig, td
 };
 
 beforeAll(async () => {
-  let seedData = Utility.seedData;
+  seedData = Utility.seedData;
   tdei_project_group_id = seedData.project_group.tdei_project_group_id;
   service_id = seedData.services.find(x => x.service_type == "osw")!.tdei_service_id;
   adminConfiguration = Utility.getAdminConfiguration();
@@ -123,8 +124,7 @@ beforeAll(async () => {
   dgConfiguration = Utility.getOSWDataGeneratorConfiguration();
   flexDgConfiguration = Utility.getFlexDataGeneratorConfiguration();
   pathwaysDgConfiguration = Utility.getPathwaysDataGeneratorConfiguration();
-  apiInput = Utility.getApiInput();
-  bboxRecordId = apiInput.osw.test_dataset;
+  bboxRecordId = seedData.datasets.osw.test_dataset;
   await authenticate();
 });
 
@@ -648,7 +648,7 @@ describe('Publish the OSW dataset', () => {
   it('When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
-    let tdei_dataset_id = apiInput.osw.published_dataset;
+    let tdei_dataset_id = seedData.datasets.osw.published_dataset;
 
     let publishOswResponse = oswAPI.publishOswFile(tdei_dataset_id);
 
@@ -659,7 +659,7 @@ describe('Publish the OSW dataset', () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let publishOswResponse = oswAPI.publishOswFile(apiInput.flex.pre_release_dataset);
+    let publishOswResponse = oswAPI.publishOswFile(seedData.datasets.flex.pre_release_dataset);
 
     await expect(publishOswResponse).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -931,7 +931,7 @@ describe('Calculate dataset confidence request', () => {
   it('Admin | Authenticated , When request made with flex dataset id, should respond with Dataset type mismatch error', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let calculateConfidenceResponse = oswAPI.oswConfidenceCalculateForm(apiInput.flex.pre_release_dataset);
+    let calculateConfidenceResponse = oswAPI.oswConfidenceCalculateForm(seedData.datasets.flex.pre_release_dataset);
 
     await expect(calculateConfidenceResponse).rejects.toMatchObject({ response: { status: 400 } });
   })
@@ -1293,7 +1293,7 @@ describe('Download OSW File as zip', () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let response = oswAPI.getOswFile(apiInput.flex.pre_release_dataset);
+    let response = oswAPI.getOswFile(seedData.datasets.flex.pre_release_dataset);
 
     await expect(response).rejects.toMatchObject({ response: { status: 400 } });
 
@@ -1418,7 +1418,7 @@ describe('Dataset Bbox Request', () => {
   it('Admin | Authenticated , When request made with flex dataset, should return with dataset type mismatch error error', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetBbox(apiInput.flex.pre_release_dataset, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = oswAPI.datasetBbox(seedData.datasets.flex.pre_release_dataset, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1526,13 +1526,13 @@ describe('Download Dataset Bbox request file', () => {
 
 let datasetRoadTagJobId = '1';
 describe('Dataset Road Tag Request', () => {
-  // let datasetTagSourceRecordId = apiInput.osw.test_dataset;
-  // let datasetTagTargetPublishedRecordId = apiInput.osw.published_dataset;//'762f3533-b18f-470f-8051-1a7988bf80c7';
+  // let datasetTagSourceRecordId = seedData.datasets.osw.test_dataset;
+  // let datasetTagTargetPublishedRecordId = seedData.datasets.osw.published_dataset;//'762f3533-b18f-470f-8051-1a7988bf80c7';
 
   it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let roadTagRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
+    let roadTagRequest = await oswAPI.datasetTagRoad(seedData.datasets.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(roadTagRequest.status).toBe(202);
     expect(roadTagRequest.data).toBeNumber();
@@ -1546,7 +1546,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = await oswAPI.datasetTagRoad(seedData.datasets.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1555,7 +1555,7 @@ describe('Dataset Road Tag Request', () => {
   it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
 
-    let bboxRequest = await oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = await oswAPI.datasetTagRoad(seedData.datasets.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1564,7 +1564,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | authenticated , When request made with publish target dataset, should return with bad request', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, apiInput.osw.published_dataset);
+    let bboxRequest = oswAPI.datasetTagRoad(seedData.datasets.osw.test_dataset, seedData.datasets.osw.published_dataset);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1573,7 +1573,7 @@ describe('Dataset Road Tag Request', () => {
 
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad("invalid_source", apiInput.osw.published_dataset);
+    let bboxRequest = oswAPI.datasetTagRoad("invalid_source", seedData.datasets.osw.published_dataset);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
   });
@@ -1581,7 +1581,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | authenticated , When request made with invalid target dataset, should return with dataset not found error', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, "invalid_target");
+    let bboxRequest = oswAPI.datasetTagRoad(seedData.datasets.osw.test_dataset, "invalid_target");
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
   });
@@ -1589,7 +1589,7 @@ describe('Dataset Road Tag Request', () => {
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
+    let bboxRequest = oswAPI.datasetTagRoad(seedData.datasets.osw.test_dataset, uploadedDatasetId_PreRelease_poc);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1597,7 +1597,7 @@ describe('Dataset Road Tag Request', () => {
   it('API-Key | Authenticated , When request made with dataset, should return with unauthorized request', async () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.test_dataset, uploadedDatasetId_PreRelease_poc, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
+    let bboxRequest = oswAPI.datasetTagRoad(seedData.datasets.osw.test_dataset, uploadedDatasetId_PreRelease_poc, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 403 } });
   });
@@ -1775,7 +1775,7 @@ describe('Dataset Union Request', () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
 
     let bboxRequest = await oswAPI.oswUnion({
-      tdei_dataset_id_one: apiInput.osw.test_dataset,
+      tdei_dataset_id_one: seedData.datasets.osw.test_dataset,
       tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc
     }, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
@@ -1912,7 +1912,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw source dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.source_dataset_id = apiInput.flex.published_dataset;
+    input.source_dataset_id = seedData.datasets.flex.published_dataset;
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1920,7 +1920,7 @@ describe('Spatial join Request', () => {
   it('OSW Data Generator | Authenticated , When request made with non osw target dataset id, should return bad request', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let input = Utility.getSpatialJoinInput();
-    input.target_dataset_id = apiInput.pathways.published_dataset;
+    input.target_dataset_id = seedData.datasets.pathways.published_dataset;
 
     await expect(oswAPI.oswSpatialJoin(input)).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1960,7 +1960,7 @@ describe('Spatial join Request', () => {
   it('Admin | un-authenticated , When request made with valid join input, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(apiInput.osw.published_dataset, uploadedDatasetId);
+    let bboxRequest = oswAPI.datasetTagRoad(seedData.datasets.osw.published_dataset, uploadedDatasetId);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });

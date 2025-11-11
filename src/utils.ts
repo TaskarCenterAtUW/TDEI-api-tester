@@ -15,12 +15,23 @@ import * as fs from "fs";
 import metadata_flex from "../assets/payloads/gtfs-flex/metadata.json";
 import metadata_osw from "../assets/payloads/osw/metadata.json";
 import metadata_pathways from "../assets/payloads/gtfs-pathways/metadata.json";
-import apiInput from "../api.input.json";
+// import apiInput from "../api.input.json";
 import { SeedData } from "./models/types";
 /**
  * Utility class.
  */
 export class Utility {
+    static getPromoCodeUpload(): any {
+        const from = new Date(); // current time
+        const to = new Date(Date.now() + 60 * 60 * 1000); // add 1 hour (in ms)
+        return {
+            "name": `api_tester_${faker.random.alphaNumeric(10)}`,
+            "type": 1,
+            "valid_from": from.toISOString(),
+            "code": faker.random.alphaNumeric(8).toUpperCase(),
+            "valid_to": to.toISOString()
+        };
+    }
 
     static get seedData() {
         const seedData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../seed.data.json'), 'utf-8'));
@@ -38,9 +49,9 @@ export class Utility {
         };
     }
 
-    static getApiInput() {
-        return apiInput[`${environment.environment}`];
-    }
+    // static getApiInput() {
+    //     return apiInput[`${environment.environment}`];
+    // }
 
     static getDefaultUserConfiguration(): Configuration {
         return new Configuration({
@@ -409,9 +420,9 @@ export class Utility {
 
     static getSpatialJoinInput() {
         let model: OswSpatialjoinBody = {
-            target_dataset_id: Utility.getApiInput().osw.spatial_target_dataset,
+            target_dataset_id: this.seedData.datasets.osw.spatial_target_dataset,
             target_dimension: OswSpatialjoinBodyTargetDimensionEnum.Edge,
-            source_dataset_id: Utility.getApiInput().osw.spatial_source_dataset,
+            source_dataset_id: this.seedData.datasets.osw.spatial_source_dataset,
             source_dimension: OswSpatialjoinBodySourceDimensionEnum.Point,
             join_condition: "ST_Contains(ST_Buffer(geometry_target, 5), geometry_source)",
             join_filter_target: "highway='footway' AND footway='sidewalk'",
