@@ -81,6 +81,7 @@ typings/
 # Nuxt.js build / generate output
 .nuxt
 dist
+build
 
 # Gatsby files
 .cache/
@@ -105,3 +106,8 @@ dist
 .DS_Store
 src/test-harness.json
 test-report.html
+wallaby.js
+
+jest-html-reporters-attach
+seed.data.json
+.idea/
