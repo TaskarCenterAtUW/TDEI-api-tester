@@ -65,7 +65,7 @@ jobs:
           mkdir -p test_results
           log_file="test_results/${timestamp}_report.log"
           echo -e "\nTest Cases Report Report\n" >> $log_file
-          npm run test >> $log_file 2>&1
+          npm run test -- --verbose >> $log_file 2>&1
           # Copy and rename the generated test report with the timestamp
           cp test-report.html test_results/test-report_${timestamp}.html
 
