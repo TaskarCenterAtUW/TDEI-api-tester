@@ -45,18 +45,13 @@ jobs:
           fi
 
       - name: Create env file
+        env: {
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
+        }
         run: |
-          # For pull requests, choose the env file based on the base branch
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            if [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
-              echo "${{ secrets.STAGE_ENV_FILE }}" > .env
-            else
-              echo "${{ secrets.ENV_FILE }}" > .env
-            fi
-          else
-            # For non-PR events (push, schedule, repository_dispatch), use the stage env file
-            echo "${{ secrets.STAGE_ENV_FILE }}" > .env
-          fi
+          set +H
+          tmp_env_file=".env"
+          printf '%s' "$ENV_CONTENT" > "$tmp_env_file"
 
 
       - name: Run tests with coverage
@@ -65,7 +60,7 @@ jobs:
           mkdir -p test_results
           log_file="test_results/${timestamp}_report.log"
           echo -e "\nTest Cases Report Report\n" >> $log_file
-          npm run test -- --verbose >> $log_file 2>&1
+          npm run test >> $log_file 2>&1
           # Copy and rename the generated test report with the timestamp
           cp test-report.html test_results/test-report_${timestamp}.html
 
@@ -79,22 +74,22 @@ jobs:
           clean_destination_folder: false
           delete_if_exists: false
 
-      - name: send email notification
-        if: always()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USER }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: ${{ job.status }} - API Testing Report | ${{ github.event_name == 'pull_request' && format('{0}-{1}', 'PR', github.event.pull_request.title)  || 'Triggered via Schema Changed' }}
-          to: gs-tdei-coreteam@gaussiansolutions.com
-          cc: sureshd@gaussiansolutions.com
-          bcc: rakeshd@gaussiansolutions.com, sujatam@gaussiansolutions.com
-          from: Workflow Notification
-          attachments: test-report.html
-          html_body: |
-            <h2>API Testing Report</h2>
-            <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.workflow }}</a></p>
-            <p>Repository: <a href="${{ github.server_url }}/${{ github.repository }}">${{ github.repository }}</a></p>
-            ${{ github.event_name == 'pull_request' && format('<p>Pull Request: <a href="{0}">{1}</a></p>', github.event.pull_request.html_url, github.event.pull_request.title)  || '<br>' }}
+#      - name: send email notification
+#        if: always()
+#        uses: dawidd6/action-send-mail@v3
+#        with:
+#          server_address: smtp.gmail.com
+#          server_port: 587
+#          username: ${{ secrets.EMAIL_USER }}
+#          password: ${{ secrets.EMAIL_PASSWORD }}
+#          subject: ${{ job.status }} - API Testing Report | ${{ github.event_name == 'pull_request' && format('{0}-{1}', 'PR', github.event.pull_request.title)  || 'Triggered via Schema Changed' }}
+#          to: gs-tdei-coreteam@gaussiansolutions.com
+#          cc: sureshd@gaussiansolutions.com
+#          bcc: rakeshd@gaussiansolutions.com, sujatam@gaussiansolutions.com
+#          from: Workflow Notification
+#          attachments: test-report.html
+#          html_body: |
+#            <h2>API Testing Report</h2>
+#            <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.workflow }}</a></p>
+#            <p>Repository: <a href="${{ github.server_url }}/${{ github.repository }}">${{ github.repository }}</a></p>
+#            ${{ github.event_name == 'pull_request' && format('<p>Pull Request: <a href="{0}">{1}</a></p>', github.event.pull_request.html_url, github.event.pull_request.title)  || '<br>' }}
