@@ -45,9 +45,8 @@ jobs:
           fi
 
       - name: Create env file
-        env: {
+        env:
           ENV_CONTENT: ${{ secrets.ENV_FILE }}
-        }
         run: |
           set +H
           tmp_env_file=".env"
