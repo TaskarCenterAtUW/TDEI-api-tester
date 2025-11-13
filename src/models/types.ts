@@ -32,6 +32,16 @@ export interface SeedData {
             pre_release_dataset: string;
         }
     },
+    user_not_associated_project: {
+        tdei_project_group_id: string,
+        name: string,
+    },
+    user_not_associated_service: [{
+        tdei_project_group_id: string,
+        service_type: string,
+        service_name: string,
+        tdei_service_id: string
+    }],
     project_group: {
         tdei_project_group_id: string,
         name: string,

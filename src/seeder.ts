@@ -31,10 +31,17 @@ export class Seeder {
                 console.log('Seeding...');
                 await this.client.login()
                 let seedData: SeedData = {} as any;
-                const project_group = await this.client.createProjectGroup()
-                seedData.project_group = project_group
-                const services = await this.createService(project_group.tdei_project_group_id)
-                seedData.services = services
+                //User associated project group and service
+                const project_group = await this.client.createProjectGroup();
+                seedData.project_group = project_group;
+                const services = await this.createService(project_group.tdei_project_group_id);
+                seedData.services = services;
+                //User not associated project group and service
+                const project_group_2 = await this.client.createProjectGroup();
+                seedData.user_not_associated_project = project_group_2;
+                const services_2 = await this.createService(project_group_2.tdei_project_group_id);
+                seedData.user_not_associated_service = services_2;
+
                 // seedData.users = await this.assignUserRoles(project_group.tdei_project_group_id)
                 seedData.users = await this.createUserWithPromo(project_group.tdei_project_group_id);
                 let userProfile = (await this.getUserProfile((seedData.users as Users).poc.username));

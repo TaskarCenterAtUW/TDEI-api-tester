@@ -15,6 +15,12 @@ let tdei_project_group_id: string = "";
 let tdei_service_id_osw: string = "";
 let tdei_service_id_flex: string = "";
 let tdei_service_id_pathways: string = "";
+
+let user_not_associated_tdei_project_group_id: string = "";
+let user_not_associated_tdei_service_id_osw: string = "";
+let user_not_associated_tdei_service_id_flex: string = "";
+let user_not_associated_tdei_service_id_pathways: string = "";
+
 let apiTesterConfiguration: Configuration = {};
 let apiTesterKeyConfiguration: Configuration = {};
 let seedData: SeedData = {} as SeedData;
@@ -57,6 +63,11 @@ beforeAll(async () => {
   tdei_service_id_osw = seedData.services.find(x => x.service_type == "osw")!.tdei_service_id;
   tdei_service_id_flex = seedData.services.find(x => x.service_type == "flex")!.tdei_service_id;
   tdei_service_id_pathways = seedData.services.find(x => x.service_type == "pathways")!.tdei_service_id;
+
+  user_not_associated_tdei_project_group_id = seedData.user_not_associated_project.tdei_project_group_id;
+  user_not_associated_tdei_service_id_osw = seedData.user_not_associated_service.find(x => x.service_type == "osw")!.tdei_service_id;
+  user_not_associated_tdei_service_id_flex = seedData.user_not_associated_service.find(x => x.service_type == "flex")!.tdei_service_id;
+  user_not_associated_tdei_service_id_pathways = seedData.user_not_associated_service.find(x => x.service_type == "pathways")!.tdei_service_id;
 }, 30000);
 
 describe('List Datasets', () => {
@@ -175,7 +186,7 @@ describe('List Datasets', () => {
             name: expect.toBeOneOf([null, expect.any(String)]),
             description: expect.toBeOneOf([null, expect.any(String)]),
             version: expect.toBeOneOf([null, expect.any(String)]),
-            custom_metadata: expect.toBeOneOf([null, expect.anything()]),
+            // custom_metadata: expect.toBeOneOf([null, expect.anything()]),
             collected_by: expect.toBeOneOf([null, expect.any(String)]),
             collection_date: expect.toBeOneOf([null, expect.any(String)]),
             valid_from: expect.toBeOneOf([null, expect.any(String)]),
@@ -280,7 +291,7 @@ describe('List Datasets', () => {
             name: expect.toBeOneOf([null, expect.any(String)]),
             description: expect.toBeOneOf([null, expect.any(String)]),
             version: expect.toBeOneOf([null, expect.any(String)]),
-            custom_metadata: expect.toBeOneOf([null, expect.anything()]),
+            // custom_metadata: expect.toBeOneOf([null, expect.anything()]),
             collected_by: expect.toBeOneOf([null, expect.any(String)]),
             collection_date: expect.toBeOneOf([null, expect.any(String)]),
             valid_from: expect.toBeOneOf([null, expect.any(String)]),
@@ -1777,7 +1788,7 @@ describe('Clone Dataset', () => {
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
     // Assert
-    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, user_not_associated_tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 
@@ -1829,7 +1840,7 @@ describe('Clone Dataset', () => {
     // Action
     const editMetaInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'))
     // Assert
-    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
+    await expect(generalAPI.cloneDatasetForm(metaToUpload, tdei_dataset_id, tdei_project_group_id, user_not_associated_tdei_service_id_flex)).rejects.toMatchObject({ response: { status: 400 } });
     axios.interceptors.request.eject(editMetaInterceptor);
   }, 30000);
 

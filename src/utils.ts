@@ -423,10 +423,10 @@ export class Utility {
             target_dataset_id: this.seedData.datasets.osw.spatial_target_dataset,
             target_dimension: OswSpatialjoinBodyTargetDimensionEnum.Edge,
             source_dataset_id: this.seedData.datasets.osw.spatial_source_dataset,
-            source_dimension: OswSpatialjoinBodySourceDimensionEnum.Point,
+            source_dimension: OswSpatialjoinBodySourceDimensionEnum.Edge,
             join_condition: "ST_Contains(ST_Buffer(geometry_target, 5), geometry_source)",
             join_filter_target: "highway='footway' AND footway='sidewalk'",
-            join_filter_source: "highway='street_lamp'",
+            join_filter_source: "highway='footway'",
             aggregate: ["ARRAY_AGG(highway) as my_highway"]
         }
         return model;

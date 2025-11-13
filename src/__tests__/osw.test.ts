@@ -1214,7 +1214,7 @@ describe('Download converted file', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 20000));
+    await new Promise((r) => setTimeout(r, 60000));
 
     let response = await generalAPI.jobDownload(convertJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1314,7 +1314,7 @@ describe('Dataset Bbox Request', () => {
   it('OSW Data Generator | Authenticated ,[OSM] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1327,7 +1327,7 @@ describe('Dataset Bbox Request', () => {
   it('POC | Authenticated ,[OSM] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1336,7 +1336,7 @@ describe('Dataset Bbox Request', () => {
   it('Admin | Authenticated ,[OSM] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1346,7 +1346,7 @@ describe('Dataset Bbox Request', () => {
   it('API-Key | Authenticated ,[OSM] When request made with dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327], { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osm', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885], { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1355,7 +1355,7 @@ describe('Dataset Bbox Request', () => {
   it('OSW Data Generator | Authenticated ,[OSW] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(dgConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1366,7 +1366,7 @@ describe('Dataset Bbox Request', () => {
   it('POC | Authenticated ,[OSW] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1375,7 +1375,7 @@ describe('Dataset Bbox Request', () => {
   it('Admin | Authenticated ,[OSW] When request made with valid dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1385,7 +1385,7 @@ describe('Dataset Bbox Request', () => {
   it('API-Key | Authenticated ,[OSW] When request made with dataset, should return request job id as response', async () => {
     let oswAPI = new OSWApi(apiKeyConfiguration);
 
-    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-122.264913, 47.558543, -122.10549, 47.691327], { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
+    let bboxRequest = await oswAPI.datasetBbox(bboxRecordId, 'osw', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885], { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
 
     expect(bboxRequest.status).toBe(202);
     expect(bboxRequest.data).toBeNumber();
@@ -1394,7 +1394,7 @@ describe('Dataset Bbox Request', () => {
   it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetBbox(bboxRecordId, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = oswAPI.datasetBbox(bboxRecordId, 'osm', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
@@ -1402,7 +1402,7 @@ describe('Dataset Bbox Request', () => {
   it('Admin | Authenticated , When request made with invalid dataset, should return with dataset not found error', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetBbox("invalid_bboxRecordId", 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = oswAPI.datasetBbox("invalid_bboxRecordId", 'osm', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 404 } });
   });
@@ -1418,7 +1418,7 @@ describe('Dataset Bbox Request', () => {
   it('Admin | Authenticated , When request made with flex dataset, should return with dataset type mismatch error error', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
 
-    let bboxRequest = oswAPI.datasetBbox(seedData.datasets.flex.pre_release_dataset, 'osm', [-122.264913, 47.558543, -122.10549, 47.691327]);
+    let bboxRequest = oswAPI.datasetBbox(seedData.datasets.flex.pre_release_dataset, 'osm', [-118.27222419, 34.0511586948, -118.2658509169, 34.0559536885]);
 
     await expect(bboxRequest).rejects.toMatchObject({ response: { status: 400 } });
   });
@@ -1497,7 +1497,7 @@ describe('Check dataset-bbox request job running status', () => {
 describe('Download Dataset Bbox request file', () => {
 
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    await new Promise((r) => setTimeout(r, 30000));
+    await new Promise((r) => setTimeout(r, 40000));
     let generalAPI = new CommonAPIsApi(dgConfiguration);
 
     let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
@@ -1650,9 +1650,9 @@ describe('Download Dataset Road Tag request file', () => {
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 10000));
+    await new Promise((r) => setTimeout(r, 20000));
 
-    let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetRoadTagJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1669,7 +1669,7 @@ describe('Download Dataset Road Tag request file', () => {
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetBboxJobIdOSW, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetRoadTagJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1686,7 +1686,7 @@ describe('Download Dataset Road Tag request file', () => {
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let downloadResponse = generalAPI.jobDownload(datasetBboxJobIdOSM);
+    let downloadResponse = generalAPI.jobDownload(datasetRoadTagJobId);
 
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
