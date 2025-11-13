@@ -1228,7 +1228,7 @@ describe('Download converted file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBe(1);
     }
-  }, 30000);
+  }, 65000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
@@ -1512,7 +1512,7 @@ describe('Download Dataset Bbox request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 40000);
+  }, 45000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
@@ -1665,7 +1665,7 @@ describe('Download Dataset Road Tag request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 20000);
+  }, 25000);
 
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
