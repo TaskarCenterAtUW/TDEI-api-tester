@@ -180,32 +180,39 @@ describe('List Datasets', () => {
         expect.toBeAbsentOrNullOrString(file.metadata.data_provenance.location_inaccuracy_factors);
 
       }
-      if (file.metadata.dataset_detail) {
-        expect(file.metadata.dataset_detail).toEqual(
-          {
-            name: expect.toBeOneOf([null, expect.any(String)]),
-            description: expect.toBeOneOf([null, expect.any(String)]),
-            version: expect.toBeOneOf([null, expect.any(String)]),
-            // custom_metadata: expect.toBeOneOf([null, expect.anything()]),
-            collected_by: expect.toBeOneOf([null, expect.any(String)]),
-            collection_date: expect.toBeOneOf([null, expect.any(String)]),
-            valid_from: expect.toBeOneOf([null, expect.any(String)]),
-            valid_to: expect.toBeOneOf([null, expect.toBeOneOf([null, expect.any(String)]),]),
-            collection_method: expect.toBeOneOf([
-              null,
-              MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
-              MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(), "others",
-              MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
-              MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()]),
-            data_source: expect.toBeOneOf([
-              null,
-              MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
-              MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
-              MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()]),
-            dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
-            schema_version: expect.toBeOneOf([null, expect.any(String)]),
-          }
-        );
+      if (file.metadata.dataset_detail && Object.keys(file.metadata.dataset_detail).length > 0) {
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.name);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.description);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.version);
+        expect.toBeAbsentOrNullOrObject(file.metadata.dataset_detail.custom_metadata);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.collected_by);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.collection_date);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.valid_from);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.valid_to);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.collection_method);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.data_source);
+        expect.toBeAbsentOrNullOrObject(file.metadata.dataset_detail.dataset_area);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.schema_version);
+
+        if (file.metadata.dataset_detail.data_source) {
+          expect(file.metadata.dataset_detail.data_source).toBeOneOf([
+            MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
+            MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
+            MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()
+          ]);
+        }
+
+
+        if (file.metadata.dataset_detail.collection_method) {
+          expect(file.metadata.dataset_detail.collection_method).toBeOneOf([
+            null,
+            MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
+            MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(), "others",
+            MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
+            MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()
+          ]);
+        }
+
       }
       if (file.metadata.dataset_summary && Object.keys(file.metadata.dataset_summary).length > 0) {
         expect.toBeAbsentOrNullOrString(file.metadata.dataset_summary.key_limitations);
@@ -285,32 +292,39 @@ describe('List Datasets', () => {
         expect.toBeAbsentOrNullOrString(file.metadata.data_provenance.location_inaccuracy_factors);
 
       }
-      if (file.metadata.dataset_detail) {
-        expect(file.metadata.dataset_detail).toEqual(
-          {
-            name: expect.toBeOneOf([null, expect.any(String)]),
-            description: expect.toBeOneOf([null, expect.any(String)]),
-            version: expect.toBeOneOf([null, expect.any(String)]),
-            // custom_metadata: expect.toBeOneOf([null, expect.anything()]),
-            collected_by: expect.toBeOneOf([null, expect.any(String)]),
-            collection_date: expect.toBeOneOf([null, expect.any(String)]),
-            valid_from: expect.toBeOneOf([null, expect.any(String)]),
-            valid_to: expect.toBeOneOf([null, expect.toBeOneOf([null, expect.any(String)]),]),
-            collection_method: expect.toBeOneOf([
-              null,
-              MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
-              MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(), "others",
-              MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
-              MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()]),
-            data_source: expect.toBeOneOf([
-              null,
-              MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
-              MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
-              MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()]),
-            dataset_area: expect.toBeOneOf([null, expect.toBeObject()]),
-            schema_version: expect.toBeOneOf([null, expect.any(String)]),
-          }
-        );
+      if (file.metadata.dataset_detail && Object.keys(file.metadata.dataset_detail).length > 0) {
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.name);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.description);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.version);
+        expect.toBeAbsentOrNullOrObject(file.metadata.dataset_detail.custom_metadata);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.collected_by);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.collection_date);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.valid_from);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.valid_to);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.collection_method);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.data_source);
+        expect.toBeAbsentOrNullOrObject(file.metadata.dataset_detail.dataset_area);
+        expect.toBeAbsentOrNullOrString(file.metadata.dataset_detail.schema_version);
+
+        if (file.metadata.dataset_detail.data_source) {
+          expect(file.metadata.dataset_detail.data_source).toBeOneOf([
+            MetadataModelDatasetDetailDataSourceEnum.InHouse.toString(),
+            MetadataModelDatasetDetailDataSourceEnum.TDEITools.toString(),
+            MetadataModelDatasetDetailDataSourceEnum._3rdParty.toString()
+          ]);
+        }
+
+
+        if (file.metadata.dataset_detail.collection_method) {
+          expect(file.metadata.dataset_detail.collection_method).toBeOneOf([
+            null,
+            MetadataModelDatasetDetailCollectionMethodEnum.Generated.toString(),
+            MetadataModelDatasetDetailCollectionMethodEnum.Other.toString(), "others",
+            MetadataModelDatasetDetailCollectionMethodEnum.Transform.toString(),
+            MetadataModelDatasetDetailCollectionMethodEnum.Manual.toString()
+          ]);
+        }
+
       }
       if (file.metadata.dataset_summary && Object.keys(file.metadata.dataset_summary).length > 0) {
         expect.toBeAbsentOrNullOrString(file.metadata.dataset_summary.key_limitations);

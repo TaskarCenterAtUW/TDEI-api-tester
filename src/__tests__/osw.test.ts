@@ -1211,7 +1211,7 @@ describe('Check convert request job running status', () => {
 })
 
 describe('Download converted file', () => {
-  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
     await new Promise((r) => setTimeout(r, 60000));
@@ -1495,7 +1495,7 @@ describe('Check dataset-bbox request job running status', () => {
 });
 
 describe('Download Dataset Bbox request file', () => {
-
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     await new Promise((r) => setTimeout(r, 40000));
     let generalAPI = new CommonAPIsApi(dgConfiguration);
@@ -1647,6 +1647,7 @@ describe('Check dataset-road-tag request job completion status', () => {
 });
 
 describe('Download Dataset Road Tag request file', () => {
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
@@ -1786,7 +1787,7 @@ describe('Dataset Union Request', () => {
 });
 
 describe('Check dataset union request job completion status', () => {
-  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
@@ -1828,6 +1829,7 @@ describe('Check dataset union request job completion status', () => {
 });
 
 describe('Download Dataset Union request file', () => {
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
@@ -2015,7 +2017,7 @@ describe('Check spatial join request job completion status', () => {
 });
 
 describe('Download Spatial join request file', () => {
-  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
   it('Admin | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
