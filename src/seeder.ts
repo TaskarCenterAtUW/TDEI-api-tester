@@ -303,6 +303,28 @@ class APIUtility {
         }
     }
 
+    async updateProjectGroupDataViewerAccess(project_group_id: string, data_viewer_allowed: boolean): Promise<void> {
+        try {
+            const resp = await axios({
+                method: 'patch',
+                url: `/api/v1/project-group/${project_group_id}/data-viewer`,
+                data: {
+                    "dataset_viewer_allowed": data_viewer_allowed,
+                    "feedback_turnaround_time": {
+                        "number": 10,
+                        "units": "days"
+                    }
+                }
+            });
+            if (resp.status !== 200)
+                throw new Error(`Failed to update project group data viewer access, status code: ${resp.status}`);
+
+            console.log('Updated Project group data viewer access : ', project_group_id);
+        } catch (err: any) {
+            throw err;
+        }
+    }
+
     async createUser(): Promise<any> {
         try {
             const resp = await axios({

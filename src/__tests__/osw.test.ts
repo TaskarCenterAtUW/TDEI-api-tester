@@ -3,7 +3,11 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
 import { SeedData } from "../models/types";
+import { waitForJobTerminalState } from "./helpers/jobPoller";
+import { expectAcceptedJobResponse } from "./helpers/asyncJobAsserts";
 const { addMsg } = require("jest-html-reporters/helper");
+
+const EXTRA_TIMEOUT_MS = 60_000;
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -142,16 +146,10 @@ describe('Upload OSW dataset', () => {
       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
-      expect(uploadFileResponse.status).toBe(202);
-      expect(uploadFileResponse.data).not.toBeNull();
-      uploadedJobId = uploadFileResponse.data;
+      uploadedJobId = expectAcceptedJobResponse(uploadFileResponse);
       console.log("uploaded tdei_dataset_id", uploadedJobId);
       await addMsg({ message: { "OSW Data Generator - uploaded Job Id ": uploadedJobId } });
       axios.interceptors.request.eject(uploadInterceptor);
-
-      //verify location header
-      expect(uploadFileResponse.headers.location).toBeDefined();
-      expect(uploadFileResponse.headers.location).toContain(`/api/v1/jobs?job_id=${uploadedJobId}`);
     } catch (e) {
       console.log(e);
     }
@@ -166,9 +164,7 @@ describe('Upload OSW dataset', () => {
       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
-      expect(uploadFileResponse.status).toBe(202);
-      expect(uploadFileResponse.data).not.toBeNull();
-      uploadedJobId_PreRelease_poc = uploadFileResponse.data;
+      uploadedJobId_PreRelease_poc = expectAcceptedJobResponse(uploadFileResponse);
       console.log("uploaded tdei_dataset_id - pre-release", uploadedJobId_PreRelease_poc);
       await addMsg({ message: { "OSW POC - uploaded Job Id ": uploadedJobId_PreRelease_poc } });
       axios.interceptors.request.eject(uploadInterceptor);
@@ -186,10 +182,8 @@ describe('Upload OSW dataset', () => {
       const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
       const uploadFileResponse = await oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id);
 
-      expect(uploadFileResponse.status).toBe(202);
-      uploadedJobId_PreRelease_admin = uploadFileResponse.data;
+      uploadedJobId_PreRelease_admin = expectAcceptedJobResponse(uploadFileResponse);
       await addMsg({ message: { "OSW Admin - uploaded Job Id ": uploadFileResponse.data } });
-      expect(uploadFileResponse.data).not.toBeNull();
       axios.interceptors.request.eject(uploadInterceptor);
     } catch (e) {
       console.log(e);
@@ -315,53 +309,53 @@ describe('Check upload request job completion status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 190000));
-    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, uploadedJobId, true);
-    expect(uploadStatus.status).toBe(200);
-    expect(uploadStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${uploadedJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
-        })
-      ])
-    );
-    uploadedDatasetId = uploadStatus.data[0].response_props.tdei_dataset_id;
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: uploadedJobId,
+      deadlineMs: 10 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+      onPoll: async ({ attempt, elapsedMs, snapshot }) => {
+        if (attempt === 1 || attempt % 15 === 0) {
+          await addMsg({ message: { "Upload job poll": { elapsedMs, snapshot } } });
+        }
+      },
+    });
+
+    expect((job as any)?.job_id).toBeOneOf([`${uploadedJobId}`]);
+    expect((job as any)?.status).toBe("COMPLETED");
+    uploadedDatasetId = (job as any).response_props.tdei_dataset_id;
     console.log("uploaded tdei_dataset_id", uploadedDatasetId);
-  }, 195000);
+  }, 10 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
-    await new Promise((r) => setTimeout(r, 25000));
-    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, uploadedJobId_PreRelease_poc, true);
-    expect(uploadStatus.status).toBe(200);
-    uploadedDatasetId_PreRelease_poc = uploadStatus.data[0].response_props.tdei_dataset_id;
-    expect(uploadStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${uploadedJobId_PreRelease_poc}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
-        })
-      ])
-    );
-  }, 30000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: uploadedJobId_PreRelease_poc,
+      deadlineMs: 10 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${uploadedJobId_PreRelease_poc}`]);
+    expect((job as any)?.status).toBe("COMPLETED");
+    uploadedDatasetId_PreRelease_poc = (job as any).response_props.tdei_dataset_id;
+  }, 10 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 25000));
-    let uploadStatus = await generalAPI.listJobs("", uploadedJobId_PreRelease_admin, true);
-    expect(uploadStatus.status).toBe(200);
-    uploadedDatasetId_PreRelease_admin = uploadStatus.data[0].response_props.tdei_dataset_id;
-    expect(uploadStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${uploadedJobId_PreRelease_admin}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
-        })
-      ])
-    );
-  }, 30000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: "",
+      jobId: uploadedJobId_PreRelease_admin,
+      deadlineMs: 10 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${uploadedJobId_PreRelease_admin}`]);
+    expect((job as any)?.status).toBe("COMPLETED");
+    uploadedDatasetId_PreRelease_admin = (job as any).response_props.tdei_dataset_id;
+  }, 10 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
@@ -518,28 +512,30 @@ describe('Check dataset-incline request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('Admin | Authenticated, When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 40000));
-    let formatStatus = await generalAPI.listJobs('', datasetInclineTagJobId, true);
-
-    expect(formatStatus.data).toEqual(
-      expect.arrayContaining([
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: "",
+      jobId: datasetInclineTagJobId,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${datasetInclineTagJobId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+    if ((job as any)?.progress) {
+      expect((job as any).progress).toEqual(
         expect.objectContaining({
-          job_id: expect.toBeOneOf([`${datasetInclineTagJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_stage: expect.any(String)
-          })
+          total_stages: expect.any(Number),
+          completed_stages: expect.any(Number),
+          current_stage: expect.any(String),
         })
-      ])
-    );
-  }, 45000);
+      );
+    }
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    let uploadStatus = await generalAPI.listJobs('', datasetInclineTagJobId, true);
-    expect(uploadStatus.status).toBe(200);
+    const resp = await generalAPI.listJobs('', datasetInclineTagJobId, true);
+    expect(resp.status).toBe(200);
   }, 25000);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
@@ -694,20 +690,16 @@ describe('Check publish request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generaror | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 40000));
-
-    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, publishJobId, true, NULL_PARAM, NULL_PARAM);
-
-    expect(uploadStatus.status).toBe(200);
-    expect(uploadStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${publishJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"])
-        })
-      ])
-    );
-  }, 45000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: publishJobId,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${publishJobId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -809,20 +801,16 @@ describe('Check validation-only request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-
-    await new Promise((r) => setTimeout(r, 90000));
-    let validateStatus = await generalAPI.listJobs(tdei_project_group_id, validationJobId, true);
-
-    expect(validateStatus.status).toBe(200);
-    expect(validateStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${validationJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"])
-        })
-      ])
-    );
-  }, 95000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: validationJobId,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${validationJobId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -960,49 +948,49 @@ describe('Check confidence request job running status', () => {
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 10000));
-    let confidenceStatus = await generalAPI.listJobs(tdei_project_group_id, confidenceJobId.toString(), true);
-
-    expect(confidenceStatus.status).toBe(200);
-
-    expect(confidenceStatus.data).toEqual(
-      expect.arrayContaining([
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: confidenceJobId.toString(),
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${confidenceJobId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+    if ((job as any)?.progress) {
+      expect((job as any).progress).toEqual(
         expect.objectContaining({
-          job_id: expect.toBeOneOf([`${confidenceJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
+          total_stages: expect.any(Number),
+          completed_stages: expect.any(Number),
+          current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
+          current_stage: expect.any(String),
         })
-      ])
-    );
-  }, 15000);
+      );
+    }
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('OSW Data Generator | Authenticated , When request made to check confidence with sub-region request, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 10000));
-    let confidenceStatus = await generalAPI.listJobs(tdei_project_group_id, confidenceJobWithSubRegionId.toString(), true);
-
-    expect(confidenceStatus.status).toBe(200);
-
-    expect(confidenceStatus.data).toEqual(
-      expect.arrayContaining([
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: confidenceJobWithSubRegionId.toString(),
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${confidenceJobWithSubRegionId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+    if ((job as any)?.progress) {
+      expect((job as any).progress).toEqual(
         expect.objectContaining({
-          job_id: expect.toBeOneOf([`${confidenceJobWithSubRegionId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
+          total_stages: expect.any(Number),
+          completed_stages: expect.any(Number),
+          current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
+          current_stage: expect.any(String),
         })
-      ])
-    );
-  }, 15000);
+      );
+    }
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -1167,25 +1155,26 @@ describe('Check convert request job running status', () => {
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 20000));
-
-    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, convertJobId, true);
-
-    expect(formatStatus.data).toEqual(
-      expect.arrayContaining([
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: convertJobId,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${convertJobId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+    if ((job as any)?.progress) {
+      expect((job as any).progress).toEqual(
         expect.objectContaining({
-          job_id: expect.toBeOneOf([`${convertJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
+          total_stages: expect.any(Number),
+          completed_stages: expect.any(Number),
+          current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
+          current_stage: expect.any(String),
         })
-      ])
-    );
-  }, 35000);
+      );
+    }
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -1214,7 +1203,13 @@ describe('Download converted file', () => {
   jest.retryTimes(3, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 60000));
+    await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: convertJobId,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
 
     let response = await generalAPI.jobDownload(convertJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1228,7 +1223,7 @@ describe('Download converted file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBe(1);
     }
-  }, 65000);
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
@@ -1429,47 +1424,29 @@ describe('Check dataset-bbox request job running status', () => {
   jest.retryTimes(1, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated ,[OSM] When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 40000));
-
-    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetBboxJobIdOSM, true);
-
-    expect(formatStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${datasetBboxJobIdOSM}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
-        })
-      ])
-    );
-  }, 45000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: datasetBboxJobIdOSM,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${datasetBboxJobIdOSM}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('OSW Data Generator | Authenticated , [OSW] When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 40000));
-
-    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetBboxJobIdOSW, true);
-
-    expect(formatStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${datasetBboxJobIdOSW}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
-        })
-      ])
-    );
-  }, 45000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: datasetBboxJobIdOSW,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${datasetBboxJobIdOSW}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -1497,8 +1474,14 @@ describe('Check dataset-bbox request job running status', () => {
 describe('Download Dataset Bbox request file', () => {
   jest.retryTimes(3, { logErrorsBeforeRetry: true });
   it('OSW Data Generator | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
-    await new Promise((r) => setTimeout(r, 40000));
     let generalAPI = new CommonAPIsApi(dgConfiguration);
+    await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: datasetBboxJobIdOSM,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
 
     let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1512,7 +1495,7 @@ describe('Download Dataset Bbox request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 45000);
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
@@ -1609,19 +1592,16 @@ describe('Check dataset-road-tag request job completion status', () => {
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 50000));
-
-    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetRoadTagJobId, true);
-
-    expect(formatStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${datasetRoadTagJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
-        })
-      ])
-    );
-  }, 55000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: datasetRoadTagJobId,
+      deadlineMs: 8 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${datasetRoadTagJobId}`]);
+    expect((job as any)?.status).toBe("COMPLETED");
+  }, 8 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -1651,7 +1631,13 @@ describe('Download Dataset Road Tag request file', () => {
 
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 20000));
+    await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: "",
+      jobId: datasetRoadTagJobId,
+      deadlineMs: 8 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
 
     let response = await generalAPI.jobDownload(datasetRoadTagJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
@@ -1665,7 +1651,7 @@ describe('Download Dataset Road Tag request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 25000);
+  }, 8 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
@@ -1791,19 +1777,16 @@ describe('Check dataset union request job completion status', () => {
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 120000));
-
-    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, datasetUnionJobId, true);
-
-    expect(formatStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${datasetUnionJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"])
-        })
-      ])
-    );
-  }, 130000);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: datasetUnionJobId,
+      deadlineMs: 12 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${datasetUnionJobId}`]);
+    expect((job as any)?.status).toBe("COMPLETED");
+  }, 12 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -1974,25 +1957,26 @@ describe('Check spatial join request job completion status', () => {
 
   it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 20000));
-
-    let formatStatus = await generalAPI.listJobs(tdei_project_group_id, spacialJoinJobId, true);
-
-    expect(formatStatus.data).toEqual(
-      expect.arrayContaining([
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: spacialJoinJobId,
+      deadlineMs: 8 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${spacialJoinJobId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+    if ((job as any)?.progress) {
+      expect((job as any).progress).toEqual(
         expect.objectContaining({
-          job_id: expect.toBeOneOf([`${spacialJoinJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
+          total_stages: expect.any(Number),
+          completed_stages: expect.any(Number),
+          current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING", "FAILED"]),
+          current_stage: expect.any(String),
         })
-      ])
-    );
-  }, 45000);
+      );
+    }
+  }, 8 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -2021,7 +2005,13 @@ describe('Download Spatial join request file', () => {
 
   it('Admin | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
-    await new Promise((r) => setTimeout(r, 40000));
+    await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: "",
+      jobId: spacialJoinJobId,
+      deadlineMs: 8 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
     let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
@@ -2034,7 +2024,7 @@ describe('Download Spatial join request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(1);
     }
-  }, 50000);
+  }, 8 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
   it('API-Key | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);

@@ -235,7 +235,7 @@ export class Utility {
             randomMetadata['dataset_detail']['schema_version'] = 'v1.0';
         } else if (type == 'osw') {
             randomMetadata = metadata_osw;
-            randomMetadata['dataset_detail']['schema_version'] = 'v0.2';
+            randomMetadata['dataset_detail']['schema_version'] = 'v0.3';
         }
 
         randomMetadata['dataset_detail']['name'] = faker.random.alphaNumeric(9) + `_${type}`;
@@ -271,7 +271,7 @@ export class Utility {
             randomMetadata['dataset_detail']['schema_version'] = 'v1.0';
         } else if (type == 'osw') {
             randomMetadata = metadata_osw;
-            randomMetadata['dataset_detail']['schema_version'] = 'v0.2';
+            randomMetadata['dataset_detail']['schema_version'] = 'v0.3';
         }
 
         randomMetadata = this.replaceValues(randomMetadata, keyMap);
