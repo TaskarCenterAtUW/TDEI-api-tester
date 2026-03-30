@@ -220,7 +220,7 @@ export class Utility {
     }
 
     static getOSMBlob(): Blob {
-        return this.getFileBlob('osw', "osw-la-osm.xml", "application/xml");
+        return this.getFileBlob('osw', "osw-la-osm.xml.zip");
     }
     // Change the implementation
     static getChangesetBlob(): Blob {
