@@ -219,6 +219,9 @@ export class Utility {
         return this.getFileBlob('osw', 'osw-la.zip');
     }
 
+    static getOSMBlob(): Blob {
+        return this.getFileBlob('osw', "osw-la-osm.xml", "application/xml");
+    }
     // Change the implementation
     static getChangesetBlob(): Blob {
         return this.getFileBlob('osw', 'changeset.zip');

@@ -34,6 +34,7 @@ export class Seeder {
                 //User associated project group and service
                 const project_group = await this.client.createProjectGroup();
                 seedData.project_group = project_group;
+                await this.client.updateProjectGroupDatasetViewerAccess(project_group.tdei_project_group_id, true, { number: 10, units: "days" });
                 const services = await this.createService(project_group.tdei_project_group_id);
                 seedData.services = services;
                 //User not associated project group and service
@@ -303,26 +304,31 @@ class APIUtility {
         }
     }
 
-    async updateProjectGroupDataViewerAccess(project_group_id: string, data_viewer_allowed: boolean): Promise<void> {
+    async updateProjectGroupDatasetViewerAccess(
+        project_group_id: string,
+        data_viewer_allowed: boolean,
+        feedback_turnaround_time: { number: number; units: "days" | "months" | "years" } = { number: 10, units: "days" }
+    ): Promise<void> {
         try {
             const resp = await axios({
-                method: 'patch',
-                url: `/api/v1/project-group/${project_group_id}/data-viewer`,
+                method: 'post',
+                url: `/api/v1/project-group/${project_group_id}/dataset-viewer`,
                 data: {
                     "dataset_viewer_allowed": data_viewer_allowed,
-                    "feedback_turnaround_time": {
-                        "number": 10,
-                        "units": "days"
-                    }
+                    "feedback_turnaround_time": feedback_turnaround_time
                 }
             });
             if (resp.status !== 200)
-                throw new Error(`Failed to update project group data viewer access, status code: ${resp.status}`);
+                throw new Error(`Failed to update project group dataset viewer access, status code: ${resp.status}`);
 
-            console.log('Updated Project group data viewer access : ', project_group_id);
+            console.log('Updated Project group dataset viewer access : ', project_group_id);
         } catch (err: any) {
             throw err;
         }
+    }
+
+    async updateProjectGroupDataViewerAccess(project_group_id: string, data_viewer_allowed: boolean): Promise<void> {
+        await this.updateProjectGroupDatasetViewerAccess(project_group_id, data_viewer_allowed);
     }
 
     async createUser(): Promise<any> {
