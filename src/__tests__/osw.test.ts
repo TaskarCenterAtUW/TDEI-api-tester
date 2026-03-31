@@ -2157,7 +2157,7 @@ describe("Quality Report API", () => {
     await expect(oswAPI.oswQualityReportGenerate(tdei_dataset_id)).rejects.toMatchObject({ response: { status: 401 } });
   }, 8 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
-  it("Admin | Authenticated, when request made with non-OSW dataset id, should return 400", async () => {
+  it("Admin | Authenticated, when request made with non-OSW dataset id, should return 400/404", async () => {
     const nonOswDatasetId = seedData.datasets.flex.published_dataset;
     let oswAPI = new OSWApi(adminConfiguration);
     await expect(oswAPI.oswQualityReportGenerate(nonOswDatasetId)).rejects.toMatchObject({ response: { status: 400 } });
@@ -2453,6 +2453,9 @@ describe("Dataset Viewer PM Tiles", () => {
   it('Admin | Authenticated, When request made, should return PM tiles SAS url', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
     let tdei_dataset_id = seedData.datasets.osw.published_dataset;
+
+    const resp1 = await oswAPI.oswDatasetViewer({ allow_viewer_access: true }, tdei_dataset_id);
+    expect(resp1.status).toBe(200);
 
     const resp = await oswAPI.oswDatasetViewerPMTiles(tdei_dataset_id);
     expect(resp.status).toBe(200);
