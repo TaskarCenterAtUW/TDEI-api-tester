@@ -104,6 +104,18 @@ const oswValidateRequestInterceptor = (request: InternalAxiosRequestConfig, data
   return request;
 };
 
+const oswSanitizeRequestInterceptor = (request: InternalAxiosRequestConfig, datasetName: string) => {
+  if (
+    request.url?.includes(`/api/v1/osw/sanitize`)
+  ) {
+    let data = request.data as FormData;
+    let datasetFile = data.get("dataset") as File;
+    delete data['dataset'];
+    data.set('dataset', datasetFile, datasetName);
+  }
+  return request;
+};
+
 const oswConvertRequestInterceptor = (request: InternalAxiosRequestConfig, fileName: string) => {
   if (
     request.url?.includes(`/api/v1/osw/convert`)
@@ -843,6 +855,156 @@ describe('Check validation-only request job running status', () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
     let validateStatusResponse = generalAPI.listJobs("", validationJobId, true);
     await expect(validateStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+});
+
+let sanitizeJobId: string = '1';
+describe('Sanitize OSW dataset request', () => {
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+    let dataset = Utility.getOSWBlob();
+    const sanitizeInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswSanitizeRequestInterceptor(req, 'osw-valid.zip'))
+    const sanitizeFileResponse = await oswAPI.sanitizeOswFileForm(dataset);
+
+    expect(sanitizeFileResponse.status).toBe(202);
+    expect(sanitizeFileResponse.data).not.toBeNull();
+    sanitizeJobId = sanitizeFileResponse.data;
+    console.log("sanitize job_id", sanitizeJobId);
+    axios.interceptors.request.eject(sanitizeInterceptor);
+
+    expect(sanitizeFileResponse.headers.location).toBeDefined();
+    expect(sanitizeFileResponse.headers.location).toContain(`/api/v1/jobs?job_id=${sanitizeJobId}`);
+  }, 20000);
+
+  it('POC | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    let dataset = Utility.getOSWBlob();
+    const sanitizeInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswSanitizeRequestInterceptor(req, 'osw-valid.zip'))
+    const sanitizeFileResponse = await oswAPI.sanitizeOswFileForm(dataset);
+
+    expect(sanitizeFileResponse.status).toBe(202);
+    expect(sanitizeFileResponse.data).not.toBeNull();
+    axios.interceptors.request.eject(sanitizeInterceptor);
+  }, 20000);
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+    let dataset = Utility.getOSWBlob();
+    const sanitizeInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswSanitizeRequestInterceptor(req, 'osw-valid.zip'))
+    const sanitizeFileResponse = await oswAPI.sanitizeOswFileForm(dataset);
+
+    expect(sanitizeFileResponse.status).toBe(202);
+    expect(sanitizeFileResponse.data).not.toBeNull();
+    axios.interceptors.request.eject(sanitizeInterceptor);
+  }, 20000);
+
+  it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+    let dataset = Utility.getOSWBlob();
+
+    const sanitizeInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswSanitizeRequestInterceptor(req, 'osw-valid.zip'))
+    const sanitizeFileResponse = oswAPI.sanitizeOswFileForm(dataset);
+
+    await expect(sanitizeFileResponse).rejects.toMatchObject({ response: { status: 401 } });
+    axios.interceptors.request.eject(sanitizeInterceptor);
+  }, 20000);
+
+  it('API-Key | Authenticated , When request made with dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+    let dataset = Utility.getOSWBlob();
+    const sanitizeInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswSanitizeRequestInterceptor(req, 'osw-valid.zip'))
+    const sanitizeFileResponse = await oswAPI.sanitizeOswFileForm(dataset, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
+
+    expect(sanitizeFileResponse.status).toBe(202);
+    expect(sanitizeFileResponse.data).not.toBeNull();
+    axios.interceptors.request.eject(sanitizeInterceptor);
+  }, 20000);
+});
+
+describe('Check sanitize request job running status', () => {
+  jest.retryTimes(1, { logErrorsBeforeRetry: true });
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: sanitizeJobId,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${sanitizeJobId}`]);
+    expect((job as any)?.status).toBeOneOf(["COMPLETED", "FAILED"]);
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let sanitizeStatus = await generalAPI.listJobs(tdei_project_group_id, sanitizeJobId, true);
+    expect(sanitizeStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let sanitizeStatus = await generalAPI.listJobs("", sanitizeJobId, true);
+    expect(sanitizeStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+    let sanitizeStatusResponse = generalAPI.listJobs("", sanitizeJobId, true);
+    await expect(sanitizeStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+});
+
+describe('Download sanitize request file', () => {
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
+
+  it('Admin | Authenticated , When request made with sanitize job id, should stream the zip file', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: "",
+      jobId: sanitizeJobId,
+      deadlineMs: 6 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+
+    let response = await generalAPI.jobDownload(sanitizeJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(0);
+    }
+  }, 6 * 60 * 1000 + EXTRA_TIMEOUT_MS);
+
+  it('API-Key | Authenticated , When request made with sanitize job id, should stream the zip file', async () => {
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
+
+    let response = await generalAPI.jobDownload(sanitizeJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(0);
+    }
+  }, 20000);
+
+  it('Admin | un-authenticated , When request made with sanitize job id, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let downloadResponse = generalAPI.jobDownload(sanitizeJobId);
+
+    await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });
 });
 
@@ -1924,6 +2086,189 @@ describe('Download Dataset Union request file', () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
     let downloadResponse = generalAPI.jobDownload(datasetUnionJobId);
+
+    await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+let datasetSelfMergeJobId = '1';
+describe('Dataset Self Merge Request', () => {
+
+  it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+
+    let selfMergeRequest = await oswAPI.oswSelfMerge({
+      tdei_dataset_id: uploadedDatasetId,
+      proximity: 0.5
+    });
+
+    expect(selfMergeRequest.status).toBe(202);
+    expect(selfMergeRequest.data).toBeNumber();
+    datasetSelfMergeJobId = selfMergeRequest.data!;
+    console.log("dataset Self Merge job_id", datasetSelfMergeJobId);
+    expect(selfMergeRequest.headers.location).toBeDefined();
+    expect(selfMergeRequest.headers.location).toContain(`/api/v1/jobs?job_id=${datasetSelfMergeJobId}`);
+  });
+
+  it('Admin | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let selfMergeRequest = await oswAPI.oswSelfMerge({
+      tdei_dataset_id: uploadedDatasetId,
+      proximity: 1.0
+    });
+
+    expect(selfMergeRequest.status).toBe(202);
+    expect(selfMergeRequest.data).toBeNumber();
+  });
+
+  it('POC | Authenticated , When request made with valid dataset and default proximity, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    let selfMergeRequest = await oswAPI.oswSelfMerge({
+      tdei_dataset_id: uploadedDatasetId
+    });
+
+    expect(selfMergeRequest.status).toBe(202);
+    expect(selfMergeRequest.data).toBeNumber();
+  });
+
+  it('Admin | authenticated , When request made with invalid dataset, should return with dataset not found error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let selfMergeRequest = oswAPI.oswSelfMerge({
+      tdei_dataset_id: "invalid"
+    });
+
+    await expect(selfMergeRequest).rejects.toMatchObject({ response: { status: 404 } });
+  });
+
+  it('Admin | authenticated , When request made with non-osw dataset, should return with bad request error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let selfMergeRequest = oswAPI.oswSelfMerge({
+      tdei_dataset_id: seedData.datasets.flex.published_dataset
+    });
+
+    await expect(selfMergeRequest).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('Admin | authenticated , When request made with invalid proximity type, should return with bad request error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let selfMergeRequest = oswAPI.oswSelfMerge({
+      tdei_dataset_id: uploadedDatasetId,
+      proximity: "invalid" as any
+    });
+
+    await expect(selfMergeRequest).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
+  it('Admin | un-authenticated , When request made with dataset, should return with unauthenticated request', async () => {
+    let oswAPI = new OSWApi(Utility.getAdminConfiguration());
+
+    let selfMergeRequest = oswAPI.oswSelfMerge({
+      tdei_dataset_id: uploadedDatasetId,
+      proximity: 0.5
+    });
+
+    await expect(selfMergeRequest).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+  it('API-Key | Authenticated , When request made with dataset, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(apiKeyConfiguration);
+
+    let selfMergeRequest = await oswAPI.oswSelfMerge({
+      tdei_dataset_id: seedData.datasets.osw.test_dataset,
+      proximity: 0.5
+    }, { headers: { 'x-api-key': apiKeyConfiguration.apiKey?.toString() } });
+
+    expect(selfMergeRequest.status).toBe(202);
+    expect(selfMergeRequest.data).toBeNumber();
+  });
+
+});
+
+describe('Check dataset self merge request job completion status', () => {
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
+
+  it('OSW Data Generator | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: datasetSelfMergeJobId,
+      deadlineMs: 12 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${datasetSelfMergeJobId}`]);
+    expect((job as any)?.status).toBe("COMPLETED");
+  }, 12 * 60 * 1000 + EXTRA_TIMEOUT_MS);
+
+  it('POC | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(pocConfiguration);
+    let selfMergeStatus = await generalAPI.listJobs(tdei_project_group_id, datasetSelfMergeJobId, true);
+    expect(selfMergeStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | Authenticated , When request made, should respond with job status', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+    let selfMergeStatus = await generalAPI.listJobs("", datasetSelfMergeJobId, true);
+    expect(selfMergeStatus.status).toBe(200);
+  }, 25000);
+
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let selfMergeStatusResponse = generalAPI.listJobs("", datasetSelfMergeJobId, true);
+
+    await expect(selfMergeStatusResponse).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+});
+
+describe('Download Dataset Self Merge request file', () => {
+  jest.retryTimes(3, { logErrorsBeforeRetry: true });
+
+  it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+
+    let response = await generalAPI.jobDownload(datasetSelfMergeJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(0);
+    }
+  }, 20000);
+
+  it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
+    let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
+
+    let response = await generalAPI.jobDownload(datasetSelfMergeJobId, { responseType: 'arraybuffer' });
+    const data: any = response.data;
+    const contentType = response.headers['content-type'];
+
+    expect(contentType).toBeOneOf(["application/zip"]);
+    expect(response.data).not.toBeNull();
+    expect(response.status).toBe(200);
+    if (contentType === "application/zip") {
+      const zip = new AdmZip(data);
+      const entries = zip.getEntries();
+      expect(entries.length).toBeGreaterThanOrEqual(0);
+    }
+  }, 20000);
+
+  it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
+    let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
+
+    let downloadResponse = generalAPI.jobDownload(datasetSelfMergeJobId);
 
     await expect(downloadResponse).rejects.toMatchObject({ response: { status: 401 } });
   });

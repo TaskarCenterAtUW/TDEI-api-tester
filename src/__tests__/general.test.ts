@@ -425,7 +425,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       NULL_PARAM,// page_no,
       page_size,
       "status",
@@ -497,7 +498,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,// page_size,
       "valid_from",
@@ -570,7 +572,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,// page_size,
       "valid_to",
@@ -643,7 +646,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size,
       "uploaded_timestamp",
@@ -716,7 +720,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size,
       "project_group_name",
@@ -788,7 +793,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -858,7 +864,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -927,7 +934,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -996,7 +1004,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      false,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1066,7 +1075,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1136,7 +1146,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1207,6 +1218,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
       NULL_PARAM,// data_viewer_allowed
+      false,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1346,6 +1358,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
       NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1417,6 +1430,7 @@ describe('List Datasets', () => {
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
       NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1486,7 +1500,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      NULL_PARAM,// data_viewer_allowed
+      NULL_PARAM,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1554,7 +1569,8 @@ describe('List Datasets', () => {
       NULL_PARAM,// validation_conducted_by,
       NULL_PARAM,// excluded_data,
       NULL_PARAM,// excluded_data_reason,
-      true,// data_viewer_allowed
+      true,// data_viewer_allowed,
+      NULL_PARAM,// include_groups,
       1,// page_no,
       1,//page_size
       // options ?: AxiosRequestConfig
@@ -1564,6 +1580,213 @@ describe('List Datasets', () => {
     datasetFiles.data.forEach((file: any) => {
       expect(file.data_viewer_allowed).toBe(true)
     })
+  });
+
+  it('POC | Authenticated , When request made with include_my_groups true, should return only datasets from project groups the user belongs to', async () => {
+    let oswAPI = new CommonAPIsApi(pocConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations,
+      NULL_PARAM,// release notes,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// data_viewer_allowed,
+      true,// include_my_groups,
+      1,// page_no,
+      10,// page_size
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+    expect(datasetFiles.data).not.toBeEmpty();
+    datasetFiles.data.forEach(file => {
+      expect(file.project_group.tdei_project_group_id).toBe(tdei_project_group_id);
+    });
+  });
+
+  it('Default-User | Authenticated , When request made with include_my_groups true, should return empty list for user with no project group memberships', async () => {
+    let oswAPI = new CommonAPIsApi(defaultUserConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations,
+      NULL_PARAM,// release notes,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// data_viewer_allowed,
+      true,// include_my_groups,
+      1,// page_no,
+      10,// page_size
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+    expect(datasetFiles.data).toBeEmpty();
+  });
+
+  it('Admin | Authenticated , When request made with include_my_groups true, should still return datasets as admin ignores the filter', async () => {
+    let oswAPI = new CommonAPIsApi(adminConfiguration);
+
+    const datasetFiles = await oswAPI.listDatasetFiles(
+      NULL_PARAM,// data_type,
+      "All",// status,
+      NULL_PARAM,// name,
+      NULL_PARAM,// version,
+      NULL_PARAM,// data_source,
+      NULL_PARAM,// collection_method,
+      NULL_PARAM,// collected_by,
+      NULL_PARAM,// derived_from_dataset_id,
+      NULL_PARAM,// collection_date,
+      NULL_PARAM,// confidence_level,
+      NULL_PARAM,// schema_version,
+      NULL_PARAM,// tdei_project_group_id,
+      NULL_PARAM,// service_id,
+      NULL_PARAM,// valid_from,
+      NULL_PARAM,// valid_to,
+      NULL_PARAM,// tdei_dataset_id,
+      NULL_PARAM,// bbox,
+      NULL_PARAM,// other_published_locations,
+      NULL_PARAM,// dataset_update_frequency_months,
+      NULL_PARAM,// schema_validation_run_description,
+      NULL_PARAM,// full_dataset_name,
+      NULL_PARAM,// collection_name,
+      NULL_PARAM,// department_name,
+      NULL_PARAM,// city,
+      NULL_PARAM,// region,
+      NULL_PARAM,// county,
+      NULL_PARAM,// key_limitations,
+      NULL_PARAM,// release notes,
+      NULL_PARAM,// challenges,
+      NULL_PARAM,// official_maintainer,
+      NULL_PARAM,// last_updated,
+      NULL_PARAM,// update_frequency,
+      NULL_PARAM,// authorization_chain,
+      NULL_PARAM,// maintenance_funded,
+      NULL_PARAM,// funding_details,
+      NULL_PARAM,// point_data_collection_device,
+      NULL_PARAM,// node_locations_and_attributes_editing_software,
+      NULL_PARAM,// data_collected_by_people,
+      NULL_PARAM,// data_collectors,
+      NULL_PARAM,// data_captured_automatically,
+      NULL_PARAM,// automated_collection,
+      NULL_PARAM,// data_collectors_organization,
+      NULL_PARAM,// data_collector_compensation,
+      NULL_PARAM,// preprocessing_location,
+      NULL_PARAM,// preprocessing_by,
+      NULL_PARAM,// preprocessing_steps,
+      NULL_PARAM,// data_collection_preprocessing_documentation,
+      NULL_PARAM,// documentation_uri,
+      NULL_PARAM,// validation_process_exists,
+      NULL_PARAM,// validation_process_description,
+      NULL_PARAM,// validation_conducted_by,
+      NULL_PARAM,// excluded_data,
+      NULL_PARAM,// excluded_data_reason,
+      NULL_PARAM,// data_viewer_allowed,
+      true,// include_my_groups,
+      1,// page_no,
+      10,// page_size
+    );
+
+    expect(datasetFiles.status).toBe(200);
+    expect(Array.isArray(datasetFiles.data)).toBe(true);
+    expect(datasetFiles.data).not.toBeEmpty();
   });
 
   it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {

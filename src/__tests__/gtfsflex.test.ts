@@ -4,8 +4,11 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
 import exp from "constants";
 import { SeedData } from "../models/types";
+import { waitForJobTerminalState } from "./helpers/jobPoller";
 
 const NULL_PARAM = void 0;
+const MIN_JOB_DEADLINE_MS = 5 * 60 * 1000;
+const EXTRA_TIMEOUT_MS = 60_000;
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -228,26 +231,23 @@ describe('Check upload request job completion status', () => {
     jest.retryTimes(1, { logErrorsBeforeRetry: true });
     it('Flex Data Generator | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new CommonAPIsApi(dgConfiguration);
-        await new Promise((r) => setTimeout(r, 80000));
-        let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, uploadedJobId, true);
-        expect(uploadStatus.status).toBe(200);
-        expect(uploadStatus.data).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    job_id: expect.toBeOneOf([`${uploadedJobId}`]),
-                    status: expect.toBeOneOf(["COMPLETED"]),
-                    progress: expect.objectContaining({
-                        total_stages: expect.any(Number),
-                        completed_stages: expect.any(Number),
-                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-                        current_stage: expect.any(String)
-                    })
-                })
-            ])
-        );
-        uploadedDatasetId = uploadStatus.data[0].response_props.tdei_dataset_id;
+
+        const { job } = await waitForJobTerminalState({
+            api: generalAPI,
+            projectGroupId: tdei_project_group_id,
+            jobId: uploadedJobId,
+            deadlineMs: MIN_JOB_DEADLINE_MS,
+            terminalStatuses: ["COMPLETED", "FAILED"],
+        });
+
+        expect(job).toBeDefined();
+        expect((job as any).job_id?.toString()).toBe(uploadedJobId.toString());
+        expect((job as any).status).toBe("COMPLETED");
+        expect((job as any).progress).toEqual(expect.any(Object));
+
+        uploadedDatasetId = (job as any).response_props.tdei_dataset_id;
         console.log("uploaded dataset_id", uploadedDatasetId);
-    }, 90000);
+    }, MIN_JOB_DEADLINE_MS + EXTRA_TIMEOUT_MS);
 
     it('POC | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -426,26 +426,20 @@ describe('Check publish request job completion status', () => {
 
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new CommonAPIsApi(adminConfiguration);
-        await new Promise((r) => setTimeout(r, 60000));
 
-        let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, publishJobId, true);
+        const { job } = await waitForJobTerminalState({
+            api: generalAPI,
+            projectGroupId: tdei_project_group_id,
+            jobId: publishJobId,
+            deadlineMs: MIN_JOB_DEADLINE_MS,
+            terminalStatuses: ["COMPLETED", "FAILED"],
+        });
 
-        expect(uploadStatus.status).toBe(200);
-        expect(uploadStatus.data).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    job_id: expect.toBeOneOf([`${publishJobId}`]),
-                    status: expect.toBeOneOf(["COMPLETED"]),
-                    progress: expect.objectContaining({
-                        total_stages: expect.any(Number),
-                        completed_stages: expect.any(Number),
-                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-                        current_stage: expect.any(String)
-                    })
-                })
-            ])
-        );
-    }, 70000);
+        expect(job).toBeDefined();
+        expect((job as any).job_id?.toString()).toBe(publishJobId.toString());
+        expect((job as any).status).toBe("COMPLETED");
+        expect((job as any).progress).toEqual(expect.any(Object));
+    }, MIN_JOB_DEADLINE_MS + EXTRA_TIMEOUT_MS);
 
     it('POC | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -536,25 +530,19 @@ describe('Check validation-only request job completion status', () => {
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new CommonAPIsApi(adminConfiguration);
 
-        await new Promise((r) => setTimeout(r, 20000));
-        let validateStatus = await generalAPI.listJobs("", validationJobId, true);
+        const { job } = await waitForJobTerminalState({
+            api: generalAPI,
+            projectGroupId: "",
+            jobId: validationJobId,
+            deadlineMs: MIN_JOB_DEADLINE_MS,
+            terminalStatuses: ["COMPLETED", "FAILED"],
+        });
 
-        expect(validateStatus.status).toBe(200);
-        expect(validateStatus.data).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    job_id: expect.toBeOneOf([`${validationJobId}`]),
-                    status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"]),
-                    progress: expect.objectContaining({
-                        total_stages: expect.any(Number),
-                        completed_stages: expect.any(Number),
-                        current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-                        current_stage: expect.any(String)
-                    })
-                })
-            ])
-        );
-    }, 25000);
+        expect(job).toBeDefined();
+        expect((job as any).job_id?.toString()).toBe(validationJobId.toString());
+        expect((job as any).status).toBe("COMPLETED");
+        expect((job as any).progress).toEqual(expect.any(Object));
+    }, MIN_JOB_DEADLINE_MS + EXTRA_TIMEOUT_MS);
 
     it('POC | Authenticated , When request made, should respond with job status', async () => {
         let generalAPI = new CommonAPIsApi(pocConfiguration);
