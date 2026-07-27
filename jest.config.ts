@@ -9,6 +9,7 @@ export default async (): Promise<Config> => {
         testEnvironment: 'node',
         testTimeout: 15000,
         setupFilesAfterEnv: ["./jest.setup.ts"],
+        testPathIgnorePatterns: ["/node_modules/", "/src/__tests__/helpers/"],
         reporters: [
             "default",
             ["jest-html-reporters", {

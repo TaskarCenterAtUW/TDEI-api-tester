@@ -30,6 +30,8 @@ Application configuration is read from .env file. Below are the list of environe
 |SEED_ADMIN_PASSWORD |admin password|
 |SYSTEM_BASE_URL | TDEI API url|
 |ENVIRONMENT | Environement to run api tester dev, stage, prod|
+|DEFAULT_PASSWORD | Default password for the users created |
+|DEFAULT_USERNAME | TDEI username which has default group permission only|
 
 
 ## API Tester Environment Data

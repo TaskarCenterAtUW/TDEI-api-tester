@@ -10,5 +10,6 @@ export default async function globalSetup() {
         console.log('Seeding completed successfully.');
     } catch (error) {
         console.error('Global setup error:', error);
+        process.exit(1);
     }
 }

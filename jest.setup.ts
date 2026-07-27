@@ -35,6 +35,23 @@ expect.extend({
     },
 });
 
+expect.extend({
+    toBeAbsentOrNullOrObject(received) {
+        const pass = received === undefined || received === null || typeof received === 'object';
+        if (pass) {
+            return {
+                message: () => `expected ${received} not to be absent, null, or an object`,
+                pass: true,
+            };
+        } else {
+            return {
+                message: () => `expected ${received} to be absent, null, or an object`,
+                pass: false,
+            };
+        }
+    },
+});
+
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     // Optionally, you can fail the test if there's an unhandled rejection
