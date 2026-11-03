@@ -2402,7 +2402,7 @@ describe('Refresh token', () => {
       refresh_token: expect.any(String)
     });
 
-    let requestResponse = await authApi.refreshToken(response.data.refresh_token!);
+    let requestResponse = await authApi.refreshToken({ refreshToken: response.data.refresh_token! });
     expect(requestResponse.status).toBe(200);
 
     expect(requestResponse.data).toMatchObject(<any>{
@@ -2416,7 +2416,7 @@ describe('Refresh token', () => {
   it('When request made with invalid refresh_token, should respond with unauthenticated request', async () => {
     let authApi = new AuthenticationApi(adminConfiguration);
 
-    const response = authApi.refreshToken("invalid");
+    const response = authApi.refreshToken({ refreshToken: "invalid" });
 
     await expect(response).rejects.toMatchObject({ response: { status: 401 } });
 
