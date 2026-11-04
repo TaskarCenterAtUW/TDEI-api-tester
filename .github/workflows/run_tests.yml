@@ -55,13 +55,14 @@ jobs:
           echo "output_folder=$output_folder" >> "$GITHUB_ENV"
 
       - name: Run tests with coverage
+        shell: bash
         run: |
           timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
           mkdir -p test_results
           log_file="test_results/${timestamp}_report.log"
-          echo -e "\nTest Cases Report Report\n" >> $log_file
-          # Run the tests and append output to the log file
-           npm run test >> $log_file 2>&1
+          printf '\nTest Cases Report\n\n' | tee -a "$log_file"
+          # Stream output to GitHub Actions and save it to the log file.
+          npm run test 2>&1 | tee -a "$log_file"
           # Copy and rename the generated test report with the timestamp
           cp test-report.html test_results/test-report_${timestamp}.html
 
