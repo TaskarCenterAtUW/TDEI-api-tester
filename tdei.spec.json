@@ -31,7 +31,7 @@
                     "Authentication"
                 ],
                 "summary": "Authenticates the user with the TDEI system.",
-                "description": "Authenticates the user with the TDEI system. Returns an access token, if successfully authenticated.",
+                "description": "Authenticates the user with the TDEI system using username and password. Returns an access token and refresh token if successfully authenticated. An optional `client_id` may be provided to select a specific auth server client; when omitted, the system default client is used.",
                 "operationId": "authenticate",
                 "requestBody": {
                     "content": {
@@ -75,14 +75,13 @@
                     "Authentication"
                 ],
                 "summary": "Re-issue an access token",
-                "description": "Re-issues an access token, if a valid refresh token is sent to the server",
+                "description": "Re-issues an access token when a valid refresh token is sent to the server. An optional `client_id` may be provided to select a specific auth server client; when omitted, the system default client is used. The `client_id` should match the client used when the original tokens were issued.",
                 "operationId": "refreshToken",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "string",
-                                "description": "The refresh token that was sent through authentication or refresh token API"
+                                "$ref": "#/components/schemas/RefreshTokenRequest"
                             }
                         }
                     },
@@ -135,6 +134,148 @@
                         "AuthorizationToken": []
                     }
                 ]
+            }
+        },
+        "/api/v1/sso-redirect": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Initiate SSO login",
+                "description": "Starts the Single Sign-On (SSO) login flow by redirecting the browser to the auth server authorization endpoint. The caller must supply a `redirect_uri` that is already registered as a valid redirect URL for the auth server client. After the user authenticates with the auth server, the auth server redirects the browser back to that `redirect_uri` with an authorization `code` and `state` query parameters. The frontend should then call `POST /api/v1/sso-login` with those values to complete login and obtain TDEI access and refresh tokens. An optional `client_id` may be provided to select a specific auth server client; when omitted, the system default client is used.",
+                "operationId": "ssoRedirect",
+                "parameters": [
+                    {
+                        "name": "redirect_uri",
+                        "in": "query",
+                        "description": "Frontend callback URL where the auth server will redirect after successful authentication. Must be registered with the auth server for the selected client.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uri",
+                            "example": "https://app.tdei.us/auth/callback"
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "description": "Auth server client id used for the SSO flow. Optional; defaults to the configured default client id when not provided.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "tdei-web-client"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to the auth server authorization endpoint. Follow the Location header to continue the SSO login flow.",
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "description": "Auth server authorization endpoint URL including client, redirect_uri, state, and other OIDC parameters."
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid redirect_uri. The provided redirect_uri is missing, malformed, or not registered with the auth server for the selected client."
+                    },
+                    "500": {
+                        "description": "An Internal server error occured"
+                    }
+                }
+            }
+        },
+        "/api/v1/sso-login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Complete SSO login",
+                "description": "Completes the Single Sign-On (SSO) login flow by exchanging the authorization `code` and `state` returned from the auth server for TDEI access and refresh tokens. Call this endpoint after the browser is redirected back to the frontend `redirect_uri` from `GET /api/v1/sso-redirect`. The server validates the `state`, exchanges the authorization code with the auth server, and returns a `TokenResponse` that can be used with subsequent authenticated TDEI API requests. The returned tokens follow the same format as the username/password authenticate and refresh-token APIs.",
+                "operationId": "ssoLogin",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SsoLoginRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response - Returns access and refresh tokens.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid code or state. The authorization code could not be exchanged, the state is invalid or expired, or SSO authentication failed."
+                    },
+                    "500": {
+                        "description": "An Internal server error occured"
+                    }
+                }
+            }
+        },
+        "/api/v1/sso-logout": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Initiate SSO logout",
+                "description": "Starts the Single Sign-On (SSO) logout flow by redirecting the browser to the auth server logout endpoint. The caller must supply a `redirect_uri` that is already registered as a Valid post logout redirect URI for the auth server client. After the auth server completes logout, it redirects the browser back to that `redirect_uri`. An optional `client_id` may be provided to select a specific auth server client; when omitted, the system default client is used. The frontend should clear any locally stored TDEI access and refresh tokens after initiating logout.",
+                "operationId": "ssoLogout",
+                "parameters": [
+                    {
+                        "name": "redirect_uri",
+                        "in": "query",
+                        "description": "Frontend URL where the auth server will redirect after logout completes. Must be registered with the auth server as a Valid post logout redirect URI for the selected client.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uri",
+                            "example": "https://app.tdei.us/logout"
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "description": "Auth server client id used for the SSO logout flow. Optional; defaults to the configured default client id when not provided.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "tdei-web-client"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to the auth server logout endpoint. Follow the Location header to continue the SSO logout flow.",
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "description": "Auth server logout endpoint URL including client, post_logout_redirect_uri, and related OIDC logout parameters."
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid redirect_uri. The provided redirect_uri is missing, malformed, or not registered with the auth server as a Valid post logout redirect URI for the selected client."
+                    },
+                    "500": {
+                        "description": "An Internal server error occured"
+                    }
+                }
             }
         },
         "/api/v1/datasets": {
@@ -669,6 +810,15 @@
                         }
                     },
                     {
+                        "name": "include_my_groups",
+                        "in": "query",
+                        "description": "<strong>Include my Group:</strong> When true, the API returns datasets only from project groups the authenticated user belongs to.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "page_no",
                         "in": "query",
                         "description": "<strong>page_no:</strong> Integer, defaults to 1. Filters datasets by retrieving results in pages.",
@@ -1058,7 +1208,7 @@
                     "Common APIs"
                 ],
                 "summary": "Downloads the job output file",
-                "description": "Downloads the output file generated by the job",
+                "description": "Downloads the output file generated by the job.\n\nSome jobs store other files beside their output, such as the Pathways-Convert job's per-level reference data. Pass `file` to download one of those instead.",
                 "operationId": "job-download",
                 "parameters": [
                     {
@@ -1069,6 +1219,17 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "file",
+                        "in": "query",
+                        "description": "Path of another file the job stored, relative to the folder holding the job's output, for example `beacon_hill/reference/platform.geojson`. Path segments may contain only letters, digits, `.`, `_` and `-`, and may not start with `.`, so `..`, a leading `/` and backslashes are refused. Only `.txt`, `.json`, `.zip`, `.xml`, `.geojson` and `.md` files can be downloaded. Give the parameter at most once. With `file`, a Quality-Report job streams that file rather than redirecting to its report.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 512
+                        },
+                        "example": "beacon_hill/reference/platform.geojson"
                     }
                 ],
                 "responses": {
@@ -1078,11 +1239,14 @@
                             "application/octet-stream": {}
                         }
                     },
+                    "400": {
+                        "description": "Invalid job_id, or a `file` path or file type that can't be downloaded."
+                    },
                     "401": {
                         "description": "Unauthenticated request. Check your access token."
                     },
                     "404": {
-                        "description": "Job download file not found or Requested job not found."
+                        "description": "Requested job not found, job download file not found, or the job has no such `file`."
                     },
                     "500": {
                         "description": "An Internal server error occured"
@@ -1128,14 +1292,14 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthenticated request. Check your access token."
+                    },
                     "400": {
                         "description": "Dataset already invalidated.",
                         "content": {
                             "application/json": {}
                         }
-                    },
-                    "401": {
-                        "description": "Unauthenticated request. Check your access token."
                     },
                     "404": {
                         "description": "Dataset not found."
@@ -1383,6 +1547,73 @@
                     },
                     "403": {
                         "description": "User unauthorized to validate the dataset."
+                    },
+                    "500": {
+                        "description": "An Internal server error occured"
+                    }
+                },
+                "security": [
+                    {
+                        "AuthorizationToken": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/osw/sanitize": {
+            "post": {
+                "tags": [
+                    "OSW"
+                ],
+                "summary": "Sanitizes the osw dataset.",
+                "description": "Allows a user to sanitize an OSW dataset by correcting invalid or unsupported values. The response includes a `job_id` for tracking the request. To check the request status, refer to the location header in the response, which provides the URL for the status API endpoint.",
+                "operationId": "sanitizeOswFile",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "dataset"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                    "dataset": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "OSW file which is expected to be a zip file, internally has {nodes, edges, zones}.geojson. If the extensions are present, then the zip file will have {lines, polygons, points}.geojson files"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "The sanitize request has been accepted for processing. It returns a `job_id`, a unique identifier for the sanitize request, which can be used to track the status of the request. The endpoint to check the status is provided in the location header of the response.",
+                        "content": {
+                            "application/text": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "description": "Location api to find the status of request processing"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Dataset input file not found."
+                    },
+                    "401": {
+                        "description": "Unauthenticated request. Check your access token."
+                    },
+                    "403": {
+                        "description": "User unauthorized to sanitize the dataset."
                     },
                     "500": {
                         "description": "An Internal server error occured"
@@ -2233,34 +2464,286 @@
                 "tags": [
                     "OSW"
                 ],
-                "summary": "Performs a union of the two input OSW datasets.",
-                "description": "This function merges spatial data from two datasets by unifying overlapping nodes, edges, and polygons into consolidated geometries. It identifies equivalent nodes based on proximity, aligns and merges overlapping edges, and combines adjacent polygons. The function outputs a single cohesive dataset.The response includes a `job_id` for tracking the request.To check the request status, refer to the location header in the response, which provides the URL for the status API endpoint.",
+                "summary": "Unions two OSW datasets into one, as the config directs.",
+                "description": "Combines two OpenSidewalks (OSW) datasets into **one new dataset**, as the request's `config` directs: which nodes to **snap** together, which duplicate edges to **dedup**, which kinds of way to **connect**, and how to merge zones and extension features.\n\nThe request returns a `job_id` straight away; the union runs in the background (see *Tracking the job* below).\n\n**Nothing is implicit.** Every snap, dedup and junction comes from `config`. With no `config`, the output is the two datasets combined, unchanged. The 4.x parameters `proximity` and `entity_filters` are no longer accepted (see *Moving from 4.x*).\n\n---\n\n## 1. Dataset order\n\n| Parameter | Role |\n|---|---|\n| `tdei_dataset_id_one` (**DS1**) | The default **anchor**: where a node moves or a duplicate is dropped, DS1's stays. |\n| `tdei_dataset_id_two` (**DS2**) | Moved onto DS1 or dropped where it duplicates DS1; everything else is added. |\n\nA snap or dedup rule can set `\"anchor\": \"ds2\"` to reverse this for that rule. Connect rules work in both directions. The two ids must be different datasets.\n\n---\n\n## 2. `config` — four sections\n\n| Section | What it does | Modes |\n|---|---|---|\n| `snap` | Joins a DS1 node and a DS2 node of the same type within a distance; the non-anchor node moves onto the anchor node. | `off`, `default`, `custom` |\n| `dedup` | Removes an edge that duplicates an anchor edge (whole edges only, never trimmed). | `off`, `default`, `custom` |\n| `connect` | Makes junctions between two kinds of way: a node on one line (split there) and, across a gap, a short connector edge. Nothing moves. | `off`, `default`, `custom` |\n| `extensions` | Merges zones and extension points, lines and polygons. | `off`, `default` |\n\n- `off`, or the section left out: the stage does nothing.\n- `default`: the published rule set (section 3) at the section's `proximity` (0.5 m when not given).\n- `custom`: only the rules listed, in the order listed. **The first rule that matches a location takes it**; later rules skip it.\n\nStages always run in this order: snap → dedup → connect → stranding guard → zones and extensions → output.\n\n---\n\n## 3. Default rule sets\n\n| Section | Rules, in order |\n|---|---|\n| `snap` | Nodes at exactly the same spot join, whatever their type (`coincident`); then `crossing`, `pedestrian`, `living_street`, `road` and `other` nodes each join their own kind within `proximity`. Anchor DS1, attributes `merge`. |\n| `dedup` | `crossing`, `pedestrian`, `living_street`, `road` and `other` edges, each against its own kind: a duplicate when at least 80% of it (`min_overlap` 0.8) lies within `proximity` of an anchor edge and its direction is within 30° (`max_angle`) of it. Anchor DS1. |\n| `connect` | `road-crossing` (crossing → road, `point`), `crossing-sidewalk`, `crossing-living-street`, `pedestrian-pedestrian`, `living-street-living-street`, `crossing-crossing` (all `geometry`), at `proximity`, without tags. |\n| `extensions` | All four types enabled: points within 0.5 m, lines with 70% of their length within 0.5 m, polygons and zones covering more than 70% of the DS1 one. |\n\nNo default rule joins a road and a sidewalk, a sidewalk and a living street, or a crossing and a plain footway; add a custom rule for those.\n\n---\n\n## 4. Custom rules\n\n### snap\n\n| Field | Default | Meaning |\n|---|---|---|\n| `type` | required | Which nodes the rule joins; both nodes must match. |\n| `proximity` | the section's, else 0.5 | Maximum distance in metres, 0 to 5 (0 = the same spot only). |\n| `anchor` | `ds1` | Which dataset's node stays put. |\n| `attributes` | `merge` | `merge`: the anchor's values win and keys only the other node has are added. `anchor_only`: nothing is added. |\n| `coincident` (section) | on in `default`, off in `custom` | Join nodes at exactly the same spot, whatever their type. |\n| `others` (section, `custom` only) | none | Distance for node types no rule lists; left out, those do not snap. |\n\nA pair of nodes is governed by the **first rule both match**.\n\n### dedup\n\n| Field | Default | Meaning |\n|---|---|---|\n| `from` | required | The kind of edge that can be removed. |\n| `to` | required | The kind of anchor edge it duplicates (may differ from `from`). |\n| `proximity` | the section's, else 0.5 | Width in metres of the corridor around the anchor edge (above 0, at most 5). |\n| `min_overlap` | the section's, else 0.8 | Share of the edge's length that must lie inside the corridor (above 0, at most 1). |\n| `max_angle` | the section's, else 30 | Degrees the edge's direction may differ from the anchor edge's (above 0, at most 90). An edge joining the same two nodes as an anchor edge is a duplicate at any angle. |\n| `anchor` | `ds1` | Which dataset's edge survives. |\n\n### connect\n\n| Field | Default | Meaning |\n|---|---|---|\n| `name` | required | Unique within the stage; written on everything the rule creates. |\n| `from` | required | Line A: the line whose end joins, or the line that crosses. |\n| `to` | required | Line B: the line that is split. |\n| `operation` | required | `point`: where A crosses B with no shared node, a node is made and both are split; an end of A that stops short of B gets a node on B and a connector. `geometry`: an end of A within reach of B gets a node on B (B is split there) and a connector to it; an end that crosses B and stops just beyond it meets B where it crosses. |\n| `proximity` | the section's, else 0.5 | Largest gap in metres between A's end and B (above 0, at most 5). |\n| `node_tags` | none | Tags written on the junction node the rule makes or reuses. Existing values win; a differing rule value is recorded in `ext:union_audit_<key>`. |\n| `edge_tags` | none | Tags written on the connector edges the rule adds. |\n\nStandard OSW keys in `node_tags` / `edge_tags` are written as given; any other key is written as `ext:<key>`. `_id`, `_u_id`, `_v_id`, `_w_id` and `ext:union_*` cannot be set.\n\n### extensions\n\nOne block per type; every block and every key is optional.\n\n| Block | Settings (default) | When enabled |\n|---|---|---|\n| `points` | `enabled` (true), `proximity` (0.5) | A DS2 point joins a DS1 point of the same type (same tags, ignoring `ext:*`) within `proximity`. DS1 values win; DS2-only keys are added; every DS2 value is kept in `ext:union_audit_<key>`. |\n| `lines` | `enabled` (true), `proximity` (0.5), `min_overlap` (0.7) | A DS2 line with at least `min_overlap` of its length within `proximity` of a DS1 line joins it; DS2-only keys are added. |\n| `polygons` | `enabled` (true), `min_overlap` (0.7) | A DS2 polygon covering more than `min_overlap` of a DS1 polygon's area merges into it (DS1 outline, DS2-only keys added); one that overlaps less is combined with it into one shape. |\n| `zones` | `enabled` (true), `min_overlap` (0.7) | A DS2 zone covering more than `min_overlap` of a DS1 zone's area is dropped; the DS1 zone is kept. |\n\nA type with `\"enabled\": false` keeps both datasets' copies. Disabling all four is rejected: use `\"mode\": \"off\"`.\n\n---\n\n## 5. Naming a type\n\nThe same way in every rule (`type`, `from`, `to`):\n\n| Form | Matches when | Example |\n|---|---|---|\n| A built-in name | — | `\"crossing\"` |\n| An object | every key matches | `{\"highway\": \"footway\", \"footway\": \"sidewalk\"}` |\n| A list as a value | the key has any of the values | `{\"highway\": [\"primary\", \"residential\"]}` |\n| `\"*\"` as a value | the key is present | `{\"kerb\": \"*\"}` |\n| A list of the above | any of them matches | `[{\"highway\": \"living_street\"}, \"sidewalk\"]` |\n\nBuilt-in names: `crossing` (`highway=footway` with `footway` crossing or traffic_island), `sidewalk` (`highway=footway`, `footway=sidewalk`), `pedestrian` (`highway` footway, pedestrian or steps, not a crossing), `living_street`, `road` (`highway` primary, secondary, tertiary, residential, service, unclassified, trunk or motorway), `other` (none of these). A node takes the types of the edges it lies on, plus its own tags (e.g. `barrier=kerb`).\n\n---\n\n## 6. Rules that always hold\n\nWhatever the config, the union:\n\n- never moves a kerb (`barrier=kerb`), and two kerbs join only at exactly the same spot;\n- never moves anything twice: a node that moved is never a target for another;\n- never joins lines on different levels (`layer`, `level`, `bridge`, `tunnel`);\n- connects only across the two datasets; gaps inside one dataset are left as drawn;\n- never splits a connector an earlier rule made;\n- restores a removed duplicate when removing it would leave another edge hanging (stranding guard);\n- removes an edge whose two ends are both on the anchor network only when the anchor edges inside its corridor already join those ends;\n- drops nodes it left unused; nodes unused in the input are passed through.\n\n---\n\n## 7. Output\n\nThe job produces a zip with the six OSW files (`osw.nodes.geojson`, `osw.edges.geojson`, `osw.zones.geojson`, `osw.points.geojson`, `osw.lines.geojson`, `osw.polygons.geojson`) and **`union_report.json`**: the effective config (every default filled in), per-rule counts, warnings, input and output totals, and seconds per stage.\n\n- **IDs:** nodes keep their stored ids; nodes the union creates get new ids above them. **Edges are renumbered.** `_u_id`, `_v_id` and zone `_w_id` lists refer to output node ids. Provenance tags carry the **original** GeoJSON `_id`s.\n- **Added tags:**\n\n| Tag | On | Meaning |\n|---|---|---|\n| `ext:union_audit_<key>` | joined nodes, merged points, junction nodes | Every other-dataset (or rule) value that differs from the kept value, as `<original _id>-<value>`, comma-separated. |\n| `ext:union_absorbed` | joined nodes; anchor edges | The original ids of the nodes that joined it, or of the duplicate edges it replaced. |\n| `ext:union_confidence` | joined nodes, junction nodes, connectors | 1.0 at the same spot, falling towards 0 at the rule's distance. |\n| `ext:union_rule` | junction nodes, connectors | The connect rule(s) that made or used it, in rule order. |\n\n- Connectors also copy line A's `highway` and `footway`. Split edges keep their own tags.\n- An `ext:*` key holding different JSON types on different features is written as text on all of them.\n\n---\n\n## 8. Validation errors (HTTP 400)\n\nThe config is checked before the job is created; the message names the section, rule and field (`rules[1]` is a stage's first rule). For example:\n\n| Request | Message |\n|---|---|\n| `proximity` or `entity_filters` at the top level | `'proximity' is no longer supported: union 5.0 takes its settings in 'config' (sections snap, dedup, connect, extensions)` |\n| The same dataset twice | `tdei_dataset_id_one and tdei_dataset_id_two must be different datasets` |\n| `{\"snapping\": {...}}` | `Invalid config: unknown section 'snapping'. Allowed sections: snap, dedup, connect, extensions` |\n| A connect rule without `operation` | `config.connect.rules[1].operation: is required — one of point, geometry` |\n| `\"from\": \"sidewalks\"` | `config.dedup.rules[1].from: unknown type name \"sidewalks\" — use a tag match such as {\"highway\": \"footway\"} or one of crossing, sidewalk, pedestrian, living_street, road, other` |\n| `\"proximity\": 9` on a connect rule | `config.connect.rules[1].proximity: must be greater than 0 and at most 5 (got 9)` |\n| `\"max_angle\": 120` | `config.dedup.max_angle: must be greater than 0 and at most 90 (got 120)` |\n| `\"tags\"` on a connect rule | `config.connect.rules[1].tags: a connect rule takes node_tags (for the junction node) and edge_tags (for the connector edge) instead of tags` |\n| A setting next to `\"mode\": \"off\"` | `config.snap: mode off takes no other settings (got \"proximity\")` |\n| `extensions.proximity` (flat key) | `config.extensions.proximity: each type has its own block now — use extensions.points.proximity (and extensions.lines.proximity)` |\n\nLimits: snap `proximity` and `others` 0 to 5 m; every other distance above 0 and at most 5 m; `min_overlap` above 0 and at most 1; `max_angle` above 0 and at most 90; **at most 15 rules per stage**; rule names 1–64 characters without commas, unique within a stage; the whole config at most 64 KB. Unknown keys are rejected, never ignored.\n\n---\n\n## 9. Moving from 4.x\n\n| 4.x | 5.0 |\n|---|---|\n| `proximity: p` | `snap`, `dedup` and `connect` each `{\"mode\": \"default\", \"proximity\": p}`, and `extensions` `{\"mode\": \"default\", \"points\": {\"proximity\": p}, \"lines\": {\"proximity\": p}}` |\n| `entity_filters` edge filters | Custom snap, dedup and connect rules naming those types |\n| `duplicate_buffer_width`, `duplicate_overlap_percentage` | A dedup rule's `proximity` and `min_overlap` (0–1, not 0–100) |\n| line / polygon / zone overlap | `extensions` `lines.min_overlap`, `polygons.min_overlap`, `zones.min_overlap` (0–1) |\n\nThe defaults are close to 4.x, not identical: connect rules add connector edges instead of moving edge ends, and steps 4.x ran implicitly (such as road × crossing nodes) are now named rules listed in the report.\n\n---\n\n## 10. Tracking the job\n\nThe response is a `job_id`, and the `Location` header gives the status URL. Track the job with `GET /api/v1/jobs` (job type `Dataset-Union`). Once its status is `COMPLETED`, download the result with `GET /api/v1/job/download/{job_id}`. A failed job's message includes the reason.",
                 "operationId": "osw-union",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
+                                "additionalProperties": false,
                                 "properties": {
                                     "tdei_dataset_id_one": {
                                         "type": "string",
                                         "example": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
-                                        "description": "Dataset id defined to be unioned"
+                                        "description": "**DS1 — the default anchor.** Where a node moves or a duplicate is dropped, DS1's stays (unless a rule sets `\"anchor\": \"ds2\"`)."
                                     },
                                     "tdei_dataset_id_two": {
                                         "type": "string",
                                         "example": "0d661b69495d47fb838862edf699fe09",
-                                        "description": "Dataset id defined to be unioned"
+                                        "description": "**DS2.** Moved onto DS1 or dropped where it duplicates DS1; everything else is added. Must be a different dataset from DS1."
                                     },
-                                    "proximity": {
-                                        "type": "number",
-                                        "example": "0.5",
-                                        "description": "Proximity value to identify equivalent nodes in meters. Default value is 0.5 meters."
+                                    "config": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/UnionConfig"
+                                            }
+                                        ],
+                                        "description": "**Optional.** What the union does: sections `snap`, `dedup`, `connect`, `extensions`. Omitted: the two datasets combined, unchanged. An object, or a JSON string of one."
                                     }
                                 },
                                 "required": [
                                     "tdei_dataset_id_one",
                                     "tdei_dataset_id_two"
+                                ]
+                            },
+                            "examples": {
+                                "no_config": {
+                                    "summary": "No config — the two datasets combined, unchanged",
+                                    "description": "Every section is off: nothing is snapped, removed or connected.",
+                                    "value": {
+                                        "tdei_dataset_id_one": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+                                        "tdei_dataset_id_two": "0d661b69495d47fb838862edf699fe09"
+                                    }
+                                },
+                                "defaults_1m": {
+                                    "summary": "Every stage on its default rules at 1 m",
+                                    "description": "The closest equivalent of a 4.x union with `proximity` 1.",
+                                    "value": {
+                                        "tdei_dataset_id_one": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+                                        "tdei_dataset_id_two": "0d661b69495d47fb838862edf699fe09",
+                                        "config": {
+                                            "snap": {
+                                                "mode": "default",
+                                                "proximity": 1
+                                            },
+                                            "dedup": {
+                                                "mode": "default",
+                                                "proximity": 1
+                                            },
+                                            "connect": {
+                                                "mode": "default",
+                                                "proximity": 1
+                                            },
+                                            "extensions": {
+                                                "mode": "default",
+                                                "points": {
+                                                    "proximity": 1
+                                                },
+                                                "lines": {
+                                                    "proximity": 1
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "custom_snap": {
+                                    "summary": "Custom snap distances per type",
+                                    "description": "Coincident nodes join; crossing nodes within 1.5 m and sidewalk nodes within 3 m; any other type within 0.5 m. The sidewalk rule keeps DS2's node and adds nothing from DS1.",
+                                    "value": {
+                                        "tdei_dataset_id_one": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+                                        "tdei_dataset_id_two": "0d661b69495d47fb838862edf699fe09",
+                                        "config": {
+                                            "snap": {
+                                                "mode": "custom",
+                                                "coincident": true,
+                                                "others": 0.5,
+                                                "rules": [
+                                                    {
+                                                        "name": "crossings",
+                                                        "type": "crossing",
+                                                        "proximity": 1.5
+                                                    },
+                                                    {
+                                                        "name": "sidewalks",
+                                                        "type": "sidewalk",
+                                                        "proximity": 3,
+                                                        "anchor": "ds2",
+                                                        "attributes": "anchor_only"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                },
+                                "sidewalks_and_crossings": {
+                                    "summary": "Remove duplicate sidewalks and crossings, join crossings to sidewalks",
+                                    "description": "DS2 sidewalks and crossings that duplicate DS1's are removed; every other DS2 edge is kept. Crossing ends within 1 m of a sidewalk are joined to it.",
+                                    "value": {
+                                        "tdei_dataset_id_one": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+                                        "tdei_dataset_id_two": "0d661b69495d47fb838862edf699fe09",
+                                        "config": {
+                                            "dedup": {
+                                                "mode": "custom",
+                                                "rules": [
+                                                    {
+                                                        "name": "dedup_edge_crossing",
+                                                        "from": "crossing",
+                                                        "to": "crossing",
+                                                        "proximity": 1
+                                                    },
+                                                    {
+                                                        "name": "dedup_edge_sidewalk",
+                                                        "from": "sidewalk",
+                                                        "to": "sidewalk",
+                                                        "proximity": 1
+                                                    }
+                                                ]
+                                            },
+                                            "connect": {
+                                                "mode": "custom",
+                                                "rules": [
+                                                    {
+                                                        "name": "connect_crossing_sidewalk",
+                                                        "from": "crossing",
+                                                        "to": "sidewalk",
+                                                        "operation": "geometry",
+                                                        "proximity": 1
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                },
+                                "tagged_junctions": {
+                                    "summary": "Junctions with tags",
+                                    "description": "Crossing ends joined to sidewalks get a lowered-kerb node and a zebra connector; where a crossing crosses a road within 0.3 m, the shared node gets tactile paving.",
+                                    "value": {
+                                        "tdei_dataset_id_one": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+                                        "tdei_dataset_id_two": "0d661b69495d47fb838862edf699fe09",
+                                        "config": {
+                                            "connect": {
+                                                "mode": "custom",
+                                                "rules": [
+                                                    {
+                                                        "name": "kerbed-crossing",
+                                                        "from": "crossing",
+                                                        "to": "sidewalk",
+                                                        "operation": "geometry",
+                                                        "proximity": 1,
+                                                        "node_tags": {
+                                                            "barrier": "kerb",
+                                                            "kerb": "lowered"
+                                                        },
+                                                        "edge_tags": {
+                                                            "crossing:markings": "zebra"
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "road-crossing",
+                                                        "from": "crossing",
+                                                        "to": "road",
+                                                        "operation": "point",
+                                                        "proximity": 0.3,
+                                                        "node_tags": {
+                                                            "tactile_paving": "yes"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                },
+                                "extensions_only": {
+                                    "summary": "Extensions only: points and zones",
+                                    "description": "Benches, hydrants and other points of the same type within 1 m merge; overlapping zones are deduplicated. Lines and polygons keep both datasets' copies; the network is combined unchanged.",
+                                    "value": {
+                                        "tdei_dataset_id_one": "fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b",
+                                        "tdei_dataset_id_two": "0d661b69495d47fb838862edf699fe09",
+                                        "config": {
+                                            "extensions": {
+                                                "mode": "default",
+                                                "points": {
+                                                    "proximity": 1
+                                                },
+                                                "lines": {
+                                                    "enabled": false
+                                                },
+                                                "polygons": {
+                                                    "enabled": false
+                                                },
+                                                "zones": {
+                                                    "min_overlap": 0.7
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "The union request has been accepted. The response body is the `job_id`. The `Location` header gives the status URL. Track the job with `GET /api/v1/jobs` (job type `Dataset-Union`); once it is `COMPLETED`, download the result with `GET /api/v1/job/download/{job_id}`.",
+                        "content": {
+                            "application/text": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "description": "Location api to find the status of request processing"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request. Possible causes: the body is empty or a dataset ID is missing; both IDs name the same dataset; the 4.x `proximity` or `entity_filters` parameter is sent; `config` is not a JSON object, names an unknown section, or is larger than 64 KB; a setting in `config` is unknown or out of range (the message names the section, rule and field, e.g. `config.connect.rules[1].operation: is required — one of point, geometry`). Unknown keys are rejected, never ignored."
+                    },
+                    "401": {
+                        "description": "Unauthenticated request. Check your access token."
+                    },
+                    "404": {
+                        "description": "Dataset not found for either tdei_dataset_id_one or tdei_dataset_id_two."
+                    },
+                    "500": {
+                        "description": "An Internal server error occured."
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKey": []
+                    },
+                    {
+                        "AuthorizationToken": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/osw/self-merge": {
+            "post": {
+                "tags": [
+                    "OSW"
+                ],
+                "summary": "Performs a self-merge of entities within a single OSW dataset.",
+                "description": "This function merges spatial entities within one dataset by unifying nodes, edges, and polygons into consolidated geometries which are within the specified proximity. Entities that are within the specified proximity are treated as equivalent and merged. The function outputs a single cohesive dataset.The response includes a `job_id` for tracking the request.To check the request status, refer to the location header in the response, which provides the URL for the status API endpoint.",
+                "operationId": "osw-self-merge",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "tdei_dataset_id": {
+                                        "type": "string",
+                                        "example": "b688519d-ea00-4daa-a23f-0aff2ca138d2",
+                                        "description": "Dataset id to self-merge"
+                                    },
+                                    "proximity": {
+                                        "type": "number",
+                                        "example": "1.0",
+                                        "description": "Proximity value to identify equivalent entities in meters. Default value is 0.5 meters."
+                                    }
+                                },
+                                "required": [
+                                    "tdei_dataset_id"
                                 ]
                             }
                         }
@@ -2293,7 +2776,7 @@
                         "description": "Unauthenticated request. Check your access token."
                     },
                     "404": {
-                        "description": "Dataset not found for either tdei_dataset_id_one or tdei_dataset_id_two."
+                        "description": "Dataset not found for tdei_dataset_id."
                     },
                     "500": {
                         "description": "An Internal server error occured."
@@ -3596,6 +4079,111 @@
                 ]
             }
         },
+        "/api/v1/gtfs-pathways/convert": {
+            "post": {
+                "tags": [
+                    "GTFS Pathways"
+                ],
+                "summary": "Converts station drawings into GTFS Pathways.",
+                "description": "Converts a station's CAD drawings into a first draft of GTFS Pathways, for review and editing in TDEI Workspaces before it is uploaded. The drawings are either a zip of DXF files (one per level) in `dataset`, or an ArcGIS MapServer or FeatureServer service in `arcgis_url`: provide exactly one. The output is POSM GeoJSON per station (stops, pathways and level outlines, with the GTFS columns as properties), a report of what to check, and the drawing each level was made from. The response includes a `job_id` for tracking the request. To check the request status, refer to the location header in the response, which provides the URL for the status API endpoint. Once the job completes, `/api/v1/job/download/{job_id}` downloads a zip of all the output.",
+                "operationId": "convertGtfsPathways",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "dataset": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "A zip of DXF drawings, one per level (folders inside the zip are fine). Provide this or `arcgis_url`."
+                                    },
+                                    "arcgis_url": {
+                                        "type": "string",
+                                        "description": "An https ArcGIS MapServer or FeatureServer URL, e.g. https://<host>/arcgis/rest/services/<name>/MapServer. Provide this or `dataset`."
+                                    },
+                                    "layers": {
+                                        "type": "string",
+                                        "description": "ArcGIS layer ids to read, e.g. `7-19`. All layers by default."
+                                    },
+                                    "crs": {
+                                        "type": "string",
+                                        "description": "The coordinate reference system of DXF drawings without georeferencing, e.g. `EPSG:2926`."
+                                    },
+                                    "control": {
+                                        "type": "string",
+                                        "description": "Instead of `crs`: JSON, a list of two or more control points, each `\"x,y,lon,lat\"` (drawing coordinates, then where that point is), e.g. `[\"x1,y1,lon1,lat1\", \"x2,y2,lon2,lat2\"]`."
+                                    },
+                                    "station": {
+                                        "type": "string",
+                                        "description": "The station's name, when the drawings don't carry one."
+                                    },
+                                    "level_pattern": {
+                                        "type": "string",
+                                        "description": "For DXF files: a regular expression on the file name whose first group is the level name, e.g. `_(\\w+)$` for `Station_Platform.dxf`."
+                                    },
+                                    "levels": {
+                                        "type": "string",
+                                        "description": "JSON, an object of level name to `level_index`, to set the order of levels or include a level, e.g. `{\"Platform\": -1}`."
+                                    },
+                                    "exclude_levels": {
+                                        "type": "string",
+                                        "description": "JSON, a list of level names to leave out, e.g. `[\"Roof\"]`."
+                                    },
+                                    "agency_gtfs_dataset_id": {
+                                        "type": "string",
+                                        "description": "The TDEI dataset id of the agency's GTFS feed (recommended). Its `stops.txt` provides the agency's station, platform and entrance `stop_id`s. It is read with the caller's own access."
+                                    },
+                                    "parent_station": {
+                                        "type": "string",
+                                        "description": "The agency's `stop_id` for the station, when the feed can't settle it."
+                                    },
+                                    "platforms": {
+                                        "type": "string",
+                                        "description": "JSON, a list of the agency's platform `stop_id`s, one per platform in level then position order, when the feed can't settle them."
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "The convert request has been accepted for processing. It returns a `job_id`, a unique identifier for the convert request, which can be used to track the status of the convert request. The endpoint to check the status is provided in the location header of the response.",
+                        "content": {
+                            "application/text": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "description": "Location api to find the status of request processing"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Neither or both of `dataset` and `arcgis_url` were given, an option isn't valid, or the dataset is over the upload size limit."
+                    },
+                    "401": {
+                        "description": "Unauthenticated request. Check your access token."
+                    },
+                    "500": {
+                        "description": "An Internal server error occured"
+                    }
+                },
+                "security": [
+                    {
+                        "AuthorizationToken": []
+                    }
+                ]
+            }
+        },
         "/api/v1/gtfs-pathways/{tdei_dataset_id}": {
             "get": {
                 "tags": [
@@ -4055,11 +4643,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Invalid project group id."
-                    },
                     "401": {
                         "description": "Unauthenticated request"
+                    },
+                    "400": {
+                        "description": "Invalid project group id."
                     },
                     "404": {
                         "description": "Not found error."
@@ -4251,6 +4839,736 @@
                     },
                     "password": {
                         "type": "string"
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "Auth server client id used for authentication. Optional; defaults to the configured default client id when not provided.",
+                        "example": "tdei-web-client"
+                    }
+                }
+            },
+            "RefreshTokenRequest": {
+                "type": "object",
+                "required": [
+                    "refreshToken"
+                ],
+                "properties": {
+                    "refreshToken": {
+                        "type": "string",
+                        "description": "The refresh token returned from authenticate, sso-login, or a previous refresh-token call."
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "Auth server client id used for the token refresh. Optional; defaults to the configured default client id when not provided. Should match the client used when the original tokens were issued.",
+                        "example": "tdei-web-client"
+                    }
+                },
+                "example": {
+                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                    "client_id": "tdei-web-client"
+                }
+            },
+            "SsoLoginRequest": {
+                "type": "object",
+                "required": [
+                    "code",
+                    "state"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Authorization code returned by the auth server to the frontend redirect_uri after successful SSO authentication."
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "Opaque state value returned by the auth server. Used to validate the SSO callback and protect against CSRF."
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "Auth server client id used for the SSO flow. Optional; defaults to the configured default client id when not provided.",
+                        "example": "tdei-web-client"
+                    }
+                },
+                "example": {
+                    "code": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                    "state": "8f7e6d5c-4b3a-2109-8765-4321fedcba09",
+                    "client_id": "tdei-web-client"
+                }
+            },
+            "UnionConfig": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Union 5.0 configuration: up to four sections, each with a `mode`. A section left out is `off`; no config at all returns the two datasets combined, unchanged. A JSON string of this object is also accepted. At most 64 KB.",
+                "properties": {
+                    "snap": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionSnap"
+                            }
+                        ],
+                        "description": "Joins a DS1 node and a DS2 node of the same type within a distance; the non-anchor node moves onto the anchor node."
+                    },
+                    "dedup": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionDedup"
+                            }
+                        ],
+                        "description": "Removes an edge that duplicates an anchor edge (whole edges only)."
+                    },
+                    "connect": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionConnect"
+                            }
+                        ],
+                        "description": "Makes junctions between two kinds of way. Nothing moves: a node is made on line B (B is split there) and, across a gap, a connector edge is added."
+                    },
+                    "extensions": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionExtensions"
+                            }
+                        ],
+                        "description": "Merges zones and extension points, lines and polygons."
+                    }
+                },
+                "example": {
+                    "snap": {
+                        "mode": "default",
+                        "proximity": 1
+                    },
+                    "dedup": {
+                        "mode": "default",
+                        "proximity": 1
+                    },
+                    "connect": {
+                        "mode": "default",
+                        "proximity": 1
+                    },
+                    "extensions": {
+                        "mode": "default",
+                        "points": {
+                            "proximity": 1
+                        },
+                        "lines": {
+                            "proximity": 1
+                        }
+                    }
+                }
+            },
+            "UnionType": {
+                "description": "Which features a rule applies to. A built-in name (`crossing`, `sidewalk`, `pedestrian`, `living_street`, `road`, `other`), a tag match (every key must match; a list value means any of the values; `\"*\"` means the key is present), or a non-empty list of these (any may match). A node takes the types of the edges it lies on, plus its own tags.",
+                "oneOf": [
+                    {
+                        "type": "string",
+                        "enum": [
+                            "crossing",
+                            "sidewalk",
+                            "pedestrian",
+                            "living_street",
+                            "road",
+                            "other"
+                        ]
+                    },
+                    {
+                        "$ref": "#/components/schemas/UnionTagMatch"
+                    },
+                    {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "enum": [
+                                        "crossing",
+                                        "sidewalk",
+                                        "pedestrian",
+                                        "living_street",
+                                        "road",
+                                        "other"
+                                    ]
+                                },
+                                {
+                                    "$ref": "#/components/schemas/UnionTagMatch"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "example": {
+                    "highway": "footway",
+                    "footway": "sidewalk"
+                }
+            },
+            "UnionTagMatch": {
+                "type": "object",
+                "minProperties": 1,
+                "description": "Tag match: every key must match. A string value must equal the tag's value (`\"*\"`: the key is present); a list value matches any of its values.",
+                "additionalProperties": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    ]
+                },
+                "example": {
+                    "highway": [
+                        "footway",
+                        "pedestrian"
+                    ],
+                    "kerb": "*"
+                }
+            },
+            "UnionTags": {
+                "type": "object",
+                "description": "Tags to write. Values are strings, numbers or booleans. Standard OSW keys are written as given; any other key is written as `ext:<key>`. `_id`, `_u_id`, `_v_id`, `_w_id` and `ext:union_*` cannot be set.",
+                "additionalProperties": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                "example": {
+                    "barrier": "kerb",
+                    "kerb": "lowered"
+                }
+            },
+            "UnionSnap": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "mode"
+                ],
+                "description": "`default` runs: coincident nodes join whatever their type, then crossing, pedestrian, living_street, road and other nodes each join their own kind within `proximity` (anchor DS1, attributes `merge`). `custom` runs only `rules`, in order; a pair of nodes is governed by the first rule both match. `off` takes no other settings.",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "off",
+                            "default",
+                            "custom"
+                        ]
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 5,
+                        "default": 0.5,
+                        "example": 1,
+                        "description": "Distance in metres, 0 to 5 (0 = the same spot only). Default for the section's rules; 0.5 when not given."
+                    },
+                    "anchor": {
+                        "type": "string",
+                        "enum": [
+                            "ds1",
+                            "ds2"
+                        ],
+                        "default": "ds1",
+                        "description": "Which dataset's feature stays fixed. Default `ds1`."
+                    },
+                    "attributes": {
+                        "type": "string",
+                        "enum": [
+                            "merge",
+                            "anchor_only"
+                        ],
+                        "default": "merge",
+                        "description": "`merge`: the anchor's values win and keys only the other node has are added. `anchor_only`: nothing is added. Differing values are always kept in `ext:union_audit_<key>`."
+                    },
+                    "coincident": {
+                        "type": "boolean",
+                        "description": "Join nodes at exactly the same spot, whatever their type. Default: true in `default` mode, false in `custom`."
+                    },
+                    "others": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 5,
+                        "description": "`custom` only. Distance in metres for node types no rule lists; left out, those do not snap."
+                    },
+                    "rules": {
+                        "type": "array",
+                        "maxItems": 15,
+                        "items": {
+                            "$ref": "#/components/schemas/UnionSnapRule"
+                        },
+                        "description": "`custom` only. At most 15. Custom mode needs at least one rule, `coincident` or `others`."
+                    }
+                }
+            },
+            "UnionSnapRule": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "type"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[^,]+$",
+                        "description": "1–64 characters, no commas, unique within the stage. Default `snap-<n>`."
+                    },
+                    "type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionType"
+                            }
+                        ],
+                        "description": "Which nodes the rule joins; both nodes must match."
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 5,
+                        "description": "Maximum distance in metres, 0 to 5. Default: the section's `proximity`."
+                    },
+                    "anchor": {
+                        "type": "string",
+                        "enum": [
+                            "ds1",
+                            "ds2"
+                        ],
+                        "default": "ds1",
+                        "description": "Which dataset's feature stays fixed. Default `ds1`."
+                    },
+                    "attributes": {
+                        "type": "string",
+                        "enum": [
+                            "merge",
+                            "anchor_only"
+                        ],
+                        "description": "Default: the section's `attributes`."
+                    }
+                },
+                "example": {
+                    "name": "crossings",
+                    "type": "crossing",
+                    "proximity": 1.5
+                }
+            },
+            "UnionDedup": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "mode"
+                ],
+                "description": "`default` runs one rule for each of crossing, pedestrian, living_street, road and other, against its own kind (anchor DS1). `custom` runs only `rules`; an edge is checked by the first rule whose `from` it matches. `off` takes no other settings.",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "off",
+                            "default",
+                            "custom"
+                        ]
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 5,
+                        "default": 0.5,
+                        "example": 1,
+                        "description": "Corridor width in metres around the anchor edge (above 0, at most 5)."
+                    },
+                    "min_overlap": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 1,
+                        "default": 0.8,
+                        "description": "Share of the edge's length that must lie inside the corridor (above 0, at most 1)."
+                    },
+                    "max_angle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 90,
+                        "default": 30,
+                        "description": "Degrees the edge's direction may differ from the anchor edge's (above 0, at most 90). An edge joining the same two nodes as an anchor edge is a duplicate at any angle."
+                    },
+                    "anchor": {
+                        "type": "string",
+                        "enum": [
+                            "ds1",
+                            "ds2"
+                        ],
+                        "default": "ds1",
+                        "description": "Which dataset's feature stays fixed. Default `ds1`."
+                    },
+                    "rules": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 15,
+                        "items": {
+                            "$ref": "#/components/schemas/UnionDedupRule"
+                        },
+                        "description": "`custom` only, and required there. At most 15."
+                    }
+                }
+            },
+            "UnionDedupRule": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "from",
+                    "to"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[^,]+$",
+                        "description": "1–64 characters, no commas, unique within the stage. Default `dedup-<n>`."
+                    },
+                    "from": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionType"
+                            }
+                        ],
+                        "description": "The kind of edge that can be removed."
+                    },
+                    "to": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionType"
+                            }
+                        ],
+                        "description": "The kind of anchor edge it duplicates (may differ from `from`)."
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 5,
+                        "description": "Corridor width in metres. Default: the section's `proximity`."
+                    },
+                    "min_overlap": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 1,
+                        "description": "Default: the section's `min_overlap`."
+                    },
+                    "max_angle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 90,
+                        "description": "Default: the section's `max_angle`."
+                    },
+                    "anchor": {
+                        "type": "string",
+                        "enum": [
+                            "ds1",
+                            "ds2"
+                        ],
+                        "default": "ds1",
+                        "description": "Which dataset's feature stays fixed. Default `ds1`."
+                    }
+                },
+                "example": {
+                    "name": "sidewalks",
+                    "from": "sidewalk",
+                    "to": "sidewalk",
+                    "proximity": 1,
+                    "min_overlap": 0.8,
+                    "max_angle": 30
+                }
+            },
+            "UnionConnect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "mode"
+                ],
+                "description": "`default` runs `road-crossing` (crossing → road, point), `crossing-sidewalk`, `crossing-living-street`, `pedestrian-pedestrian`, `living-street-living-street` and `crossing-crossing` (geometry), at `proximity`. `custom` runs only `rules`, in order; the first rule that matches a location takes it. Only DS1 × DS2 pairs are joined. `off` takes no other settings.",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "off",
+                            "default",
+                            "custom"
+                        ]
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 5,
+                        "default": 0.5,
+                        "example": 1,
+                        "description": "Largest gap in metres (above 0, at most 5). Default for the section's rules."
+                    },
+                    "rules": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 15,
+                        "items": {
+                            "$ref": "#/components/schemas/UnionConnectRule"
+                        },
+                        "description": "`custom` only, and required there. At most 15."
+                    }
+                }
+            },
+            "UnionConnectRule": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "name",
+                    "from",
+                    "to",
+                    "operation"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[^,]+$",
+                        "description": "Required. 1–64 characters, no commas, unique within the stage. Written as `ext:union_rule` on what the rule creates."
+                    },
+                    "from": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionType"
+                            }
+                        ],
+                        "description": "Line A: the line whose end joins, or the line that crosses."
+                    },
+                    "to": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionType"
+                            }
+                        ],
+                        "description": "Line B: the line that is split."
+                    },
+                    "operation": {
+                        "type": "string",
+                        "enum": [
+                            "point",
+                            "geometry"
+                        ],
+                        "description": "`point`: where A crosses B with no shared node, a node is made and both are split; an end of A that stops short of B gets a node on B and a connector. `geometry`: an end of A within reach of B gets a node on B (B is split there) and a connector to it; an end that crosses B and stops just beyond it meets B where it crosses."
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 5,
+                        "description": "Largest gap in metres. Default: the section's `proximity`."
+                    },
+                    "node_tags": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionTags"
+                            }
+                        ],
+                        "description": "Tags for the junction node the rule makes or reuses. Existing values win; a differing rule value is recorded in `ext:union_audit_<key>`."
+                    },
+                    "edge_tags": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionTags"
+                            }
+                        ],
+                        "description": "Tags for the connector edges the rule adds (connectors also copy line A's `highway` and `footway`)."
+                    }
+                },
+                "example": {
+                    "name": "kerbed-crossing",
+                    "from": "crossing",
+                    "to": "sidewalk",
+                    "operation": "geometry",
+                    "proximity": 1,
+                    "node_tags": {
+                        "barrier": "kerb",
+                        "kerb": "lowered"
+                    },
+                    "edge_tags": {
+                        "crossing:markings": "zebra"
+                    }
+                }
+            },
+            "UnionExtensions": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "mode"
+                ],
+                "description": "`default` merges each enabled type; DS1's feature is always the one kept. Every block and key is optional; a type with `\"enabled\": false` keeps both datasets' copies; disabling all four is rejected (use `\"mode\": \"off\"`). The 4.x-era flat keys (`proximity`, `line_proximity`, `line_overlap`, `polygon_overlap`, `zone_overlap`) are rejected.",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "off",
+                            "default"
+                        ]
+                    },
+                    "points": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionExtensionPoints"
+                            }
+                        ],
+                        "description": "A DS2 point joins a DS1 point of the same type within `proximity`."
+                    },
+                    "lines": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionExtensionLines"
+                            }
+                        ],
+                        "description": "A DS2 line with at least `min_overlap` of its length within `proximity` of a DS1 line joins it."
+                    },
+                    "polygons": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionExtensionPolygons"
+                            }
+                        ],
+                        "description": "A DS2 polygon covering more than `min_overlap` of a DS1 polygon's area merges into it; one overlapping less is combined with it."
+                    },
+                    "zones": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnionExtensionZones"
+                            }
+                        ],
+                        "description": "A DS2 zone covering more than `min_overlap` of a DS1 zone's area is dropped."
+                    }
+                },
+                "example": {
+                    "mode": "default",
+                    "points": {
+                        "proximity": 1
+                    },
+                    "lines": {
+                        "proximity": 2.5,
+                        "min_overlap": 0.7
+                    },
+                    "polygons": {
+                        "enabled": false
+                    },
+                    "zones": {
+                        "min_overlap": 0.7
+                    }
+                }
+            },
+            "UnionExtensionPoints": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 5,
+                        "default": 0.5,
+                        "description": "Distance in metres (above 0, at most 5). Same type means the same tags, ignoring `ext:*` keys; a point with no other tags matches any type."
+                    }
+                }
+            },
+            "UnionExtensionLines": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "proximity": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 5,
+                        "default": 0.5,
+                        "description": "Corridor width in metres around the DS1 line (above 0, at most 5)."
+                    },
+                    "min_overlap": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 1,
+                        "default": 0.7,
+                        "description": "Share of the DS2 line's length that must lie in the corridor (above 0, at most 1)."
+                    }
+                }
+            },
+            "UnionExtensionPolygons": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "min_overlap": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 1,
+                        "default": 0.7,
+                        "description": "Share of the DS1 polygon's area the DS2 polygon must cover to merge into it (above 0, at most 1)."
+                    }
+                }
+            },
+            "UnionExtensionZones": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "min_overlap": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "maximum": 1,
+                        "default": 0.7,
+                        "description": "Share of the DS1 zone's area the DS2 zone must cover to be dropped (above 0, at most 1)."
                     }
                 }
             },
@@ -5126,7 +6444,7 @@
                             "title": "tag",
                             "type": "string",
                             "description": "Quality metric for the tag in percentage",
-                            "example": 45
+                            "example": 45.0
                         }
                     }
                 },

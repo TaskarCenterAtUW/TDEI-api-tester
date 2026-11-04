@@ -525,6 +525,17 @@ describe('Validate-only flex dataset request', () => {
 
 });
 
+describe('Validate-only flex dataset request - error responses', () => {
+    it('POC | Authenticated , When request made without dataset file, should respond with bad request', async () => {
+        const response = axios.post(`${pocConfiguration.basePath}/api/v1/gtfs-flex/validate`, new FormData(), pocConfiguration.baseOptions);
+
+        await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+    }, 30000);
+
+    // API returns 202 for users without a role, while the spec documents 403. Enable once the API team confirms the rule.
+    // it.todo('Default-User | Authenticated , When request made with dataset, should respond with forbidden');
+});
+
 describe('Check validation-only request job completion status', () => {
     jest.retryTimes(1, { logErrorsBeforeRetry: true });
     it('Admin | Authenticated , When request made, should respond with job status', async () => {
