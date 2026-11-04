@@ -298,7 +298,7 @@ describe('Upload OSW dataset', () => {
     const uploadInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswUploadRequestInterceptor(req, tdei_project_group_id, service_id, 'osw-valid.zip', 'changeset.zip', 'metadata.json'))
     const uploadFileResponse = oswAPI.uploadOswFileForm(dataset, metaToUpload, changesetToUpload, tdei_project_group_id, service_id)
 
-    await expect(uploadFileResponse).toReject();
+    await expect(uploadFileResponse).rejects.toMatchObject({ response: { status: 401 } });
     axios.interceptors.request.eject(uploadInterceptor);
 
   }, 20000)
@@ -809,6 +809,17 @@ describe('Validate-only OSW dataset request', () => {
     axios.interceptors.request.eject(validateInterceptor);
   }, 20000);
 
+});
+
+describe('Validate-only OSW dataset request - error responses', () => {
+  it('POC | Authenticated , When request made without dataset file, should respond with bad request', async () => {
+    const response = axios.post(`${pocConfiguration.basePath}/api/v1/osw/validate`, new FormData(), pocConfiguration.baseOptions);
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  // API returns 202 for users without a role, while the spec documents 403. Enable once the API team confirms the rule.
+  // it.todo('Default-User | Authenticated , When request made with dataset, should respond with forbidden');
 });
 
 describe('Check validation-only request job running status', () => {
@@ -2375,11 +2386,16 @@ describe('Spatial join Request', () => {
   it('Admin | un-authenticated , When request made with valid join input, should return with unauthenticated request', async () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
 
-    let bboxRequest = oswAPI.datasetTagRoad(seedData.datasets.osw.published_dataset, uploadedDatasetId);
+    let spatialRequest = oswAPI.oswSpatialJoin(Utility.getSpatialJoinInput());
 
-    await expect(bboxRequest).rejects.toMatchObject({ response: { status: 401 } });
+    await expect(spatialRequest).rejects.toMatchObject({ response: { status: 401 } });
   });
 
+});
+
+describe('Spatial join Request - error responses', () => {
+  // Any authenticated user currently gets 202, while the spec documents 403. Enable once the API team confirms the rule.
+  // it.todo('Default-User | Authenticated , When request made with valid join input, should respond with forbidden');
 });
 
 describe('Check spatial join request job completion status', () => {
@@ -2746,6 +2762,20 @@ describe("Intersection Quality Metric", () => {
   }, 30000);
 });
 
+describe('Intersection Quality Metric - error responses', () => {
+  it('POC | Authenticated, When request made with unknown dataset id, should respond with dataset not found', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswQualityCalculateForm('invalid_tdei_dataset_id')).rejects.toMatchObject({ response: { status: 404 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request made with non-osw dataset, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswQualityCalculateForm(seedData.datasets.flex.published_dataset)).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+});
+
 describe('Check intersection quality metric request job completion status', () => {
   jest.retryTimes(3, { logErrorsBeforeRetry: true });
   it('Admin | Authenticated , When request made, should respond with job status', async () => {
@@ -2807,6 +2837,20 @@ describe("Dataset Viewer Preferences", () => {
   }, 30000);
 });
 
+describe("Dataset Viewer access - error responses", () => {
+  it('Default-User | Authenticated, When request made to allow viewer access, should respond with forbidden', async () => {
+    let oswAPI = new OSWApi(await getAuthenticatedDefaultUser());
+
+    await expect(oswAPI.oswDatasetViewer({ allow_viewer_access: true }, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 403 } });
+  }, 30000);
+
+  it('Flex Data Generator | Authenticated, When request made to allow viewer access on osw dataset, should respond with forbidden', async () => {
+    let oswAPI = new OSWApi(flexDgConfiguration);
+
+    await expect(oswAPI.oswDatasetViewer({ allow_viewer_access: true }, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 403 } });
+  }, 30000);
+});
+
 describe("Dataset Viewer PM Tiles", () => {
   it('Admin | Authenticated, When request made, should return PM tiles SAS url', async () => {
     let oswAPI = new OSWApi(adminConfiguration);
@@ -2825,6 +2869,20 @@ describe("Dataset Viewer PM Tiles", () => {
     let oswAPI = new OSWApi(Utility.getAdminConfiguration());
     let tdei_dataset_id = seedData.datasets.osw.published_dataset;
     await expect(oswAPI.oswDatasetViewerPMTiles(tdei_dataset_id)).rejects.toMatchObject({ response: { status: 401 } });
+  }, 30000);
+});
+
+describe("Dataset Viewer PM Tiles - error responses", () => {
+  it('POC | Authenticated, When request made with unknown dataset id, should respond with dataset not found', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswDatasetViewerPMTiles('invalid_tdei_dataset_id')).rejects.toMatchObject({ response: { status: 404 } });
+  }, 30000);
+
+  it('POC | Authenticated, When dataset does not allow viewer access, should respond with forbidden', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswDatasetViewerPMTiles(seedData.datasets.osw.spatial_target_dataset)).rejects.toMatchObject({ response: { status: 403 } });
   }, 30000);
 });
 
@@ -2861,6 +2919,38 @@ describe("Dataset Viewer Feedback Submit", () => {
   }, 30000);
 });
 
+describe("Dataset Viewer Feedback Submit - error responses", () => {
+  const validFeedback = () => ({
+    dataset_element_id: "14325",
+    feedback_text: "API tester negative path.",
+    customer_email: seedData.users.poc.username,
+    location_latitude: 47.6062,
+    location_longitude: -122.3321,
+  });
+
+  it('POC | Authenticated, When request made without feedback text, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    const { feedback_text, ...body } = validFeedback();
+
+    await expect(oswAPI.oswDatasetViewerFeedback(body as any, tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request made with invalid email, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswDatasetViewerFeedback({ ...validFeedback(), customer_email: "invalid" }, tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated, When dataset does not belong to the project group, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswDatasetViewerFeedback(validFeedback(), seedData.user_not_associated_project.tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  // The spec documents 403 as a CORS rejection, which could not be triggered from an API client.
+  // it.todo('When request made from a disallowed origin, should respond with forbidden');
+});
+
 describe("Dataset Viewer Feedback Status Update", () => {
   it('POC | Authenticated, When request made to update feedback status, should return per-item update results', async () => {
     let oswAPI = new OSWApi(pocConfiguration);
@@ -2883,6 +2973,62 @@ describe("Dataset Viewer Feedback Status Update", () => {
     expect(resp.data).toBeArray();
     expect(resp.data.length).toBeGreaterThan(0);
     expect(resp.data[0]).toContainAllKeys(["id", "message", "status"]);
+  }, 30000);
+});
+
+describe("Dataset Viewer Feedback Status Update - error responses", () => {
+  const UNKNOWN_FEEDBACK_ID = 999999999;
+  const update = () => [{ id: UNKNOWN_FEEDBACK_ID, status: ProjectIdTdeiDatasetIdBodyStatusEnum.Resolved }];
+
+  it('POC | Authenticated, When request made with invalid status, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    const body = [{ id: UNKNOWN_FEEDBACK_ID, status: "invalid" }] as any;
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(body, tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request made without feedback id, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    const body = [{ status: ProjectIdTdeiDatasetIdBodyStatusEnum.Resolved }] as any;
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(body, tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request body is not an array, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+    const body = { id: UNKNOWN_FEEDBACK_ID } as any;
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(body, tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | un-authenticated, When request made, should respond with unauthenticated request', async () => {
+    let oswAPI = new OSWApi(Utility.getPocConfiguration());
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(update(), tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 401 } });
+  }, 30000);
+
+  it('Default-User | Authenticated, When request made, should respond with forbidden', async () => {
+    let oswAPI = new OSWApi(await getAuthenticatedDefaultUser());
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(update(), tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 403 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request made for another project group, should respond with forbidden', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(update(), seedData.user_not_associated_project.tdei_project_group_id, seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 403 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request made with unknown dataset id, should respond with not found', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(update(), tdei_project_group_id, "invalid_tdei_dataset_id")).rejects.toMatchObject({ response: { status: 404 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request made with unknown project group id, should respond with not found', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    await expect(oswAPI.oswDatasetViewerFeedbackStatusUpdate(update(), "invalid_project_group_id", seedData.datasets.osw.published_dataset)).rejects.toMatchObject({ response: { status: 404 } });
   }, 30000);
 });
 
@@ -2915,6 +3061,26 @@ describe("Dataset Viewer Feedbacks Download", () => {
     const resp = await oswAPI.oswDatasetViewerFeedbacksDownload(tdei_project_group_id, uploadedDatasetId, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, NULL_PARAM, 1);
     expect(resp.status).toBe(200);
     expect(resp.data).toBeDefined();
+  }, 30000);
+});
+
+describe("Dataset Viewer Feedbacks Download - error responses", () => {
+  const NO_PARAM = undefined;
+
+  it('POC | Authenticated, When request made with invalid format, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    const response = oswAPI.oswDatasetViewerFeedbacksDownload(tdei_project_group_id, NO_PARAM, NO_PARAM, NO_PARAM, NO_PARAM, NO_PARAM, NO_PARAM, NO_PARAM, NO_PARAM, NO_PARAM, "invalid");
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated, When request made with invalid status, should respond with bad request', async () => {
+    let oswAPI = new OSWApi(pocConfiguration);
+
+    const response = oswAPI.oswDatasetViewerFeedbacksDownload(tdei_project_group_id, NO_PARAM, NO_PARAM, NO_PARAM, "invalid");
+
+    await expect(response).rejects.toMatchObject({ response: { status: 400 } });
   }, 30000);
 });
 
@@ -3723,6 +3889,12 @@ describe("Job Download API", () => {
     await expect(response).rejects.toMatchObject({ response: { status: 401 } });
   });
 });
+
+async function getAuthenticatedDefaultUser(): Promise<Configuration> {
+  const configuration = Utility.getDefaultUserConfiguration();
+  await Utility.setAuthToken(configuration);
+  return configuration;
+}
 
 async function authenticate() {
   await Utility.setAuthToken(adminConfiguration);

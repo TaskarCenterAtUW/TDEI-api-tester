@@ -1,4 +1,5 @@
 import { Configuration, DatasetItemProjectGroup, DatasetItem, DatasetItemStatusEnum, CommonAPIsApi, VersionSpec, DatasetItemService, MetadataModelDatasetDetailCollectionMethodEnum, MetadataModelDatasetDetailDataSourceEnum, JobDetails, JobProgress, ServiceModel, AuthenticationApi, MetricsApi } from "tdei-client";
+import { SystemApi } from "tdei-client";
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { SeedData } from "../models/types";
@@ -1798,6 +1799,98 @@ describe('List Datasets', () => {
   });
 });
 
+describe('Clone Dataset - error responses', () => {
+  const cloneFlexAs = async (configuration: Configuration) => {
+    const tdei_dataset_id = seedData.datasets.flex.published_dataset;
+    const interceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'));
+    try {
+      await new CommonAPIsApi(configuration).cloneDatasetForm(Utility.getMetadataBlob("flex"), tdei_dataset_id, tdei_project_group_id, tdei_service_id_flex);
+    } finally {
+      axios.interceptors.request.eject(interceptor);
+    }
+  };
+
+  it('Default-User | Authenticated , When request made to clone dataset, should respond with forbidden', async () => {
+    await expect(cloneFlexAs(defaultUserConfiguration)).rejects.toMatchObject({ response: { status: 403 } });
+  }, 30000);
+
+  it('OSW Data Generator | Authenticated , When request made to clone flex dataset, should respond with forbidden', async () => {
+    await expect(cloneFlexAs(oswDgConfiguration)).rejects.toMatchObject({ response: { status: 403 } });
+  }, 30000);
+});
+
+describe('Invalidate Dataset - error responses', () => {
+  it('POC | Authenticated , When dataset is already invalidated, should respond with bad request', async () => {
+    const generalAPI = new CommonAPIsApi(pocConfiguration);
+    const source = seedData.datasets.flex.published_dataset;
+    const interceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => cloneDatasetRequestInterceptor(req, source, tdei_project_group_id, tdei_service_id_flex, 'metadata.json'));
+    let clonedDatasetId: string;
+    try {
+      clonedDatasetId = (await generalAPI.cloneDatasetForm(Utility.getMetadataBlob("flex"), source, tdei_project_group_id, tdei_service_id_flex)).data;
+    } finally {
+      axios.interceptors.request.eject(interceptor);
+    }
+    expect((await generalAPI.deleteDataset(clonedDatasetId)).status).toBe(200);
+
+    const secondDelete = generalAPI.deleteDataset(clonedDatasetId);
+
+    await expect(secondDelete).rejects.toMatchObject({ response: { status: 400 } });
+  }, 60000);
+});
+
+describe('List Datasets - error responses', () => {
+  it('POC | Authenticated , When request made with invalid data type, should respond with bad request', async () => {
+    await expect(new CommonAPIsApi(pocConfiguration).listDatasetFiles("invalid")).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated , When request made with invalid status, should respond with bad request', async () => {
+    await expect(new CommonAPIsApi(pocConfiguration).listDatasetFiles(NULL_PARAM, "invalid")).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+});
+
+describe('List Jobs - error responses', () => {
+  it('POC | Authenticated , When request made with non-numeric job id, should respond with bad request', async () => {
+    await expect(new CommonAPIsApi(pocConfiguration).listJobs(tdei_project_group_id, "invalid")).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated , When request made with invalid status, should respond with bad request', async () => {
+    await expect(new CommonAPIsApi(pocConfiguration).listJobs(tdei_project_group_id, NULL_PARAM, NULL_PARAM, NULL_PARAM, "invalid")).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+
+  it('POC | Authenticated , When request made with invalid job type, should respond with bad request', async () => {
+    await expect(new CommonAPIsApi(pocConfiguration).listJobs(tdei_project_group_id, NULL_PARAM, NULL_PARAM, "invalid")).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+});
+
+describe('Job Download - error responses', () => {
+  it('POC | Authenticated , When request made with non-numeric job id, should respond with bad request', async () => {
+    await expect(new CommonAPIsApi(pocConfiguration).jobDownload("invalid")).rejects.toMatchObject({ response: { status: 400 } });
+  }, 30000);
+});
+
+describe('List Services - error responses', () => {
+  it('Admin | un-authenticated , When request made, should respond with unauthenticated request', async () => {
+    await expect(new CommonAPIsApi(Utility.getAdminConfiguration()).listServices()).rejects.toMatchObject({ response: { status: 401 } });
+  }, 30000);
+});
+
+describe('System capabilities', () => {
+  it('When request made without credentials, should return upload limits for every dataset type', async () => {
+    const systemAPI = new SystemApi(Utility.getAdminConfiguration());
+
+    const response = await systemAPI.systemCapabilities();
+
+    expect(response.status).toBe(200);
+    for (const dataType of ['osw', 'pathways', 'flex']) {
+      expect(response.data.dataset_upload_limits[dataType]).toEqual({
+        limit_bytes: expect.any(Number),
+        limit_display: expect.any(String),
+      });
+      expect(response.data.dataset_upload_limits[dataType].limit_bytes).toBeGreaterThan(0);
+    }
+  }, 30000);
+});
+
 describe("List API versions", () => {
 
   it('Admin | Authenticated , When request made, expect to return api version list', async () => {
@@ -2443,6 +2536,13 @@ describe('Recover password', () => {
   }, 30000);
 });
 
+describe('Recover password - documented responses not reachable', () => {
+  // An unknown user gets 400 "User not found" while the spec documents 404. Enable once the API or the spec is corrected.
+  // it.todo('When request made with a well-formed unknown email, should respond with user not found');
+  // Invalid credentials are ignored, so the documented 401 cannot be produced. Remove from the spec if the endpoint is public.
+  // it.todo('When request made with an invalid token, should respond with unauthenticated request');
+});
+
 describe('Verify Email', () => {
 
   it('When request made with valid email, expect to return success response', async () => {
@@ -2462,6 +2562,13 @@ describe('Verify Email', () => {
 
   }, 30000);
 
+});
+
+describe('Verify Email - documented responses not reachable', () => {
+  // An unknown user gets 400 "User not found" while the spec documents 404. Enable once the API or the spec is corrected.
+  // it.todo('When request made with a well-formed unknown email, should respond with user not found');
+  // Invalid credentials are ignored, so the documented 401 cannot be produced. Remove from the spec if the endpoint is public.
+  // it.todo('When request made with an invalid token, should respond with unauthenticated request');
 });
 
 describe('System metrics', () => {

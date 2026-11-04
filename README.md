@@ -32,6 +32,7 @@ Application configuration is read from .env file. Below are the list of environe
 |ENVIRONMENT | Environement to run api tester dev, stage, prod|
 |DEFAULT_PASSWORD | Default password for the users created |
 |DEFAULT_USERNAME | TDEI username which has default group permission only|
+|SSO_REDIRECT_URI | Redirect URI registered in Keycloak, used by the SSO login test. Required outside dev; defaults to the dev portal login page on dev|
 
 
 ## API Tester Environment Data
