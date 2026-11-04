@@ -38,6 +38,24 @@ jobs:
           tmp_env_file=".env"
           printf '%s' "$ENV_CONTENT" > "$tmp_env_file"
 
+      - name: Determine output folder
+        id: set_output_folder
+        run: |
+          if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
+            branch_name=$GITHUB_BASE_REF
+          else
+            branch_name=$GITHUB_REF_NAME
+          fi
+          if [[ $branch_name == "main" ]]; then
+            echo "output_folder=prod" >> $GITHUB_ENV
+          elif [[ $branch_name == "stage" ]]; then
+            echo "output_folder=stage" >> $GITHUB_ENV
+          elif [[ $branch_name == "develop" ]]; then
+            echo "output_folder=dev" >> $GITHUB_ENV
+          else
+            echo "Unknown branch: $branch_name"
+            exit 1
+          fi
 
       - name: Run tests with coverage
         run: |
@@ -45,7 +63,8 @@ jobs:
           mkdir -p test_results
           log_file="test_results/${timestamp}_report.log"
           echo -e "\nTest Cases Report Report\n" >> $log_file
-          npm run test >> $log_file 2>&1
+          # Run the tests and append output to the log file
+           npm run test >> $log_file 2>&1
           # Copy and rename the generated test report with the timestamp
           cp test-report.html test_results/test-report_${timestamp}.html
 
