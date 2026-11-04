@@ -1075,7 +1075,7 @@ describe('Convert dataset request', () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let oswBlob = Utility.getOSMBlob();
 
-    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-la-osm.xml.zip'))
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-la-osm.xml'))
     let formatResponse = await oswAPI.oswOnDemandFormatForm(oswBlob, "osm", "osw");
 
     expect(formatResponse.status).toBe(202);
