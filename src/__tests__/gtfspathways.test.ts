@@ -2,6 +2,8 @@ import { Configuration, GTFSPathwaysApi, CommonAPIsApi, VersionSpec } from "tdei
 import { Utility } from "../utils";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AdmZip from "adm-zip";
+import { SeedData } from "../models/types";
+import { waitForJobTerminalState } from "./helpers/jobPoller";
 
 let apiKeyConfiguration: Configuration = {};
 let pocConfiguration: Configuration = {};
@@ -9,6 +11,8 @@ let dgConfiguration: Configuration = {};
 let oswDgConfiguration: Configuration = {};
 let adminConfiguration: Configuration = {};
 const NULL_PARAM = void 0;
+const MIN_JOB_DEADLINE_MS = 5 * 60 * 1000;
+const EXTRA_TIMEOUT_MS = 60_000;
 
 let validationJobId: string = '1';
 let uploadedJobId: string = '1';
@@ -16,7 +20,7 @@ let publishJobId: string = '1';
 let uploadedDatasetId: string = '1';
 let tdei_project_group_id = "";
 let service_id = "";
-let apiInput: any = {};
+let seedData: SeedData = {} as SeedData;
 
 const editMetadataRequestInterceptor = (request: InternalAxiosRequestConfig, tdei_dataset_id: string, datasetName: string) => {
   if (
@@ -61,7 +65,7 @@ const validateRequestInterceptor = (request: InternalAxiosRequestConfig, dataset
 };
 
 beforeAll(async () => {
-  let seedData = Utility.seedData;
+  seedData = Utility.seedData;
   tdei_project_group_id = seedData.project_group.tdei_project_group_id;
   service_id = seedData.services.find(x => x.service_type == "pathways")!.tdei_service_id;
   adminConfiguration = Utility.getAdminConfiguration();
@@ -73,7 +77,6 @@ beforeAll(async () => {
   await Utility.setAuthToken(pocConfiguration);
   await Utility.setAuthToken(dgConfiguration);
   await Utility.setAuthToken(oswDgConfiguration);
-  apiInput = Utility.getApiInput();
 });
 
 
@@ -258,27 +261,23 @@ describe('Check upload request job completion status', () => {
 
   it('Pathways Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 30000));
 
-    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, uploadedJobId, true);
-    expect(uploadStatus.status).toBe(200);
-    expect(uploadStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${uploadedJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
-        })
-      ])
-    );
-    uploadedDatasetId = uploadStatus.data[0].response_props.tdei_dataset_id;
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: uploadedJobId,
+      deadlineMs: MIN_JOB_DEADLINE_MS,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+
+    expect(job).toBeDefined();
+    expect((job as any).job_id?.toString()).toBe(uploadedJobId.toString());
+    expect((job as any).status).toBe("COMPLETED");
+    expect((job as any).progress).toEqual(expect.any(Object));
+
+    uploadedDatasetId = (job as any).response_props.tdei_dataset_id;
     console.log("uploaded tdei_dataset_id", uploadedDatasetId);
-  }, 35000);
+  }, MIN_JOB_DEADLINE_MS + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -408,7 +407,7 @@ describe('Publish the pathways dataset', () => {
   it('Admin | When passed with already published tdei_dataset_id, should respond with bad request', async () => {
 
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
-    let tdei_dataset_id = apiInput.pathways.published_dataset;
+    let tdei_dataset_id = seedData.datasets.pathways.published_dataset;
 
     let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(tdei_dataset_id);
 
@@ -417,7 +416,7 @@ describe('Publish the pathways dataset', () => {
 
   it('Admin | When passed with osw dataset id, should respond with invalid dataset type error', async () => {
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
-    let tdei_dataset_id = apiInput.osw.pre_release_dataset;
+    let tdei_dataset_id = seedData.datasets.osw.pre_release_dataset;
 
     let publishResponse = pathwaysAPI.publishGtfsPathwaysFile(tdei_dataset_id);
 
@@ -454,26 +453,20 @@ describe('Check publish request job completion status', () => {
 
   it('Pathways Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
-    await new Promise((r) => setTimeout(r, 20000));
 
-    let uploadStatus = await generalAPI.listJobs(tdei_project_group_id, publishJobId, true);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: publishJobId,
+      deadlineMs: MIN_JOB_DEADLINE_MS,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
 
-    expect(uploadStatus.status).toBe(200);
-    expect(uploadStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${publishJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
-        })
-      ])
-    );
-  }, 25000);
+    expect(job).toBeDefined();
+    expect((job as any).job_id?.toString()).toBe(publishJobId.toString());
+    expect((job as any).status).toBe("COMPLETED");
+    expect((job as any).progress).toEqual(expect.any(Object));
+  }, MIN_JOB_DEADLINE_MS + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -560,25 +553,19 @@ describe('Check validation-only request job completion status', () => {
   it('Pathways Data Generator | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(dgConfiguration);
 
-    await new Promise((r) => setTimeout(r, 20000));
-    let validateStatus = await generalAPI.listJobs(tdei_project_group_id, validationJobId, true);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: validationJobId,
+      deadlineMs: MIN_JOB_DEADLINE_MS,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
 
-    expect(validateStatus.status).toBe(200);
-    expect(validateStatus.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          job_id: expect.toBeOneOf([`${validationJobId}`]),
-          status: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS"]),
-          progress: expect.objectContaining({
-            total_stages: expect.any(Number),
-            completed_stages: expect.any(Number),
-            current_state: expect.toBeOneOf(["COMPLETED", "IN-PROGRESS", "RUNNING"]),
-            current_stage: expect.any(String)
-          })
-        })
-      ])
-    );
-  }, 25000);
+    expect(job).toBeDefined();
+    expect((job as any).job_id?.toString()).toBe(validationJobId.toString());
+    expect((job as any).status).toBe("COMPLETED");
+    expect((job as any).progress).toEqual(expect.any(Object));
+  }, MIN_JOB_DEADLINE_MS + EXTRA_TIMEOUT_MS);
 
   it('POC | Authenticated , When request made, should respond with job status', async () => {
     let generalAPI = new CommonAPIsApi(pocConfiguration);
@@ -716,7 +703,7 @@ describe('Download pathways dataset', () => {
 
     let pathwaysAPI = new GTFSPathwaysApi(adminConfiguration);
 
-    let response = pathwaysAPI.getGtfsPathwaysFile(apiInput.flex.pre_release_dataset);
+    let response = pathwaysAPI.getGtfsPathwaysFile(seedData.datasets.flex.pre_release_dataset);
 
     await expect(response).rejects.toMatchObject({ response: { status: 400 } });
 

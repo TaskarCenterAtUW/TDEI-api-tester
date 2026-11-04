@@ -105,9 +105,9 @@ build
 .tern-port
 .DS_Store
 src/test-harness.json
-test-report.html
+test-report*
 wallaby.js
 
 jest-html-reporters-attach
-seed.data.json
+seed.data*
 .idea/
