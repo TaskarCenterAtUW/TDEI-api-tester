@@ -1,4 +1,4 @@
-import { OSWApi, VersionSpec, CommonAPIsApi, Configuration, JobDetails, JobDetailsJobTypeEnum, JobDetailsStatusEnum, ProjectIdTdeiDatasetIdBody, ProjectIdTdeiDatasetIdBodyStatusEnum, ProjectIdTdeiDatasetIdBodyResolutionStatusEnum } from "tdei-client";
+import { OSWApi, VersionSpec, UnionSnapModeEnum, UnionDedupModeEnum, UnionConnectModeEnum, UnionExtensionsModeEnum, UnionConnectRuleOperationEnum, UnionSnapRuleAnchorEnum, UnionSnapRuleAttributesEnum, UnionDedupRuleAnchorEnum, CommonAPIsApi, Configuration, JobDetails, JobDetailsJobTypeEnum, JobDetailsStatusEnum, ProjectIdTdeiDatasetIdBody, ProjectIdTdeiDatasetIdBodyStatusEnum, ProjectIdTdeiDatasetIdBodyResolutionStatusEnum } from "tdei-client";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { Utility } from "../utils";
 import AdmZip from "adm-zip";
@@ -568,7 +568,7 @@ describe('Download Incline request file', () => {
   //   let generalAPI = new CommonAPIsApi(adminConfiguration);
   //   await new Promise((r) => setTimeout(r, 10000));
   //
-  //   let response = await generalAPI.jobDownload(datasetInclineTagJobId, { responseType: 'arraybuffer' });
+  //   let response = await generalAPI.jobDownload(datasetInclineTagJobId, undefined, { responseType: 'arraybuffer' });
   //   const data: any = response.data;
   //   const contentType = response.headers['content-type'];
   //
@@ -1075,7 +1075,7 @@ describe('Convert dataset request', () => {
     let oswAPI = new OSWApi(dgConfiguration);
     let oswBlob = Utility.getOSMBlob();
 
-    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-valid.zip'))
+    const convertInterceptor = axios.interceptors.request.use((req: InternalAxiosRequestConfig) => oswConvertRequestInterceptor(req, 'osw-la-osm.xml.zip'))
     let formatResponse = await oswAPI.oswOnDemandFormatForm(oswBlob, "osm", "osw");
 
     expect(formatResponse.status).toBe(202);
@@ -1265,7 +1265,7 @@ describe('Download converted file', () => {
       terminalStatuses: ["COMPLETED", "FAILED"],
     });
 
-    let response = await generalAPI.jobDownload(convertJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(convertJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1289,7 +1289,7 @@ describe('Download converted file', () => {
       terminalStatuses: ["COMPLETED", "FAILED"],
     });
 
-    let response = await generalAPI.jobDownload(convertJobIdOSMToOSW, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(convertJobIdOSMToOSW, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1555,7 +1555,7 @@ describe('Download Dataset Bbox request file', () => {
       terminalStatuses: ["COMPLETED", "FAILED"],
     });
 
-    let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetBboxJobIdOSM, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1711,7 +1711,7 @@ describe('Download Dataset Road Tag request file', () => {
       terminalStatuses: ["COMPLETED", "FAILED"],
     });
 
-    let response = await generalAPI.jobDownload(datasetRoadTagJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetRoadTagJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1728,7 +1728,7 @@ describe('Download Dataset Road Tag request file', () => {
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetRoadTagJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetRoadTagJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1753,6 +1753,7 @@ describe('Download Dataset Road Tag request file', () => {
 });
 
 let datasetUnionJobId = '1';
+let datasetUnionConfigJobId = '1';
 describe('Dataset Union Request', () => {
 
   it('OSW Data Generator | Authenticated , When request made with valid dataset, should return request job id as response', async () => {
@@ -1842,6 +1843,148 @@ describe('Dataset Union Request', () => {
     expect(bboxRequest.data).toBeNumber();
   });
 
+  it('OSW Data Generator | Authenticated , When request made with default config for all sections, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(dgConfiguration);
+
+    let unionRequest = await oswAPI.oswUnion({
+      tdei_dataset_id_one: uploadedDatasetId,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc,
+      config: {
+        snap: { mode: UnionSnapModeEnum.Default, proximity: 0.5 },
+        dedup: { mode: UnionDedupModeEnum.Default, proximity: 0.5 },
+        connect: { mode: UnionConnectModeEnum.Default, proximity: 0.5 },
+        extensions: { mode: UnionExtensionsModeEnum.Default }
+      }
+    });
+
+    datasetUnionConfigJobId = expectAcceptedJobResponse(unionRequest);
+    console.log("dataset Union (config) job_id", datasetUnionConfigJobId);
+  });
+
+  it('Admin | Authenticated , When request made with custom rules in every section, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let unionRequest = await oswAPI.oswUnion({
+      tdei_dataset_id_one: uploadedDatasetId,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc,
+      config: {
+        snap: {
+          mode: UnionSnapModeEnum.Custom,
+          coincident: true,
+          others: 0.3,
+          rules: [
+            { name: 'snap-crossings', type: 'crossing', proximity: 1, anchor: UnionSnapRuleAnchorEnum.Ds1, attributes: UnionSnapRuleAttributesEnum.Merge },
+            { type: [{ highway: 'living_street' }, 'sidewalk'], proximity: 0.5, attributes: UnionSnapRuleAttributesEnum.AnchorOnly }
+          ]
+        },
+        dedup: {
+          mode: UnionDedupModeEnum.Custom,
+          proximity: 1,
+          min_overlap: 0.8,
+          max_angle: 30,
+          rules: [
+            { name: 'dedup-sidewalks', from: { highway: 'footway', footway: 'sidewalk' }, to: 'sidewalk' },
+            { from: { highway: ['primary', 'residential'] }, to: 'road', anchor: UnionDedupRuleAnchorEnum.Ds2, max_angle: 45 }
+          ]
+        },
+        connect: {
+          mode: UnionConnectModeEnum.Custom,
+          proximity: 1,
+          rules: [
+            { name: 'crossing-road', from: 'crossing', to: 'road', operation: UnionConnectRuleOperationEnum.Point },
+            { name: 'sidewalk-crossing', from: 'sidewalk', to: 'crossing', operation: UnionConnectRuleOperationEnum.Geometry, proximity: 2, node_tags: { kerb: 'flush' }, edge_tags: { surface: 'asphalt' } }
+          ]
+        },
+        extensions: {
+          mode: UnionExtensionsModeEnum.Default,
+          points: { enabled: true, proximity: 1 },
+          lines: { enabled: true, proximity: 1, min_overlap: 0.7 },
+          polygons: { enabled: false },
+          zones: { min_overlap: 0.7 }
+        }
+      }
+    });
+
+    expectAcceptedJobResponse(unionRequest);
+  });
+
+  it('Admin | Authenticated , When request made with config as a JSON string, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let unionRequest = await oswAPI.oswUnion({
+      tdei_dataset_id_one: uploadedDatasetId,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc,
+      config: JSON.stringify({ snap: { mode: 'default' } }) as any
+    });
+
+    expectAcceptedJobResponse(unionRequest);
+  });
+
+  it('Admin | Authenticated , When request made with every section off, should return request job id as response', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let unionRequest = await oswAPI.oswUnion({
+      tdei_dataset_id_one: uploadedDatasetId,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc,
+      config: {
+        snap: { mode: UnionSnapModeEnum.Off },
+        dedup: { mode: UnionDedupModeEnum.Off },
+        connect: { mode: UnionConnectModeEnum.Off },
+        extensions: { mode: UnionExtensionsModeEnum.Off }
+      }
+    });
+
+    expectAcceptedJobResponse(unionRequest);
+  });
+
+  const invalidUnionRequests: { name: string, body: any, message: string }[] = [
+    { name: 'legacy top-level proximity', body: { proximity: 0.5 }, message: "'proximity' is no longer supported" },
+    { name: 'legacy top-level entity_filters', body: { entity_filters: { edge: { filters: [] } } }, message: "'entity_filters' is no longer supported" },
+    { name: 'unknown config section', body: { config: { snapping: { mode: 'default' } } }, message: "unknown section 'snapping'" },
+    { name: 'invalid section mode', body: { config: { snap: { mode: 'aggressive' } } }, message: 'config.snap' },
+    { name: 'setting next to mode off', body: { config: { snap: { mode: 'off', proximity: 0.5 } } }, message: 'mode off takes no other settings' },
+    { name: 'connect rule without operation', body: { config: { connect: { mode: 'custom', rules: [{ name: 'r1', from: 'crossing', to: 'road' }] } } }, message: 'config.connect.rules[1].operation' },
+    { name: 'connect rule without name', body: { config: { connect: { mode: 'custom', rules: [{ from: 'crossing', to: 'road', operation: 'point' }] } } }, message: 'config.connect.rules[1].name' },
+    { name: 'connect rule with tags instead of node_tags/edge_tags', body: { config: { connect: { mode: 'custom', rules: [{ name: 'r1', from: 'crossing', to: 'road', operation: 'point', tags: { kerb: 'flush' } }] } } }, message: 'config.connect.rules[1].tags' },
+    { name: 'connect rule proximity above 5', body: { config: { connect: { mode: 'custom', rules: [{ name: 'r1', from: 'crossing', to: 'road', operation: 'point', proximity: 9 }] } } }, message: 'config.connect.rules[1].proximity' },
+    { name: 'unknown built-in type name', body: { config: { dedup: { mode: 'custom', rules: [{ from: 'sidewalks', to: 'sidewalk' }] } } }, message: 'unknown type name' },
+    { name: 'dedup max_angle above 90', body: { config: { dedup: { mode: 'default', max_angle: 120 } } }, message: 'config.dedup.max_angle' },
+    { name: 'dedup min_overlap above 1', body: { config: { dedup: { mode: 'default', min_overlap: 80 } } }, message: 'config.dedup.min_overlap' },
+    { name: 'snap proximity below 0', body: { config: { snap: { mode: 'default', proximity: -1 } } }, message: 'config.snap.proximity' },
+    { name: 'custom mode without rules', body: { config: { dedup: { mode: 'custom' } } }, message: 'config.dedup' },
+    { name: 'more than 15 rules in a stage', body: { config: { dedup: { mode: 'custom', rules: Array.from({ length: 16 }, (_, i) => ({ name: `d${i}`, from: 'road', to: 'road' })) } } }, message: 'config.dedup' },
+    { name: 'duplicate rule names in a stage', body: { config: { dedup: { mode: 'custom', rules: [{ name: 'same', from: 'road', to: 'road' }, { name: 'same', from: 'sidewalk', to: 'sidewalk' }] } } }, message: 'config.dedup.rules' },
+    { name: 'rule name containing a comma', body: { config: { dedup: { mode: 'custom', rules: [{ name: 'a,b', from: 'road', to: 'road' }] } } }, message: 'config.dedup.rules[1].name' },
+    { name: 'unknown key in a section', body: { config: { snap: { mode: 'default', distance: 1 } } }, message: 'config.snap' },
+    { name: 'flat extensions.proximity key', body: { config: { extensions: { mode: 'default', proximity: 0.5 } } }, message: 'config.extensions.proximity' },
+    { name: 'every extension type disabled', body: { config: { extensions: { mode: 'default', points: { enabled: false }, lines: { enabled: false }, polygons: { enabled: false }, zones: { enabled: false } } } }, message: 'config.extensions' },
+  ];
+
+  it.each(invalidUnionRequests)('Admin | authenticated , When request made with $name, should return with bad request error', async ({ body, message }) => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let unionRequest = oswAPI.oswUnion({
+      tdei_dataset_id_one: uploadedDatasetId,
+      tdei_dataset_id_two: uploadedDatasetId_PreRelease_poc,
+      ...body
+    });
+
+    await expect(unionRequest).rejects.toMatchObject({ response: { status: 400 } });
+    const error = await unionRequest.catch((e: any) => e);
+    expect(JSON.stringify(error.response.data)).toContain(message);
+  });
+
+  it('Admin | authenticated , When request made with the same dataset twice, should return with bad request error', async () => {
+    let oswAPI = new OSWApi(adminConfiguration);
+
+    let unionRequest = oswAPI.oswUnion({
+      tdei_dataset_id_one: uploadedDatasetId,
+      tdei_dataset_id_two: uploadedDatasetId
+    });
+
+    await expect(unionRequest).rejects.toMatchObject({ response: { status: 400 } });
+  });
+
 });
 
 describe('Check dataset union request job completion status', () => {
@@ -1857,6 +2000,20 @@ describe('Check dataset union request job completion status', () => {
       terminalStatuses: ["COMPLETED", "FAILED"],
     });
     expect((job as any)?.job_id).toBeOneOf([`${datasetUnionJobId}`]);
+    expect((job as any)?.status).toBe("COMPLETED");
+  }, 12 * 60 * 1000 + EXTRA_TIMEOUT_MS);
+
+  it('OSW Data Generator | Authenticated , When request made for union with config, should respond with completed job status', async () => {
+    let generalAPI = new CommonAPIsApi(dgConfiguration);
+    const { job } = await waitForJobTerminalState({
+      api: generalAPI,
+      projectGroupId: tdei_project_group_id,
+      jobId: datasetUnionConfigJobId,
+      deadlineMs: 12 * 60 * 1000,
+      terminalStatuses: ["COMPLETED", "FAILED"],
+    });
+    expect((job as any)?.job_id).toBeOneOf([`${datasetUnionConfigJobId}`]);
+    expect((job as any)?.job_type).toBe(JobDetailsJobTypeEnum.DatasetUnion);
     expect((job as any)?.status).toBe("COMPLETED");
   }, 12 * 60 * 1000 + EXTRA_TIMEOUT_MS);
 
@@ -1889,7 +2046,7 @@ describe('Download Dataset Union request file', () => {
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetUnionJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetUnionJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1906,7 +2063,7 @@ describe('Download Dataset Union request file', () => {
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetUnionJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetUnionJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -1918,6 +2075,24 @@ describe('Download Dataset Union request file', () => {
       const entries = zip.getEntries();
       expect(entries.length).toBeGreaterThanOrEqual(0);
     }
+  }, 20000);
+
+  it('Admin | Authenticated , When request made for union with config, should stream the zip with OSW files and union_report.json', async () => {
+    let generalAPI = new CommonAPIsApi(adminConfiguration);
+
+    let response = await generalAPI.jobDownload(datasetUnionConfigJobId, undefined, { responseType: 'arraybuffer' });
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toBe("application/zip");
+
+    const zip = new AdmZip(response.data as any);
+    const entryNames = zip.getEntries().map(e => e.entryName.split('/').pop());
+    expect(entryNames).toEqual(expect.arrayContaining(['osw.nodes.geojson', 'osw.edges.geojson', 'union_report.json']));
+
+    const reportEntry = zip.getEntries().find(e => e.entryName.endsWith('union_report.json'))!;
+    const report = JSON.parse(reportEntry.getData().toString('utf8'));
+    expect(report).toBeObject();
+    expect(JSON.stringify(report)).toContain('snap');
   }, 20000);
 
   it('Admin | un-authenticated , When request made with tdei_dataset_id, should respond with unauthenticated request', async () => {
@@ -2072,7 +2247,7 @@ describe('Download Dataset Self Merge request file', () => {
   it('Admin | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetSelfMergeJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetSelfMergeJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -2089,7 +2264,7 @@ describe('Download Dataset Self Merge request file', () => {
   it('API-Key | Authenticated , When request made with tdei_dataset_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
 
-    let response = await generalAPI.jobDownload(datasetSelfMergeJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(datasetSelfMergeJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -2267,7 +2442,7 @@ describe('Download Spatial join request file', () => {
       deadlineMs: 8 * 60 * 1000,
       terminalStatuses: ["COMPLETED", "FAILED"],
     });
-    let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(spacialJoinJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -2283,7 +2458,7 @@ describe('Download Spatial join request file', () => {
 
   it('API-Key | Authenticated , When request made with job_id, should stream the zip file', async () => {
     let generalAPI = new CommonAPIsApi(apiKeyConfiguration);
-    let response = await generalAPI.jobDownload(spacialJoinJobId, { responseType: 'arraybuffer' });
+    let response = await generalAPI.jobDownload(spacialJoinJobId, undefined, { responseType: 'arraybuffer' });
     const data: any = response.data;
     const contentType = response.headers['content-type'];
 
@@ -3535,7 +3710,7 @@ describe("Job Download API", () => {
   it('Admin | un-authenticated , When request made with invalid job id, should return job id not found error', async () => {
     let generalAPI = new CommonAPIsApi(adminConfiguration);
 
-    let response = generalAPI.jobDownload("000", { responseType: 'arraybuffer' });
+    let response = generalAPI.jobDownload("000", undefined, { responseType: 'arraybuffer' });
 
     await expect(response).rejects.toMatchObject({ response: { status: 404 } });
   });
@@ -3543,7 +3718,7 @@ describe("Job Download API", () => {
   it('Admin | un-authenticated , When request made with job id, should return unauthenticated error', async () => {
     let generalAPI = new CommonAPIsApi(Utility.getAdminConfiguration());
 
-    let response = generalAPI.jobDownload(convertJobId, { responseType: 'arraybuffer' });
+    let response = generalAPI.jobDownload(convertJobId, undefined, { responseType: 'arraybuffer' });
 
     await expect(response).rejects.toMatchObject({ response: { status: 401 } });
   });
